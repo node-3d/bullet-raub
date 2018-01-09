@@ -1,0 +1,29 @@
+{
+  "name": "node-bullet-raub",
+  "version": "0.0.1",
+  "description": "Bullet-driven physics API",
+  "main": "index.js",
+  "author": "Luis Blanco <raubtierxxx@gmail.com>",
+  "keywords": [
+    "bullet",
+    "physics",
+    "3d"
+  ],
+  "maintainers": [
+    {
+      "name": "Luis Blanco",
+      "email": "raubtierxxx@gmail.com",
+      "skype": "rauber666"
+    }
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/raub/node-bullet.git"
+  },
+  "dependencies": {
+    "nan": "2.8.0",
+    "node-deps-bullet-raub": "0.0.1",
+    "node-addon-tools-raub": "0.0.4"
+  }
+}
