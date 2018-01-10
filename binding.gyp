@@ -1,61 +1,52 @@
 {
 	'variables': {
-		'opengl_include' : '<!(node -e "console.log(require(\'node-deps-opengl-raub\').include)")',
-		'opengl_bin'     : '<!(node -e "console.log(require(\'node-deps-opengl-raub\').bin)")',
+		'bullet_include' : '<!(node -e "console.log(require(\'node-deps-bullet-raub\').include)")',
+		'bullet_bin'     : '<!(node -e "console.log(require(\'node-deps-bullet-raub\').bin)")',
 	},
 	'targets': [
 		{
-			'target_name': 'glfw',
-			'defines': [ 'VERSION=0.4.6' ],
-			'sources': [ 'cpp/glfw.cpp' ],
+			'target_name': 'bullet',
+			'sources': [
+				'cpp/bindings.cpp',
+				'cpp/body.cpp',
+				'cpp/joint.cpp',
+				'cpp/scene.cpp',
+				'cpp/trace.cpp',
+			],
 			'include_dirs': [
 				'<!(node -e "require(\'nan\')")',
-				'<(opengl_include)',
+				'<(bullet_include)',
 				'<!(node -e "require(\'node-addon-tools-raub\')")',
 			],
-			'library_dirs': [ '<(opengl_bin)' ],
-			'conditions': [
+			'library_dirs': [ '<(bullet_bin)' ],
+			'libraries'    : [ '-lbullet' ],
+			'conditions'   : [
 				[
-					'OS=="linux"',
-					{
+					'OS=="linux"', {
 						'libraries': [
-							'-Wl,-rpath,<(opengl_bin)',
-							'<(opengl_bin)/libfreeimage.so',
-							'<(opengl_bin)/libglfw.so.3',
-							'<(opengl_bin)/libGLEW.so.2.0',
-							'<(opengl_bin)/libGL.so',
-							'<(opengl_bin)/libXrandr.so',
+							'-Wl,-rpath,<(bullet_bin)',
 						],
 					}
 				],
 				[
-					'OS=="mac"',
-					{
+					'OS=="mac"', {
 						'libraries': [
-							'-Wl,-rpath,<(opengl_bin)',
-							'<(opengl_bin)/freeimage.dylib',
-							'<(opengl_bin)/glfw.dylib',
-							'<(opengl_bin)/glew.dylib'
+							'-Wl,-rpath,<(bullet_bin)',
 						],
 					}
 				],
 				[
 					'OS=="win"',
 					{
-						'libraries': [ 'FreeImage.lib', 'glfw3dll.lib', 'glew32.lib', 'opengl32.lib' ],
-						'defines' : [
-							'WIN32_LEAN_AND_MEAN',
-							'VC_EXTRALEAN'
-						],
 						'msvs_settings' : {
 							'VCCLCompilerTool' : {
 								'AdditionalOptions' : [
-									'/O2','/Oy','/GL','/GF','/Gm-',
+									'/O2','/Oy','/GL','/GF','/Gm-', '/Fm-',
 									'/EHsc','/MT','/GS','/Gy','/GR-','/Gd',
 								]
 							},
 							'VCLinkerTool' : {
-								'AdditionalOptions' : ['/OPT:REF','/OPT:ICF','/LTCG']
+								'AdditionalOptions' : ['/RELEASE','/OPT:REF','/OPT:ICF','/LTCG']
 							},
 						},
 					},
@@ -65,7 +56,7 @@
 		{
 			'target_name'  : 'make_directory',
 			'type'         : 'none',
-			'dependencies' : ['glfw'],
+			'dependencies' : ['bullet'],
 			'actions'      : [{
 				'action_name' : 'Directory created.',
 				'inputs'      : [],
@@ -91,17 +82,17 @@
 				'conditions'  : [
 					[ 'OS=="linux"', { 'action' : [
 						'cp',
-						'<(module_root_dir)/build/Release/glfw.node',
-						'<(module_root_dir)/binary/glfw.node'
+						'<(module_root_dir)/build/Release/bullet.node',
+						'<(module_root_dir)/binary/bullet.node'
 					] } ],
 					[ 'OS=="mac"', { 'action' : [
 						'cp',
-						'<(module_root_dir)/build/Release/glfw.node',
-						'<(module_root_dir)/binary/glfw.node'
+						'<(module_root_dir)/build/Release/bullet.node',
+						'<(module_root_dir)/binary/bullet.node'
 					] } ],
 					[ 'OS=="win"', { 'action' : [
-						'copy "<(module_root_dir)/build/Release/glfw.node"' +
-						' "<(module_root_dir)/binary/glfw.node"'
+						'copy "<(module_root_dir)/build/Release/bullet.node"' +
+						' "<(module_root_dir)/binary/bullet.node"'
 					] } ],
 				],
 			}],
@@ -117,18 +108,18 @@
 				'conditions'  : [
 					[ 'OS=="linux"', { 'action' : [
 						'rm',
-						'<(module_root_dir)/build/Release/obj.target/glfw/cpp/glfw.o',
-						'<(module_root_dir)/build/Release/obj.target/glfw.node',
-						'<(module_root_dir)/build/Release/glfw.node'
+						'<(module_root_dir)/build/Release/obj.target/bullet/cpp/bullet.o',
+						'<(module_root_dir)/build/Release/obj.target/bullet.node',
+						'<(module_root_dir)/build/Release/bullet.node'
 					] } ],
 					[ 'OS=="mac"', { 'action' : [
 						'rm',
-						'<(module_root_dir)/build/Release/obj.target/glfw/cpp/glfw.o',
-						'<(module_root_dir)/build/Release/glfw.node'
+						'<(module_root_dir)/build/Release/obj.target/bullet/cpp/bullet.o',
+						'<(module_root_dir)/build/Release/bullet.node'
 					] } ],
 					[ 'OS=="win"', { 'action' : [
-						'<(module_root_dir)/_del "<(module_root_dir)/build/Release/glfw.*" && ' +
-						'<(module_root_dir)/_del "<(module_root_dir)/build/Release/obj/glfw/*.*"'
+						'<(module_root_dir)/_del "<(module_root_dir)/build/Release/bullet.*" && ' +
+						'<(module_root_dir)/_del "<(module_root_dir)/build/Release/obj/bullet/*.*"'
 					] } ],
 				],
 			}],

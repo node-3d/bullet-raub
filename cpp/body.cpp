@@ -13,6 +13,7 @@
 #include <LinearMath/btDefaultMotionState.h>
 
 #include "scene.hpp"
+#include "joint.hpp"
 #include "body.hpp"
 
 using namespace v8;
@@ -109,7 +110,7 @@ Body::Body(Scene *scene) {
 	_cacheMap = NULL;
 	_cacheMesh = NULL;
 	
-	rebuild();
+	_rebuild();
 	
 	_scene->refBody(this);
 	
@@ -120,7 +121,7 @@ Body::~Body() {
 	
 	vector<Joint*>::iterator it = _joints.begin();
 	while (it != _joints.end()) {
-		(*it)->dropBody(this);
+		(*it)->_dropBody(this);
 		it++;
 	}
 	_joints.clear();
@@ -188,7 +189,7 @@ NAN_GETTER(Body::typeGetter) { NAN_HS; THIS_BODY;
 }
 
 
-NAN_SETTER(Body::typeSetter) { NAN_HS; THIS_BODY;
+NAN_SETTER(Body::typeSetter) { THIS_BODY;
 	
 	REQ_UTF8_ARG(0, str);
 	
@@ -209,7 +210,7 @@ V3_GETTER(factl, _cacheFactl);
 V3_GETTER(facta, _cacheFacta);
 
 
-NAN_SETTER(Body::posSetter) { NAN_HS; THIS_BODY;
+NAN_SETTER(Body::posSetter) { THIS_BODY;
 	
 	REQ_VEC3_ARG(0, v);
 	
@@ -246,7 +247,7 @@ NAN_GETTER(Body::rotGetter) { NAN_HS; THIS_BODY;
 }
 
 
-NAN_SETTER(Body::rotSetter) { NAN_HS; THIS_BODY;
+NAN_SETTER(Body::rotSetter) { THIS_BODY;
 	
 	REQ_VEC3_ARG(0, v);
 	
@@ -264,7 +265,7 @@ NAN_SETTER(Body::rotSetter) { NAN_HS; THIS_BODY;
 }
 
 
-NAN_SETTER(Body::vellSetter) { NAN_HS; THIS_BODY;
+NAN_SETTER(Body::vellSetter) { THIS_BODY;
 	
 	REQ_VEC3_ARG(0, v);
 	
@@ -281,7 +282,7 @@ NAN_SETTER(Body::vellSetter) { NAN_HS; THIS_BODY;
 }
 
 
-NAN_SETTER(Body::velaSetter) { NAN_HS; THIS_BODY;
+NAN_SETTER(Body::velaSetter) { THIS_BODY;
 	
 	REQ_VEC3_ARG(0, v);
 	
@@ -298,7 +299,7 @@ NAN_SETTER(Body::velaSetter) { NAN_HS; THIS_BODY;
 }
 
 
-NAN_SETTER(Body::sizeSetter) { NAN_HS; THIS_BODY;
+NAN_SETTER(Body::sizeSetter) { THIS_BODY;
 	
 	REQ_VEC3_ARG(0, v);
 	
@@ -311,7 +312,7 @@ NAN_SETTER(Body::sizeSetter) { NAN_HS; THIS_BODY;
 }
 
 
-NAN_SETTER(Body::factlSetter) { NAN_HS; THIS_BODY;
+NAN_SETTER(Body::factlSetter) { THIS_BODY;
 	
 	REQ_VEC3_ARG(0, v);
 	
@@ -324,7 +325,7 @@ NAN_SETTER(Body::factlSetter) { NAN_HS; THIS_BODY;
 }
 
 
-NAN_SETTER(Body::factaSetter) { NAN_HS; THIS_BODY;
+NAN_SETTER(Body::factaSetter) { THIS_BODY;
 	
 	REQ_VEC3_ARG(0, v);
 	
@@ -337,7 +338,7 @@ NAN_SETTER(Body::factaSetter) { NAN_HS; THIS_BODY;
 }
 
 
-NAN_SETTER(Body::mapSetter) { NAN_HS; THIS_BODY;
+NAN_SETTER(Body::mapSetter) { THIS_BODY;
 	
 	REQ_OBJ_ARG(0, v);
 	
@@ -348,7 +349,7 @@ NAN_SETTER(Body::mapSetter) { NAN_HS; THIS_BODY;
 }
 
 
-NAN_SETTER(Body::meshSetter) { NAN_HS; THIS_BODY;
+NAN_SETTER(Body::meshSetter) { THIS_BODY;
 	
 	REQ_OBJ_ARG(0, v);
 	
@@ -359,7 +360,7 @@ NAN_SETTER(Body::meshSetter) { NAN_HS; THIS_BODY;
 }
 
 
-NAN_SETTER(Body::massSetter) { NAN_HS; THIS_BODY;
+NAN_SETTER(Body::massSetter) { THIS_BODY;
 	
 	REQ_FLOAT_ARG(0, v);
 	
@@ -372,7 +373,7 @@ NAN_SETTER(Body::massSetter) { NAN_HS; THIS_BODY;
 }
 
 
-NAN_SETTER(Body::restSetter) { NAN_HS; THIS_BODY;
+NAN_SETTER(Body::restSetter) { THIS_BODY;
 	
 	REQ_FLOAT_ARG(0, v);
 	
@@ -385,7 +386,7 @@ NAN_SETTER(Body::restSetter) { NAN_HS; THIS_BODY;
 }
 
 
-NAN_SETTER(Body::damplSetter) { NAN_HS; THIS_BODY;
+NAN_SETTER(Body::damplSetter) { THIS_BODY;
 	
 	REQ_FLOAT_ARG(0, v);
 	
@@ -398,7 +399,7 @@ NAN_SETTER(Body::damplSetter) { NAN_HS; THIS_BODY;
 }
 
 
-NAN_SETTER(Body::dampaSetter) { NAN_HS; THIS_BODY;
+NAN_SETTER(Body::dampaSetter) { THIS_BODY;
 	
 	REQ_FLOAT_ARG(0, v);
 	
@@ -411,7 +412,7 @@ NAN_SETTER(Body::dampaSetter) { NAN_HS; THIS_BODY;
 }
 
 
-NAN_SETTER(Body::frictSetter) { NAN_HS; THIS_BODY;
+NAN_SETTER(Body::frictSetter) { THIS_BODY;
 	
 	REQ_FLOAT_ARG(0, v);
 	
@@ -424,7 +425,7 @@ NAN_SETTER(Body::frictSetter) { NAN_HS; THIS_BODY;
 }
 
 
-NAN_SETTER(Body::sleepySetter) { NAN_HS; THIS_BODY;
+NAN_SETTER(Body::sleepySetter) { THIS_BODY;
 	
 	REQ_BOOL_ARG(0, v);
 	

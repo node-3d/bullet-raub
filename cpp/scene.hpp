@@ -18,6 +18,7 @@ class btConstraintSolver;
 class btDefaultCollisionConfiguration;
 class btDynamicsWorld;
 class btOverlappingPairCache;
+class btClock;
 
 class Body;
 class Trace;
@@ -41,7 +42,7 @@ public:
 	void doUpdate(float dt);
 	void doUpdate();
 	Trace *doHit(const btVector3 &from, const btVector3 &to);
-	const vector<Trace*> &doTrace(const btVector3 &from, const btVector3 &to);
+	const std::vector<Trace*> &doTrace(const btVector3 &from, const btVector3 &to);
 	
 	
 protected:
@@ -61,11 +62,11 @@ protected:
 	
 private:
 	
-	static vector<Scene*> _scenes;
+	static std::vector<Scene*> _scenes;
 	static v8::Persistent<v8::Function> _constructor;
 	
 	btClock *_clock;
-	vector<Body*> _bodies;
+	std::vector<Body*> _bodies;
 	
 	btDefaultCollisionConfiguration *_physConfig;
 	btCollisionDispatcher *_physDispatcher;

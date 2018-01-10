@@ -9,6 +9,7 @@
 #include <LinearMath/btAabbUtil2.h>
 #include <LinearMath/btAlignedObjectArray.h>
 
+#include "body.hpp"
 #include "scene.hpp"
 
 using namespace v8;
@@ -17,6 +18,18 @@ using namespace std;
 
 #define THIS_SCENE                                                 \
 	Scene *scene = ObjectWrap::Unwrap<Scene>(info.This());
+
+#define V3_GETTER(NAME, CACHE)                                     \
+	NAN_GETTER(Scene::NAME ## Getter) { NAN_HS; THIS_SCENE;        \
+		VEC3_TO_OBJ(scene->CACHE, NAME);                           \
+		RET_VALUE(NAME);                                           \
+	}
+
+#define CACHE_CAS(CACHE, V)                                        \
+	if (scene->CACHE == V) {                                       \
+		return;                                                    \
+	}                                                              \
+	scene->CACHE = V;
 
 
 vector<Scene*> Scene::_scenes
@@ -237,24 +250,17 @@ const vector<Trace*> &Scene::doTrace(const btVector3 &from, const btVector3 &to)
 }
 
 
+V3_GETTER(gravity, _cacheGrav);
 
-NAN_GETTER(Scene::gravityGetter) { NAN_HS; THIS_SCENE;
-	
-	VEC3_TO_OBJ(scene->_cacheGrav, gravity)
-	
-	RET_VALUE(gravity);
-	
-}
-
-
-NAN_SETTER(Scene::gravitySetter) { NAN_HS; THIS_SCENE;
+NAN_SETTER(Scene::gravitySetter) { THIS_SCENE;
 	
 	REQ_VEC3_ARG(0, v);
 	
-	scene->_cacheGrav = v;
+	CACHE_CAS(_cacheGrav, v);
+	
 	scene->_physWorld->setGravity(scene->_cacheGrav);
 	
-	// EMIT?
+	// EMIT
 	
 }
 

@@ -50,6 +50,44 @@
 	OBJ_TO_VEC3(_obj_##VAR, VAR);
 
 
+// TODO: transfer to addon tools
+
+#define SETTER_CHECK(C, T)                                              \
+	if ( ! value->C )                                                   \
+		Nan::ThrowTypeError("Value must be " T);
+
+#define SETTER_UTF8_ARG                                                 \
+	SETTER_CHECK(IsString(), "string");
+
+#define SETTER_INT32_ARG                                                \
+	SETTER_CHECK(IsInt32(), "int32");
+
+#define SETTER_BOOL_ARG                                                 \
+	SETTER_CHECK(IsBoolean(), "bool");
+
+#define SETTER_UINT32_ARG                                               \
+	SETTER_CHECK(IsUint32(), "uint32");
+
+#define SETTER_OFFS_ARG                                                 \
+	SETTER_CHECK(IsNumber(), "number");
+
+#define SETTER_DOUBLE_ARG                                               \
+	SETTER_CHECK(IsNumber(), "number");
+
+#define SETTER_FLOAT_ARG                                                \
+	SETTER_CHECK(IsNumber(), "number");
+
+#define SETTER_EXT_ARG                                                  \
+	SETTER_CHECK(IsExternal(), "void*");
+
+#define SETTER_FUN_ARG                                                  \
+	SETTER_CHECK(IsFunction(), "function");
+
+#define SETTER_OBJ_ARG                                                  \
+	SETTER_CHECK(IsObject(), "object");
+
+
+
 // Fix bad defines
 
 #undef True

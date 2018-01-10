@@ -2,8 +2,6 @@
 #define _TRACE_HPP_
 
 
-#include <vector>
-
 #include <nan.h>
 
 #include <LinearMath/btVector3.h>
@@ -23,10 +21,10 @@ public:
 	static void init(v8::Handle<v8::Object> target);
 	static void deinit();
 	
+	Trace(bool hit, Body *body, const btVector3 &pos, const btVector3 &norm);
+	
 protected:
 	
-	Trace(bool hit, Body *body, const btVector3 &pos, const btVector3 &norm);
-	Trace();
 	virtual ~Trace();
 	
 	static NAN_METHOD(newCtor);

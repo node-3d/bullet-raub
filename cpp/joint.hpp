@@ -2,8 +2,6 @@
 #define _JOINT_HPP_
 
 
-#include <vector>
-
 #include <nan.h>
 
 #include <LinearMath/btVector3.h>
@@ -28,7 +26,7 @@ public:
 	
 protected:
 	
-	explicit Joint(Body *body);
+	explicit Joint();
 	virtual ~Joint();
 	
 	static NAN_METHOD(newCtor);

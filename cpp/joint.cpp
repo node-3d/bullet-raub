@@ -1,12 +1,13 @@
 #include <cstdlib>
 #include <iostream>
+#include <vector>
 
 #include <BulletDynamics/Dynamics/btRigidBody.h>
-#include <Bullet3Dynamics/ConstraintSolver/btTypedConstraint.h>
+#include <BulletDynamics/ConstraintSolver/btTypedConstraint.h>
 #include <BulletDynamics/Dynamics/btDynamicsWorld.h>
 #include <BulletDynamics/Dynamics/btRigidBody.h>
 #include <BulletDynamics/ConstraintSolver/btGeneric6DofSpringConstraint.h>
-#include <Bullet3Dynamics/ConstraintSolver/b3Generic6DofConstraint.h>
+#include <BulletDynamics/ConstraintSolver/btGeneric6DofConstraint.h>
 
 #include "scene.hpp"
 #include "body.hpp"
@@ -30,6 +31,11 @@ using namespace std;
 		return;                                                    \
 	}                                                              \
 	joint->CACHE = V;
+
+#define CHECK_CONSTRAINT                                           \
+	if ( ! joint->_constraint ) {                                  \
+		return;                                                    \
+	}
 
 
 
@@ -165,7 +171,7 @@ V3_GETTER(motorav, _cacheMotorav);
 
 
 
-NAN_SETTER(Joint::entaSetter) { NAN_HS; THIS_JOINT;
+NAN_SETTER(Joint::entaSetter) { THIS_JOINT;
 	
 	REQ_OBJ_ARG(0, a);
 	Body *body = ObjectWrap::Unwrap<Body>(a);
@@ -192,7 +198,7 @@ NAN_SETTER(Joint::entaSetter) { NAN_HS; THIS_JOINT;
 }
 
 
-NAN_SETTER(Joint::entbSetter) { NAN_HS; THIS_JOINT;
+NAN_SETTER(Joint::entbSetter) { THIS_JOINT;
 	
 	REQ_OBJ_ARG(0, b);
 	Body *body = ObjectWrap::Unwrap<Body>(b);
@@ -219,37 +225,348 @@ NAN_SETTER(Joint::entbSetter) { NAN_HS; THIS_JOINT;
 }
 
 
-NAN_SETTER(Joint::brokenSetter) { NAN_HS; THIS_JOINT;
+NAN_SETTER(Joint::brokenSetter) { THIS_JOINT;
 	
 	REQ_BOOL_ARG(0, v);
 	
 	CACHE_CAS(_cacheBroken, v);
+	CHECK_CONSTRAINT;
 	
-	if (joint->_constraint) {
-		joint->_constraint->setEnabled( ! joint->_cacheBroken );
-	}
+	joint->_constraint->setEnabled( ! joint->_cacheBroken );
 	
 	// EMIT
 	
 }
 
 
-NAN_SETTER(Joint::maximpSetter) { NAN_HS; THIS_JOINT;
+NAN_SETTER(Joint::maximpSetter) { THIS_JOINT;
 	
 	REQ_FLOAT_ARG(0, v);
 	
 	CACHE_CAS(_cacheMaximp, v);
+	CHECK_CONSTRAINT;
 	
-	if (joint->_constraint) {
-		joint->_constraint->setBreakingImpulseThreshold(joint->_cacheMaximp);
-	}
+	joint->_constraint->setBreakingImpulseThreshold(joint->_cacheMaximp);
 	
 	// EMIT
 	
 }
 
 
+NAN_SETTER(Joint::posaSetter) { THIS_JOINT;
+	
+	REQ_VEC3_ARG(0, v);
+	
+	CACHE_CAS(_cachePosa, v);
+	CHECK_CONSTRAINT;
+	
+	btTransform transformA = _constraint->getFrameOffsetA();
+	transformA.setOrigin(_cachePosa);
+	_constraint->setFrames(transformA, _constraint->getFrameOffsetB());
+	
+	// EMIT
+	
+}
 
+
+NAN_SETTER(Joint::posbSetter) { THIS_JOINT;
+	
+	REQ_VEC3_ARG(0, v);
+	
+	CACHE_CAS(_cachePosb, v);
+	CHECK_CONSTRAINT;
+	
+	btTransform transformB = _constraint->getFrameOffsetB();
+	transformA.setOrigin(_cachePosb);
+	joint->_constraint->setFrames(joint->_constraint->getFrameOffsetA(), transformB);
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Joint::rotaSetter) { THIS_JOINT;
+	
+	REQ_VEC3_ARG(0, v);
+	
+	CACHE_CAS(_cacheRota, v);
+	CHECK_CONSTRAINT;
+	
+	v *= 0.01745329f;
+	btQuaternion q;
+	q.setEuler(v.y(), v.x(), v.z());
+	
+	btTransform transformA = joint->_constraint->getFrameOffsetA();
+	transformA.setRotation(q);
+	joint->_constraint->setFrames(transformA, joint->_constraint->getFrameOffsetB());
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Joint::rotbSetter) { THIS_JOINT;
+	
+	REQ_VEC3_ARG(0, v);
+	
+	CACHE_CAS(_cacheRotb, v);
+	CHECK_CONSTRAINT;
+	
+	v *= 0.01745329f;
+	btQuaternion q;
+	q.setEuler(v.y(), v.x(), v.z());
+	
+	btTransform transformB = joint->_constraint->getFrameOffsetB();
+	transformB.setRotation(q);
+	joint->_constraint->setFrames(joint->_constraint->getFrameOffsetA(), transformB);
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Joint::minlSetter) { THIS_JOINT;
+	
+	REQ_VEC3_ARG(0, v);
+	
+	CACHE_CAS(_cacheMinl, v);
+	CHECK_CONSTRAINT;
+	
+	joint->_constraint->setLinearLowerLimit(v);
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Joint::maxlSetter) { THIS_JOINT;
+	
+	REQ_VEC3_ARG(0, v);
+	
+	CACHE_CAS(_cacheMaxl, v);
+	CHECK_CONSTRAINT;
+	
+	joint->_constraint->setLinearUpperLimit(v);
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Joint::minaSetter) { THIS_JOINT;
+	
+	REQ_VEC3_ARG(0, v);
+	
+	CACHE_CAS(_cacheMina, v);
+	CHECK_CONSTRAINT;
+	
+	joint->_constraint->setAngularLowerLimit(M_PI * v);
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Joint::maxaSetter) { THIS_JOINT;
+	
+	REQ_VEC3_ARG(0, v);
+	
+	CACHE_CAS(_cacheMaxa, v);
+	CHECK_CONSTRAINT;
+	
+	joint->_constraint->setAngularUpperLimit(M_PI * v);
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Joint::damplSetter) { THIS_JOINT;
+	
+	REQ_VEC3_ARG(0, v);
+	
+	CACHE_CAS(_cacheDampl, v);
+	CHECK_CONSTRAINT;
+	
+	joint->_constraint->setDamping(0, v.x());
+	joint->_constraint->setDamping(1, v.y());
+	joint->_constraint->setDamping(2, v.z());
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Joint::dampaSetter) { THIS_JOINT;
+	
+	REQ_VEC3_ARG(0, v);
+	
+	CACHE_CAS(_cacheDampa, v);
+	CHECK_CONSTRAINT;
+	
+	joint->_constraint->setDamping(3, v.x());
+	joint->_constraint->setDamping(4, v.y());
+	joint->_constraint->setDamping(5, v.z());
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Joint::stiflSetter) { THIS_JOINT;
+	
+	REQ_VEC3_ARG(0, v);
+	
+	CACHE_CAS(_cacheStifl, v);
+	CHECK_CONSTRAINT;
+	
+	joint->_constraint->setStiffness(0, v.x());
+	joint->_constraint->setStiffness(1, v.y());
+	joint->_constraint->setStiffness(2, v.z());
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Joint::stifaSetter) { THIS_JOINT;
+	
+	REQ_VEC3_ARG(0, v);
+	
+	CACHE_CAS(_cacheStifa, v);
+	CHECK_CONSTRAINT;
+	
+	joint->_constraint->setStiffness(3, v.x());
+	joint->_constraint->setStiffness(4, v.y());
+	joint->_constraint->setStiffness(5, v.z());
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Joint::springlSetter) { THIS_JOINT;
+	
+	REQ_VEC3_ARG(0, v);
+	
+	CACHE_CAS(_cacheSpringl, v);
+	CHECK_CONSTRAINT;
+	
+	joint->_constraint->enableSpring(0, v.x());
+	joint->_constraint->enableSpring(1, v.y());
+	joint->_constraint->enableSpring(2, v.z());
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Joint::springaSetter) { THIS_JOINT;
+	
+	REQ_VEC3_ARG(0, v);
+	
+	CACHE_CAS(_cacheSpringa, v);
+	CHECK_CONSTRAINT;
+	
+	joint->_constraint->enableSpring(3, v.x());
+	joint->_constraint->enableSpring(4, v.y());
+	joint->_constraint->enableSpring(5, v.z());
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Joint::motorlSetter) { THIS_JOINT;
+	
+	REQ_VEC3_ARG(0, v);
+	
+	CACHE_CAS(_cacheMotorl, v);
+	CHECK_CONSTRAINT;
+	
+	joint->_constraint->getTranslationalLimitMotor()->m_enableMotor[0] = v.x();
+	joint->_constraint->getTranslationalLimitMotor()->m_enableMotor[1] = v.y();
+	joint->_constraint->getTranslationalLimitMotor()->m_enableMotor[2] = v.z();
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Joint::motoraSetter) { THIS_JOINT;
+	
+	REQ_VEC3_ARG(0, v);
+	
+	CACHE_CAS(_cacheMotora, v);
+	CHECK_CONSTRAINT;
+	
+	joint->_constraint->getRotationalLimitMotor(0)->m_enableMotor = value.x() != 0;
+	joint->_constraint->getRotationalLimitMotor(1)->m_enableMotor = value.y() != 0;
+	joint->_constraint->getRotationalLimitMotor(2)->m_enableMotor = value.z() != 0;
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Joint::motorlfSetter) { THIS_JOINT;
+	
+	REQ_VEC3_ARG(0, v);
+	
+	CACHE_CAS(_cacheMotorlf, v);
+	CHECK_CONSTRAINT;
+	
+	joint->_constraint->getTranslationalLimitMotor()->m_maxMotorForce = v;
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Joint::motorafSetter) { THIS_JOINT;
+	
+	REQ_VEC3_ARG(0, v);
+	
+	CACHE_CAS(_cacheMotoraf, v);
+	CHECK_CONSTRAINT;
+	
+	joint->_constraint->getRotationalLimitMotor(0)->m_maxMotorForce = value.x();
+	joint->_constraint->getRotationalLimitMotor(1)->m_maxMotorForce = value.y();
+	joint->_constraint->getRotationalLimitMotor(2)->m_maxMotorForce = value.z();
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Joint::motorlvSetter) { THIS_JOINT;
+	
+	REQ_VEC3_ARG(0, v);
+	
+	CACHE_CAS(_cacheMotorlv, v);
+	CHECK_CONSTRAINT;
+	
+	joint->_constraint->getTranslationalLimitMotor()->m_targetVelocity = v;
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Joint::motoravSetter) { THIS_JOINT;
+	
+	REQ_VEC3_ARG(0, v);
+	
+	CACHE_CAS(_cacheMotorav, v);
+	CHECK_CONSTRAINT;
+	
+	joint->_constraint->getRotationalLimitMotor(0)->m_targetVelocity = value.x();
+	joint->_constraint->getRotationalLimitMotor(1)->m_targetVelocity = value.y();
+	joint->_constraint->getRotationalLimitMotor(2)->m_targetVelocity = value.z();
+	
+	// EMIT
+	
+}
 
 
 

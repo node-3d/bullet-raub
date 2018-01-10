@@ -7,6 +7,7 @@
 #include <nan.h>
 
 #include <LinearMath/btVector3.h>
+#include <LinearMath/btQuaternion.h>
 
 #include "common.hpp"
 
@@ -98,7 +99,7 @@ private:
 	static v8::Persistent<v8::Function> _constructor;
 	
 	Scene *_scene;
-	vector<Joint*> _joints;
+	std::vector<Joint*> _joints;
 	
 	btCollisionShape *_cshape;
 	btRigidBody *_body;
