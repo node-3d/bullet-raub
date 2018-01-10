@@ -1,277 +1,527 @@
 #include <cstdlib>
-#include <vector>
 #include <iostream>
 
-#include "image.hpp"
+#include <BulletCollision/CollisionShapes/btBoxShape.h>
+#include <BulletCollision/CollisionShapes/btCapsuleShape.h>
+#include <BulletCollision/CollisionShapes/btCollisionShape.h>
+#include <BulletCollision/CollisionShapes/btConvexTriangleMeshShape.h>
+#include <BulletCollision/CollisionShapes/btCylinderShape.h>
+#include <BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
+#include <BulletCollision/CollisionShapes/btSphereShape.h>
+#include <BulletDynamics/Dynamics/btDynamicsWorld.h>
+#include <BulletDynamics/Dynamics/btRigidBody.h>
+#include <LinearMath/btDefaultMotionState.h>
+
+#include "scene.hpp"
+#include "body.hpp"
 
 using namespace v8;
 using namespace node;
 using namespace std;
 
+#define THIS_BODY                                                 \
+	Body *body = ObjectWrap::Unwrap<Body>(info.This());
 
-static vector<Image*> images;
-
-
-static void registerImage(Image *obj) {
-	images.push_back(obj);
-}
-
-
-static void unregisterImage(Image* obj) {
-	vector<Image*>::iterator it = images.begin();
-	while (it != images.end()) {
-		if (*it == obj) {
-			images.erase(it);
-			break;
-		}
-		it++;
+#define V3_GETTER(NAME, CACHE)                                    \
+	NAN_GETTER(Body::posGetter) { NAN_HS; THIS_BODY;              \
+		VEC3_TO_OBJ(body->CACHE, NAME);                           \
+		RET_VALUE(NAME);                                          \
 	}
-}
+
+#define CACHE_CAS(CACHE, V)                                       \
+	if (body->CACHE == V) {                                        \
+		return;                                                   \
+	}                                                             \
+	body->CACHE = V;
 
 
-Persistent<Function> Image::constructor_template;
 
 
-void Image::Initialize(Handle<Object> target) { NAN_HS;
+Persistent<Function> Body::_constructor;
+
+
+void Body::init(Handle<Object> target) { NAN_HS;
 	
-	// constructor
-	Local<FunctionTemplate> ctor = Nan::New<FunctionTemplate>(New);
+	Local<FunctionTemplate> ctor = Nan::New<FunctionTemplate>(newCtor);
 	ctor->InstanceTemplate()->SetInternalFieldCount(1);
-	ctor->SetClassName(JS_STR("Image"));
+	ctor->SetClassName(JS_STR("Body"));
 	
 	// prototype
-	Nan::SetPrototypeMethod(ctor, "save",save);// NODE_SET_PROTOTYPE_METHOD(ctor, "save", save);
 	Local<ObjectTemplate> proto = ctor->PrototypeTemplate();
+	ACCESSOR_RW(proto, type);
+	ACCESSOR_RW(proto, pos);
+	ACCESSOR_RW(proto, rot);
+	ACCESSOR_RW(proto, vell);
+	ACCESSOR_RW(proto, vela);
+	ACCESSOR_RW(proto, size);
+	ACCESSOR_RW(proto, map);
+	ACCESSOR_RW(proto, mesh);
+	ACCESSOR_RW(proto, mass);
+	ACCESSOR_RW(proto, rest);
+	ACCESSOR_RW(proto, dampl);
+	ACCESSOR_RW(proto, dampa);
+	ACCESSOR_RW(proto, factl);
+	ACCESSOR_RW(proto, facta);
+	ACCESSOR_RW(proto, frict);
+	ACCESSOR_RW(proto, sleepy);
 	
-	Nan::SetAccessor(proto,JS_STR("width"), WidthGetter);
-	Nan::SetAccessor(proto,JS_STR("height"), HeightGetter);
-	Nan::SetAccessor(proto,JS_STR("pitch"), PitchGetter);
-	Nan::SetAccessor(proto,JS_STR("src"), SrcGetter, SrcSetter);
-	Nan::Set(target, JS_STR("Image"), ctor->GetFunction());
+	Nan::Set(target, JS_STR("Body"), ctor->GetFunction());
 	
-	constructor_template.Reset(Isolate::GetCurrent(), ctor->GetFunction());
-	
-	FreeImage_Initialise(true);
-	
-}
-
-
-int Image::GetWidth() {
-	return FreeImage_GetWidth(image_bmp);
-}
-
-
-int Image::GetHeight () {
-	return FreeImage_GetHeight(image_bmp);
-}
-
-
-int Image::GetPitch() {
-	return FreeImage_GetPitch(image_bmp);
-}
-
-
-void *Image::GetData() {
-	
-	BYTE *pixels = FreeImage_GetBits(image_bmp);
-	
-	// FreeImage stores data in BGR
-	// Convert from BGR to RGB
-	int sz=FreeImage_GetWidth(image_bmp) * FreeImage_GetHeight(image_bmp);
-	for(int i = 0; i < sz; i++)
-	{
-		int i4 = i << 2;
-		BYTE temp = pixels[i4 + 0];
-		pixels[i4 + 0] = pixels[i4 + 2];
-		pixels[i4 + 2] = temp;
-	}
-	
-	return pixels;
+	_constructor.Reset(Isolate::GetCurrent(), ctor->GetFunction());
 	
 }
 
 
-void Image::Load(const char *filename) {
+NAN_METHOD(Body::newCtor) { NAN_HS;
 	
-	this->filename = (char *)filename;
+	REQ_OBJ_ARG(0, owner);
+	Scene *scene = ObjectWrap::Unwrap<Scene>(owner);
 	
-	FREE_IMAGE_FORMAT format = FreeImage_GetFileType(filename, 0);
-	FIBITMAP *tmp = FreeImage_Load(format, filename, 0);
-	image_bmp = FreeImage_ConvertTo32Bits(tmp);
-	FreeImage_Unload(tmp);
-	
-}
-
-
-NAN_METHOD(Image::New) { NAN_HS;
-	
-	Image *image = new Image();
-	image->Wrap(info.This());
-	registerImage(image);
+	Body *body = new Body(scene);
+	body->Wrap(info.This());
 	
 	RET_VALUE(info.This());
 	
 }
 
 
-NAN_GETTER(Image::WidthGetter) { NAN_HS;
+Body::Body(Scene *scene) {
 	
-	Image *image = ObjectWrap::Unwrap<Image>(info.This());
+	_scene = scene;
 	
-	RET_VALUE(JS_INT(image->GetWidth()));
+	_cshape = NULL;
+	_body = NULL;
 	
-}
-
-
-NAN_GETTER(Image::HeightGetter) { NAN_HS;
+	_cacheType = "box";
+	_cachePos = btVector3(0,0,0);
+	_cacheRot = btQuaternion(0,0,0,1);
+	_cacheSize = btVector3(1,1,1);
+	_cacheVell = btVector3(0,0,0);
+	_cacheVela = btVector3(0,0,0);
+	_cacheMass = 0;
+	_cacheRest = 0.0f;
+	_cacheDampl = 0.1f;
+	_cacheDampa = 0.1f;
+	_cacheFactl = btVector3(1,1,1);
+	_cacheFacta = btVector3(1,1,1);
+	_cacheFrict = 0.5f;
+	_cacheSleepy = true;
+	_cacheMap = NULL;
+	_cacheMesh = NULL;
 	
-	Image *image = ObjectWrap::Unwrap<Image>(info.This());
+	rebuild();
 	
-	RET_VALUE(JS_INT(image->GetHeight()));
-	
-}
-
-
-NAN_GETTER(Image::PitchGetter) { NAN_HS;
-	
-	Image *image = ObjectWrap::Unwrap<Image>(info.This());
-	
-	RET_VALUE(JS_INT(image->GetPitch()));
-	
-}
-
-
-NAN_GETTER(Image::SrcGetter) { NAN_HS;
-	
-	Image *image = ObjectWrap::Unwrap<Image>(info.This());
-	
-	RET_VALUE(JS_STR(image->filename));
+	_scene->refBody(this);
 	
 }
 
 
-NAN_SETTER(Image::SrcSetter) { NAN_HS;
+Body::~Body() {
 	
-	Nan::MaybeLocal<v8::Object> buffer;
-	
-	Image *image = ObjectWrap::Unwrap<Image>(info.This());
-	String::Utf8Value filename_s(value->ToString());
-	image->Load(*filename_s);
-	
-	// adjust internal fields
-	size_t num_pixels = FreeImage_GetWidth(image->image_bmp) * FreeImage_GetHeight(image->image_bmp);
-	BYTE *pixels = FreeImage_GetBits(image->image_bmp);
-	size_t num_bytes = num_pixels * 4;
-	
-	// FreeImage stores data in BGR
-	// Convert from BGR to RGB
-	for (size_t i = 0; i < num_pixels; i++) {
-		size_t i4 = i << 2;
-		BYTE temp = pixels[i4 + 0];
-		pixels[i4 + 0] = pixels[i4 + 2];
-		pixels[i4 + 2] = temp;
+	vector<Joint*>::iterator it = _joints.begin();
+	while (it != _joints.end()) {
+		(*it)->dropBody(this);
+		it++;
 	}
+	_joints.clear();
 	
-	buffer= Nan::NewBuffer((int)num_bytes);
+	_scene->unrefBody(this);
 	
-	std::memcpy(node::Buffer::Data(buffer.ToLocalChecked()), pixels, (int)num_bytes);
-	
-	Nan::Set(info.This(), JS_STR("data"), buffer.ToLocalChecked());
-	
-	// emit event
-	Nan::MaybeLocal<Value> emit_v = Nan::Get(info.This(), JS_STR("emit"));//info.This()->Get(Nan::New<String>("emit"));
-	assert(emit_v.ToLocalChecked()->IsFunction());
-	Local<Function> emit_f = emit_v.ToLocalChecked().As<Function>();
-	
-	Handle<Value> argv[2] = {
-		JS_STR("load"), // event name
-		value	// argument
-	};
-	
-	Nan::TryCatch tc;
-	
-	emit_f->Call(info.This(), 2, argv);
-	
-	if (tc.HasCaught()) {
-		Nan::FatalException(tc);
+	btMotionState *motion = _body->getMotionState();
+	if (motion) {
+		delete motion;
 	}
+	_scene->getWorld()->removeCollisionObject(_body);
+	
+	delete _body;
+	_body = NULL;
+	
+	delete _cshape;
+	_cshape = NULL;
 	
 }
 
 
-NAN_METHOD(Image::save) { NAN_HS;
-	
-	REQ_UTF8_ARG(0, filename)
-	
-	FREE_IMAGE_FORMAT format = FreeImage_GetFIFFromFilename(*filename);
-	
-	void *buffer = node::Buffer::Data(info[1]);
-	
-	REQ_UINT32_ARG(2, width);
-	REQ_UINT32_ARG(3, height);
-	
-	USE_UINT32_ARG(4, pitch, width * 4);
-	USE_UINT32_ARG(5, bpp, 32);
-	USE_UINT32_ARG(6, redMask, 0xFF000000);
-	USE_UINT32_ARG(7, greenMask, 0x00FF0000);
-	USE_UINT32_ARG(8, blueMask, 0x0000FF00);
-	
-	FIBITMAP *image = FreeImage_ConvertFromRawBits(
-		(BYTE*)buffer,
-		width, height,
-		pitch, bpp,
-		redMask, greenMask, blueMask
-	);
-	
-	if (format == FIF_JPEG && bpp != 24) {
-		FIBITMAP *old = image;
-		image = FreeImage_ConvertTo24Bits(image);
-		FreeImage_Unload(old);
-	}
-	
-	bool ret = FreeImage_Save(format, image, *filename) == 1;
-	FreeImage_Unload(image);
-	
-	RET_VALUE(Nan::New<Boolean>(ret));
-	
+void Body::refJoint(Joint *joint) {
+	_joints.push_back(joint);
 }
 
-
-Image::~Image() {
+void Body::unrefJoint(Joint* joint) {
 	
-	if (image_bmp) {
-		#ifdef LOGGING
-		cout<<"	Deleting image"<<endl;
-		#endif
-		FreeImage_Unload(image_bmp);
-	}
+	vector<Joint*>::iterator it = _joints.begin();
 	
-	unregisterImage(this);
-	
-}
-
-
-void Image::AtExit() {
-	
-	#ifdef LOGGING
-	cout<<"Image AtExit()"<<endl;
-	#endif
-	
-	vector<Image*>::iterator it = images.begin();
-	while (it != images.end()) {
-		Image *img = *it;
+	while (it != _joints.end()) {
 		
-		if (img->image_bmp) {
-			#ifdef LOGGING
-			cout<<"	Deleting image"<<endl;
-			#endif
-			FreeImage_Unload(img->image_bmp);
-			img->image_bmp = NULL;
+		if (*it == joint) {
+			_joints.erase(it);
+			break;
 		}
 		
 		it++;
+		
 	}
 	
-	FreeImage_DeInitialise();
+}
+
+
+void Body::__update()
+{
+	if (_body->isStaticObject() || ! _body->isActive()) {
+		return;
+	}
+	
+	btTransform  transform = _body->getCenterOfMassTransform();
+	_cachePos = transform.getOrigin();
+	_cacheRot = transform.getRotation();
+	_cacheVell = _body->getLinearVelocity();
+	_cacheVela = _body->getAngularVelocity();
+	
+	// EMIT
+	
+}
+
+
+NAN_GETTER(Body::typeGetter) { NAN_HS; THIS_BODY;
+	
+	RET_VALUE(JS_STR(body->_cacheType.c_str()));
+	
+}
+
+
+NAN_SETTER(Body::typeSetter) { NAN_HS; THIS_BODY;
+	
+	REQ_UTF8_ARG(0, str);
+	
+	CACHE_CAS(_cacheType, std::string(*str))
+	
+	body->_rebuild();
+	
+	// EMIT
+	
+}
+
+
+V3_GETTER(pos, _cachePos);
+V3_GETTER(vell, _cacheVell);
+V3_GETTER(vela, _cacheVela);
+V3_GETTER(size, _cacheSize);
+V3_GETTER(factl, _cacheFactl);
+V3_GETTER(facta, _cacheFacta);
+
+
+NAN_SETTER(Body::posSetter) { NAN_HS; THIS_BODY;
+	
+	REQ_VEC3_ARG(0, v);
+	
+	CACHE_CAS(_cachePos, v);
+	
+	_rebuild(); // FIXME: ???
+	
+	// EMIT
+	
+}
+
+
+NAN_GETTER(Body::rotGetter) { NAN_HS; THIS_BODY;
+	
+	btScalar w = body->_cacheRot.getW();
+	btScalar x = body->_cacheRot.getX();
+	btScalar y = body->_cacheRot.getY();
+	btScalar z = body->_cacheRot.getZ();
+	float wSquared = w * w;
+	float xSquared = x * x;
+	float ySquared = y * y;
+	float zSquared = z * z;
+	
+	btVector3 r;
+	r.setX(atan2f(2.0f * (y * z + x * w), -xSquared - ySquared + zSquared + wSquared));
+	r.setY(asinf(-2.0f * (x * z - y * w)));
+	r.setZ(atan2f(2.0f * (x * y + z * w), xSquared - ySquared - zSquared + wSquared));
+	r *= 57.29577f;
+	
+	VEC3_TO_OBJ(r, rot)
+	
+	RET_VALUE(pos);
+	
+}
+
+
+NAN_SETTER(Body::rotSetter) { NAN_HS; THIS_BODY;
+	
+	REQ_VEC3_ARG(0, v);
+	
+	btQuaternion q;
+	q.setEuler(v.getY() * 0.01745329, v.getX() * 0.01745329, v.getZ() * 0.01745329);
+	
+	CACHE_CAS(_cacheRot, q);
+	
+	btTransform transform = body->_body->getCenterOfMassTransform();
+	transform.setRotation(body->_cacheRot);
+	body->_body->setCenterOfMassTransform(transform);
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Body::vellSetter) { NAN_HS; THIS_BODY;
+	
+	REQ_VEC3_ARG(0, v);
+	
+	CACHE_CAS(_cacheVell, v);
+	
+	if (cacheSleepy) {
+		body->body->setActivationState(ACTIVE_TAG);
+	}
+	
+	body->body->setLinearVelocity(body->_cacheVell);
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Body::velaSetter) { NAN_HS; THIS_BODY;
+	
+	REQ_VEC3_ARG(0, v);
+	
+	CACHE_CAS(_cacheVela, v);
+	
+	if (cacheSleepy) {
+		body->body->setActivationState(ACTIVE_TAG);
+	}
+	
+	body->body->setAngularVelocity(body->_cacheVela);
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Body::sizeSetter) { NAN_HS; THIS_BODY;
+	
+	REQ_VEC3_ARG(0, v);
+	
+	CACHE_CAS(_cacheSize, v);
+	
+	body->_rebuild(); // ??
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Body::factlSetter) { NAN_HS; THIS_BODY;
+	
+	REQ_VEC3_ARG(0, v);
+	
+	CACHE_CAS(_cacheFactl, v);
+	
+	body->body->setLinearFactor(body->_cacheFactl);
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Body::factaSetter) { NAN_HS; THIS_BODY;
+	
+	REQ_VEC3_ARG(0, v);
+	
+	CACHE_CAS(_cacheFacta, v);
+	
+	body->body->setAngularFactor(body->_cacheFacta);
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Body::mapSetter) { NAN_HS; THIS_BODY;
+	
+	REQ_OBJ_ARG(0, v);
+	
+	// TODO
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Body::meshSetter) { NAN_HS; THIS_BODY;
+	
+	REQ_OBJ_ARG(0, v);
+	
+	// TODO
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Body::massSetter) { NAN_HS; THIS_BODY;
+	
+	REQ_FLOAT_ARG(0, v);
+	
+	CACHE_CAS(_cacheMass, v);
+	
+	body->_rebuild();
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Body::restSetter) { NAN_HS; THIS_BODY;
+	
+	REQ_FLOAT_ARG(0, v);
+	
+	CACHE_CAS(_cacheRest, v);
+	
+	body->_body->setRestitution();
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Body::damplSetter) { NAN_HS; THIS_BODY;
+	
+	REQ_FLOAT_ARG(0, v);
+	
+	CACHE_CAS(_cacheDampl, v);
+	
+	body->_body->setDamping(body->_cacheDampl, body->_cacheDampa);
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Body::dampaSetter) { NAN_HS; THIS_BODY;
+	
+	REQ_FLOAT_ARG(0, v);
+	
+	CACHE_CAS(_cacheDampa, v);
+	
+	body->_body->setDamping(body->_cacheDampl, body->_cacheDampa);
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Body::frictSetter) { NAN_HS; THIS_BODY;
+	
+	REQ_FLOAT_ARG(0, v);
+	
+	CACHE_CAS(_cacheFrict, v);
+	
+	body->_body->setDamping(body->_cacheFrict);
+	
+	// EMIT
+	
+}
+
+
+NAN_SETTER(Body::sleepySetter) { NAN_HS; THIS_BODY;
+	
+	REQ_BOOL_ARG(0, v);
+	
+	CACHE_CAS(_cacheSleepy, v);
+	
+	body->_body->setActivationState(body->_cacheSleepy ? ACTIVE_TAG : DISABLE_DEACTIVATION);
+	
+	// EMIT
+	
+}
+
+
+
+void Body::_rebuild() {
+	
+	btCollisionShape *oldShape = _cshape;
+	
+	if (_cacheType == "ball") {
+		_cshape = new btSphereShape(0.5f);
+	} else if (_cacheType == "roll") {
+		_cshape = new btCylinderShape(btVector3(0.5f, 0.5f, 0.5f));
+	} else if (_cacheType == "caps") {
+		_cshape = new btCapsuleShape(0.5f, 1);
+	} else if (_cacheType == "map" && _cacheMap) {
+		_cshape = new btHeightfieldTerrainShape(
+			_cacheMap->w(), _cacheMap->h(),
+			_cacheMap->data(),
+			1, 1,
+			true, false
+		);
+	} else /*if (type == "box")*/ {
+		_cshape = new btBoxShape(btVector3(0.5f, 0.5f, 0.5f));
+	}
+	
+	_cshape->setLocalScaling(_calcScale());
+	
+	btRigidBody *oldb = _body;
+	
+	bool isDynamic = (_cacheMass != 0.f);
+	
+	btVector3 localInertia(0,0,0);
+	if (isDynamic) {
+		_cshape->calculateLocalInertia(_cacheMass, localInertia);
+	}
+	
+	btDefaultMotionState* myMotionState = new btDefaultMotionState();
+	
+	btTransform transform;
+	myMotionState->getWorldTransform(transform);
+	transform.setOrigin(_cachePos);
+	transform.setRotation(_cacheRot);
+	myMotionState->setWorldTransform(transform);
+	
+	btRigidBody::btRigidBodyConstructionInfo rbInfo(_cacheMass, myMotionState, _cshape, localInertia);
+	
+	_body = new btRigidBody(rbInfo);
+	
+	// reapply cached setup
+	_body->setRestitution(_cacheRest);
+	_body->setDamping(_cacheDampl, _cacheDampa);
+	_body->setLinearFactor(_cacheFactl);
+	_body->setAngularFactor(_cacheFacta);
+	_body->setFriction(_cacheFrict);
+	_body->setActivationState(_cacheSleepy ? ACTIVE_TAG : DISABLE_DEACTIVATION);
+	
+	_body->setUserPointer(this);
+	
+	_scene->getWorld()->addRigidBody(_body);
+	
+	vector<Joint*>::iterator it = _joints.begin();
+	while (it != _joints.end()) {
+		(*it)->rebuild();
+	}
+	
+	if (oldb) {
+		_scene->getWorld()->removeRigidBody(oldb);
+	}
+	
+	delete oldb;
+	delete oldShape;
+	
+}
+
+
+const btVector3 &VecBody::calcScale() const {
+	
+	if (_cacheType != "map" || ! cacheMap) {
+		return cacheSizeBt;
+	}
+	
+	btVector3 sz;
+	sz.setValue(
+		cacheSizeBt.getX() / (cacheMap->w() - 1),
+		cacheSizeBt.getY(),
+		cacheSizeBt.getZ() / (cacheMap->h() - 1)
+	);
+	
+	return sz;
 	
 }

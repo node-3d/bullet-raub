@@ -1,14 +1,13 @@
 #include <cstdlib>
-#include <vector>
 #include <iostream>
 
-#include <BulletCollision/CollisionShapes/btStaticPlaneShape.h>
-#include <LinearMath/btAlignedObjectArray.h>
-#include <BulletDynamics/Dynamics/btDynamicsWorld.h>
 #include <btBulletDynamicsCommon.h>
-#include <BulletDynamics/ConstraintSolver/btSolverConstraint.h>
-#include <LinearMath/btAabbUtil2.h>
+#include <BulletCollision/CollisionShapes/btStaticPlaneShape.h>
 #include <BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
+#include <BulletDynamics/ConstraintSolver/btSolverConstraint.h>
+#include <BulletDynamics/Dynamics/btDynamicsWorld.h>
+#include <LinearMath/btAabbUtil2.h>
+#include <LinearMath/btAlignedObjectArray.h>
 
 #include "scene.hpp"
 
@@ -16,33 +15,16 @@ using namespace v8;
 using namespace node;
 using namespace std;
 
-
-static vector<Scene*> scenes;
-
-
-static void registerScene(Scene *obj) {
-	scenes.push_back(obj);
-}
+#define THIS_SCENE                                                 \
+	Scene *scene = ObjectWrap::Unwrap<Scene>(info.This());
 
 
-static void unregisterScene(Scene* obj) {
-	vector<Scene*>::iterator it = scenes.begin();
-	while (it != scenes.end()) {
-		if (*it == obj) {
-			scenes.erase(it);
-			break;
-		}
-		it++;
-	}
-}
+vector<Scene*> Scene::_scenes
+Persistent<Function> Scene::_constructor;
 
 
-Persistent<Function> Scene::constructor_template;
-
-
-void Scene::Initialize(Handle<Object> target) { NAN_HS;
+void Scene::init(Handle<Object> target) { NAN_HS;
 	
-	// constructor
 	Local<FunctionTemplate> ctor = Nan::New<FunctionTemplate>(newCtor);
 	ctor->InstanceTemplate()->SetInternalFieldCount(1);
 	ctor->SetClassName(JS_STR("Scene"));
@@ -51,30 +33,48 @@ void Scene::Initialize(Handle<Object> target) { NAN_HS;
 	Nan::SetPrototypeMethod(ctor, "update", update);
 	Nan::SetPrototypeMethod(ctor, "trace", trace);
 	Nan::SetPrototypeMethod(ctor, "hit", hit);
-	Local<ObjectTemplate> proto = ctor->PrototypeTemplate();
 	
-	Nan::SetAccessor(proto,JS_STR("src"), gravityGetter, gravitySetter);
+	Local<ObjectTemplate> proto = ctor->PrototypeTemplate();
+	ACCESSOR_RW(proto, gravity);
+	
 	Nan::Set(target, JS_STR("Image"), ctor->GetFunction());
 	
-	constructor_template.Reset(Isolate::GetCurrent(), ctor->GetFunction());
+	_constructor.Reset(Isolate::GetCurrent(), ctor->GetFunction());
+	
+}
+
+void Scene::deinit() {
+	
+	vector<Scene*>::iterator it = _scenes.begin();
+	
+	while (it != _scenes.end()) {
+		delete (*it);
+		it++;
+	}
+	
+	_scenes.clear();
 	
 }
 
 
-void Scene::AtExit() {
+void Scene::remember(Scene *scene) {
+	_scenes.push_back(scene);
+}
+
+void Scene::forget(Scene* scene) {
 	
-	vector<Scene*>::iterator it = scenes.begin();
+	vector<Scene*>::iterator it = _scenes.begin();
 	
-	while (it != scenes.end()) {
+	while (it != _scenes.end()) {
 		
-		Scene *scene = *it;
-		
-		delete scene;
+		if (*it == scene) {
+			_scenes.erase(it);
+			break;
+		}
 		
 		it++;
+		
 	}
-	
-	scenes.clear();
 	
 }
 
@@ -83,7 +83,6 @@ NAN_METHOD(Scene::newCtor) { NAN_HS;
 	
 	Scene *scene = new Scene();
 	scene->Wrap(info.This());
-	registerScene(scene);
 	
 	RET_VALUE(info.This());
 	
@@ -92,14 +91,19 @@ NAN_METHOD(Scene::newCtor) { NAN_HS;
 
 Scene::Scene() {
 	
-	physConfig = new btDefaultCollisionConfiguration();
-	physDispatcher = new btCollisionDispatcher(physConfig);
-	physBroadphase = new btDbvtBroadphase();
-	physSolver = new btSequentialImpulseConstraintSolver();
-	physWorld = new btDiscreteDynamicsWorld(physDispatcher, physBroadphase, physSolver, physConfig);
+	_clock = new btClock();
+	_clock->reset();
 	
-	cacheGrav.setValue(0, -10, 0);
-	physWorld->setGravity(cacheGrav);
+	_physConfig = new btDefaultCollisionConfiguration();
+	_physDispatcher = new btCollisionDispatcher(physConfig);
+	_physBroadphase = new btDbvtBroadphase();
+	_physSolver = new btSequentialImpulseConstraintSolver();
+	_physWorld = new btDiscreteDynamicsWorld(physDispatcher, physBroadphase, physSolver, physConfig);
+	
+	_cacheGrav.setValue(0, -10, 0);
+	_physWorld->setGravity(_cacheGrav);
+	
+	remember(this);
 	
 	// A SUDDEN STATIC PLANE
 	// btStaticPlaneShape *cshape = new btStaticPlaneShape(btVector3(0.0f, 1.0f, 0.0f), 0);
@@ -107,48 +111,82 @@ Scene::Scene() {
 	// btDefaultMotionState* myMotionState = new btDefaultMotionState();
 	// btRigidBody::btRigidBodyConstructionInfo rbInfo(0, myMotionState, cshape, localInertia);
 	// btRigidBody *body = new btRigidBody(rbInfo);
-	// physWorld->addRigidBody(body);
+	// _physWorld->addRigidBody(body);
 	
 }
 
 
 Scene::~Scene() {
 	
-	unregisterScene(this);
+	vector<Body*>::iterator it = _bodies.begin();
+	while (it != _bodies.end()) {
+		delete (*it);
+		it++;
+	}
+	_bodies.clear();
 	
-	delete physWorld;
-	physWorld = NULL;
+	forget(this);
 	
-	delete physSolver;
-	physSolver = NULL;
+	delete _physWorld;
+	_physWorld = NULL;
 	
-	delete physBroadphase;
-	physBroadphase = NULL;
+	delete _physSolver;
+	_physSolver = NULL;
 	
-	delete physDispatcher;
-	physDispatcher = NULL;
+	delete _physBroadphase;
+	_physBroadphase = NULL;
 	
-	delete physConfig;
-	physConfig = NULL;
+	delete _physDispatcher;
+	_physDispatcher = NULL;
+	
+	delete _physConfig;
+	_physConfig = NULL;
 	
 }
 
 
-void Scene::setGravity(const btVector3 &v) {
+void Scene::refBody(Body *body) {
+	_bodies.push_back(body);
+}
+
+void Scene::unrefBody(Body* body) {
 	
-	if(cacheGrav == v) {
-		return;
+	vector<Body*>::iterator it = _bodies.begin();
+	
+	while (it != _bodies.end()) {
+		
+		if (*it == body) {
+			_bodies.erase(it);
+			break;
+		}
+		
+		it++;
+		
 	}
-	
-	cacheGrav = v;
-	physWorld->setGravity(cacheGrav);
 	
 }
 
 
 void Scene::doUpdate(float dt) {
 	
-	physWorld->stepSimulation(dt * 0.5f, 10, 1.f / 120.f);
+	_physWorld->stepSimulation(dt * 0.5f, 10, 1.f / 120.f);
+	
+	vector<Body*>::iterator it = _bodies.begin();
+	while (it != _bodies.end()) {
+		(*it)->__update();
+		it++;
+	}
+	
+	
+}
+
+
+void Scene::doUpdate() {
+	
+	btScalar dt = static_cast<btScalar>(_clock->getTimeMicroseconds())* 0.000001f;
+	_clock->reset();
+	
+	doUpdate(dt);
 	
 }
 
@@ -156,7 +194,7 @@ void Scene::doUpdate(float dt) {
 Trace *Scene::doHit(const btVector3 &from, const btVector3 &to) {
 	
 	btCollisionWorld::ClosestRayResultCallback closestResults(from, to);
-	physWorld->rayTest(from, to, closestResults);
+	_physWorld->rayTest(from, to, closestResults);
 	
 	Trace *result;
 	if (closestResults.hasHit()) {
@@ -175,19 +213,23 @@ Trace *Scene::doHit(const btVector3 &from, const btVector3 &to) {
 }
 
 
-vector<Trace*> Scene::doTrace(const btVector3 &from, const btVector3 &to) {
+const vector<Trace*> &Scene::doTrace(const btVector3 &from, const btVector3 &to) {
 	
 	btCollisionWorld::AllHitsRayResultCallback allResults(from, to);
-	physWorld->rayTest(from, to, allResults);
+	_physWorld->rayTest(from, to, allResults);
 	
 	vector<Trace*> list;
+	
 	for (int i = 0; i < allResults.m_collisionObjects.size(); i++) {
+		
 		Body *b = reinterpret_cast<Body *>(allResults.m_collisionObjects[i]->getUserPointer());
+		
 		list.push(new Trace(
 			nullptr, true, b,
 			allResults.m_hitPointWorld[i],
 			allResults.m_hitNormalWorld[i]
 		));
+		
 	}
 	
 	return list;
@@ -196,142 +238,71 @@ vector<Trace*> Scene::doTrace(const btVector3 &from, const btVector3 &to) {
 
 
 
-NAN_GETTER(Scene::gravityGetter) { NAN_HS;
+NAN_GETTER(Scene::gravityGetter) { NAN_HS; THIS_SCENE;
 	
-	Scene *scene = ObjectWrap::Unwrap<Scene>(info.This());
+	VEC3_TO_OBJ(scene->_cacheGrav, gravity)
 	
-	const btVector3 &gravity = scene->getGravity();
-	
-	Local<Array> arr = Nan::New<Array>(3);
-	SET_PROP(arr, 0, JS_NUM(gravity.getX()));
-	SET_PROP(arr, 1, JS_NUM(gravity.getY()));
-	SET_PROP(arr, 2, JS_NUM(gravity.getZ()));
-	
-	RET_VALUE(arr);
+	RET_VALUE(gravity);
 	
 }
 
 
-NAN_SETTER(Image::gravitySetter) { NAN_HS;
+NAN_SETTER(Scene::gravitySetter) { NAN_HS; THIS_SCENE;
 	
-	Nan::MaybeLocal<v8::Object> buffer;
+	REQ_VEC3_ARG(0, v);
 	
-	Image *image = ObjectWrap::Unwrap<Image>(info.This());
-	String::Utf8Value filename_s(value->ToString());
-	image->Load(*filename_s);
+	scene->_cacheGrav = v;
+	scene->_physWorld->setGravity(scene->_cacheGrav);
 	
-	// adjust internal fields
-	size_t num_pixels = FreeImage_GetWidth(image->image_bmp) * FreeImage_GetHeight(image->image_bmp);
-	BYTE *pixels = FreeImage_GetBits(image->image_bmp);
-	size_t num_bytes = num_pixels * 4;
+	// EMIT?
 	
-	// FreeImage stores data in BGR
-	// Convert from BGR to RGB
-	for (size_t i = 0; i < num_pixels; i++) {
-		size_t i4 = i << 2;
-		BYTE temp = pixels[i4 + 0];
-		pixels[i4 + 0] = pixels[i4 + 2];
-		pixels[i4 + 2] = temp;
-	}
+}
+
+
+NAN_METHOD(Scene::update) { NAN_HS; THIS_SCENE;
 	
-	buffer= Nan::NewBuffer((int)num_bytes);
+	LET_FLOAT_ARG(0, dt);
 	
-	std::memcpy(node::Buffer::Data(buffer.ToLocalChecked()), pixels, (int)num_bytes);
-	
-	Nan::Set(info.This(), JS_STR("data"), buffer.ToLocalChecked());
-	
-	// emit event
-	Nan::MaybeLocal<Value> emit_v = Nan::Get(info.This(), JS_STR("emit"));//info.This()->Get(Nan::New<String>("emit"));
-	assert(emit_v.ToLocalChecked()->IsFunction());
-	Local<Function> emit_f = emit_v.ToLocalChecked().As<Function>();
-	
-	Handle<Value> argv[2] = {
-		JS_STR("load"), // event name
-		value	// argument
-	};
-	
-	Nan::TryCatch tc;
-	
-	emit_f->Call(info.This(), 2, argv);
-	
-	if (tc.HasCaught()) {
-		Nan::FatalException(tc);
+	if (dt > 0.f) {
+		scene->doUpdate(dt);
+	} else {
+		scene->doUpdate();
 	}
 	
 }
 
 
-NAN_METHOD(Scene::doUpdate) { NAN_HS;
+NAN_METHOD(Scene::hit) { NAN_HS; THIS_SCENE;
 	
-	REQ_UTF8_ARG(0, filename)
+	REQ_VEC3_ARG(0, f);
+	REQ_VEC3_ARG(1, t);
 	
-	FREE_IMAGE_FORMAT format = FreeImage_GetFIFFromFilename(*filename);
+	Trace *traceResult = scene->doHit(f, t);
 	
-	void *buffer = node::Buffer::Data(info[1]);
+	Local<Object> result = Nan::New<Object>();
+	traceResult->Wrap(result);
 	
-	REQ_UINT32_ARG(2, width);
-	REQ_UINT32_ARG(3, height);
-	
-	USE_UINT32_ARG(4, pitch, width * 4);
-	USE_UINT32_ARG(5, bpp, 32);
-	USE_UINT32_ARG(6, redMask, 0xFF000000);
-	USE_UINT32_ARG(7, greenMask, 0x00FF0000);
-	USE_UINT32_ARG(8, blueMask, 0x0000FF00);
-	
-	FIBITMAP *image = FreeImage_ConvertFromRawBits(
-		(BYTE*)buffer,
-		width, height,
-		pitch, bpp,
-		redMask, greenMask, blueMask
-	);
-	
-	if (format == FIF_JPEG && bpp != 24) {
-		FIBITMAP *old = image;
-		image = FreeImage_ConvertTo24Bits(image);
-		FreeImage_Unload(old);
-	}
-	
-	bool ret = FreeImage_Save(format, image, *filename) == 1;
-	FreeImage_Unload(image);
-	
-	RET_VALUE(Nan::New<Boolean>(ret));
+	RET_VALUE(result);
 	
 }
 
-NAN_METHOD(Scene::doUpdate) { NAN_HS;
+
+NAN_METHOD(Scene::trace) { NAN_HS; THIS_SCENE;
 	
-	REQ_UTF8_ARG(0, filename)
+	REQ_VEC3_ARG(0, f);
+	REQ_VEC3_ARG(1, t);
 	
-	FREE_IMAGE_FORMAT format = FreeImage_GetFIFFromFilename(*filename);
+	const vector<Trace*> &traceList = scene->doTrace(f, t);
+	int size = traceList.size();
 	
-	void *buffer = node::Buffer::Data(info[1]);
+	Local<Array> result = Nan::New<Array>(size);
 	
-	REQ_UINT32_ARG(2, width);
-	REQ_UINT32_ARG(3, height);
-	
-	USE_UINT32_ARG(4, pitch, width * 4);
-	USE_UINT32_ARG(5, bpp, 32);
-	USE_UINT32_ARG(6, redMask, 0xFF000000);
-	USE_UINT32_ARG(7, greenMask, 0x00FF0000);
-	USE_UINT32_ARG(8, blueMask, 0x0000FF00);
-	
-	FIBITMAP *image = FreeImage_ConvertFromRawBits(
-		(BYTE*)buffer,
-		width, height,
-		pitch, bpp,
-		redMask, greenMask, blueMask
-	);
-	
-	if (format == FIF_JPEG && bpp != 24) {
-		FIBITMAP *old = image;
-		image = FreeImage_ConvertTo24Bits(image);
-		FreeImage_Unload(old);
+	for (int i = 0; i < size; i++) {
+		Local<Object> wrapped = Nan::New<Object>();
+		traceList[i]->Wrap(wrapped);
+		SET_PROP(result, i, wrapped);
 	}
 	
-	bool ret = FreeImage_Save(format, image, *filename) == 1;
-	FreeImage_Unload(image);
-	
-	RET_VALUE(Nan::New<Boolean>(ret));
+	RET_VALUE(result);
 	
 }
-

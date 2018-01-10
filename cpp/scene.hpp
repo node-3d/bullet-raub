@@ -2,6 +2,8 @@
 #define _SCENE_HPP_
 
 
+#include <vector>
+
 #include <nan.h>
 
 #include <LinearMath/btVector3.h>
@@ -10,33 +12,36 @@
 
 
 class btBroadphaseInterface;
-class btCollisionShape;
-class btOverlappingPairCache;
 class btCollisionDispatcher;
+class btCollisionShape;
 class btConstraintSolver;
-struct btCollisionAlgorithmCreateFunc;
 class btDefaultCollisionConfiguration;
 class btDynamicsWorld;
+class btOverlappingPairCache;
 
-class Trace;
 class Body;
+class Trace;
 
 
-class Scene : public node::ObjectWrap {
+class Scene : public Nan::ObjectWrap {
 	
 public:
 	
-	static void Initialize (v8::Handle<v8::Object> target);
-	static void AtExit();
+	static void init(v8::Handle<v8::Object> target);
+	static void deinit();
 	
-	btDynamicsWorld *getWorld() { return physWorld; }
+	static void remember(Scene *scene);
+	static void forget(Scene* scene);
 	
-	const btVector3 &getGravity() { return cacheGrav; }
-	void setGravity(const btVector3 &v);
+	void refBody(Body *body);
+	void unrefBody(Body *body);
+	
+	btDynamicsWorld *getWorld() { return _physWorld; }
 	
 	void doUpdate(float dt);
+	void doUpdate();
 	Trace *doHit(const btVector3 &from, const btVector3 &to);
-	vector<Trace*> doTrace(const btVector3 &from, const btVector3 &to);
+	const vector<Trace*> &doTrace(const btVector3 &from, const btVector3 &to);
 	
 	
 protected:
@@ -50,21 +55,25 @@ protected:
 	static NAN_SETTER(gravitySetter);
 	
 	static NAN_METHOD(update);
-	static NAN_METHOD(trace);
 	static NAN_METHOD(hit);
+	static NAN_METHOD(trace);
 	
 	
 private:
 	
-	static v8::Persistent<v8::Function> constructor_template;
+	static vector<Scene*> _scenes;
+	static v8::Persistent<v8::Function> _constructor;
 	
-	btDefaultCollisionConfiguration *physConfig;
-	btCollisionDispatcher *physDispatcher;
-	btBroadphaseInterface *physBroadphase;
-	btConstraintSolver *physSolver;
-	btDynamicsWorld *physWorld;
+	btClock *_clock;
+	vector<Body*> _bodies;
 	
-	btVector3 cacheGrav;
+	btDefaultCollisionConfiguration *_physConfig;
+	btCollisionDispatcher *_physDispatcher;
+	btBroadphaseInterface *_physBroadphase;
+	btConstraintSolver *_physSolver;
+	btDynamicsWorld *_physWorld;
+	
+	btVector3 _cacheGrav;
 	
 };
 
