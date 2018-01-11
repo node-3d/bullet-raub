@@ -99,7 +99,9 @@ NAN_METHOD(Trace::newCtor) {
 		REQ_VEC3_ARG(2, pos);
 		REQ_VEC3_ARG(3, norm);
 		
-		traceResult = new Trace(hit, reinterpret_cast<Body*>(External::Unwrap(body)), pos, norm);
+		void *external = body->Value();
+		
+		traceResult = new Trace(hit, reinterpret_cast<Body*>(external), pos, norm);
 		
 	}
 	
