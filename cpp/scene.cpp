@@ -10,6 +10,7 @@
 #include <LinearMath/btAlignedObjectArray.h>
 
 #include "body.hpp"
+#include "trace.hpp"
 #include "scene.hpp"
 
 using namespace v8;
@@ -20,7 +21,7 @@ using namespace std;
 	Scene *scene = ObjectWrap::Unwrap<Scene>(info.This());
 
 #define V3_GETTER(NAME, CACHE)                                     \
-	NAN_GETTER(Scene::NAME ## Getter) { NAN_HS; THIS_SCENE;        \
+	NAN_GETTER(Scene::NAME ## Getter) { THIS_SCENE;        \
 		VEC3_TO_OBJ(scene->CACHE, NAME);                           \
 		RET_VALUE(NAME);                                           \
 	}
@@ -32,11 +33,11 @@ using namespace std;
 	scene->CACHE = V;
 
 
-vector<Scene*> Scene::_scenes
+vector<Scene*> Scene::_scenes;
 Persistent<Function> Scene::_constructor;
 
 
-void Scene::init(Handle<Object> target) { NAN_HS;
+void Scene::init(Handle<Object> target) {
 	
 	Local<FunctionTemplate> ctor = Nan::New<FunctionTemplate>(newCtor);
 	ctor->InstanceTemplate()->SetInternalFieldCount(1);
@@ -92,7 +93,7 @@ void Scene::forget(Scene* scene) {
 }
 
 
-NAN_METHOD(Scene::newCtor) { NAN_HS;
+NAN_METHOD(Scene::newCtor) {
 	
 	Scene *scene = new Scene();
 	scene->Wrap(info.This());
@@ -108,10 +109,10 @@ Scene::Scene() {
 	_clock->reset();
 	
 	_physConfig = new btDefaultCollisionConfiguration();
-	_physDispatcher = new btCollisionDispatcher(physConfig);
+	_physDispatcher = new btCollisionDispatcher(_physConfig);
 	_physBroadphase = new btDbvtBroadphase();
 	_physSolver = new btSequentialImpulseConstraintSolver();
-	_physWorld = new btDiscreteDynamicsWorld(physDispatcher, physBroadphase, physSolver, physConfig);
+	_physWorld = new btDiscreteDynamicsWorld(_physDispatcher, _physBroadphase, _physSolver, _physConfig);
 	
 	_cacheGrav.setValue(0, -10, 0);
 	_physWorld->setGravity(_cacheGrav);
@@ -204,41 +205,19 @@ void Scene::doUpdate() {
 }
 
 
-Trace *Scene::doHit(const btVector3 &from, const btVector3 &to) {
-	
-	btCollisionWorld::ClosestRayResultCallback closestResults(from, to);
-	_physWorld->rayTest(from, to, closestResults);
-	
-	Trace *result;
-	if (closestResults.hasHit()) {
-		Body *b = reinterpret_cast<Body *>(closestResults.m_collisionObject->getUserPointer());
-		result = new Trace(
-			NULL, true, b,
-			from.lerp(to, closestResults.m_closestHitFraction),
-			closestResults.m_hitNormalWorld
-		);
-	} else {
-		result = new Trace(NULL, false, NULL, btVector3(0, 0, 0), btVector3(0, 1, 0));
-	}
-	
-	return result;
-	
-}
-
-
-const vector<Trace*> &Scene::doTrace(const btVector3 &from, const btVector3 &to) {
+const vector< Local<Value> > &Scene::doTrace(const btVector3 &from, const btVector3 &to) {
 	
 	btCollisionWorld::AllHitsRayResultCallback allResults(from, to);
 	_physWorld->rayTest(from, to, allResults);
 	
-	vector<Trace*> list;
+	vector< Local<Value> > list;
 	
 	for (int i = 0; i < allResults.m_collisionObjects.size(); i++) {
 		
 		Body *b = reinterpret_cast<Body *>(allResults.m_collisionObjects[i]->getUserPointer());
 		
-		list.push(new Trace(
-			nullptr, true, b,
+		list.push_back(Trace::instance(
+			true, b,
 			allResults.m_hitPointWorld[i],
 			allResults.m_hitNormalWorld[i]
 		));
@@ -252,9 +231,7 @@ const vector<Trace*> &Scene::doTrace(const btVector3 &from, const btVector3 &to)
 
 V3_GETTER(gravity, _cacheGrav);
 
-NAN_SETTER(Scene::gravitySetter) { THIS_SCENE;
-	
-	REQ_VEC3_ARG(0, v);
+NAN_SETTER(Scene::gravitySetter) { THIS_SCENE; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheGrav, v);
 	
@@ -265,7 +242,7 @@ NAN_SETTER(Scene::gravitySetter) { THIS_SCENE;
 }
 
 
-NAN_METHOD(Scene::update) { NAN_HS; THIS_SCENE;
+NAN_METHOD(Scene::update) { THIS_SCENE;
 	
 	LET_FLOAT_ARG(0, dt);
 	
@@ -278,35 +255,28 @@ NAN_METHOD(Scene::update) { NAN_HS; THIS_SCENE;
 }
 
 
-NAN_METHOD(Scene::hit) { NAN_HS; THIS_SCENE;
+NAN_METHOD(Scene::hit) { THIS_SCENE;
 	
 	REQ_VEC3_ARG(0, f);
 	REQ_VEC3_ARG(1, t);
 	
-	Trace *traceResult = scene->doHit(f, t);
-	
-	Local<Object> result = Nan::New<Object>();
-	traceResult->Wrap(result);
-	
-	RET_VALUE(result);
+	RET_VALUE(Trace::instance(scene, f, t));
 	
 }
 
 
-NAN_METHOD(Scene::trace) { NAN_HS; THIS_SCENE;
+NAN_METHOD(Scene::trace) { THIS_SCENE;
 	
 	REQ_VEC3_ARG(0, f);
 	REQ_VEC3_ARG(1, t);
 	
-	const vector<Trace*> &traceList = scene->doTrace(f, t);
+	const vector< Local<Value> > &traceList = scene->doTrace(f, t);
 	int size = traceList.size();
 	
 	Local<Array> result = Nan::New<Array>(size);
 	
 	for (int i = 0; i < size; i++) {
-		Local<Object> wrapped = Nan::New<Object>();
-		traceList[i]->Wrap(wrapped);
-		SET_PROP(result, i, wrapped);
+		SET_PROP(result, i, traceList[i]);
 	}
 	
 	RET_VALUE(result);

@@ -24,13 +24,13 @@ using namespace std;
 	Body *body = ObjectWrap::Unwrap<Body>(info.This());
 
 #define V3_GETTER(NAME, CACHE)                                    \
-	NAN_GETTER(Body::posGetter) { NAN_HS; THIS_BODY;              \
+	NAN_GETTER(Body::NAME ## Getter) { THIS_BODY;                 \
 		VEC3_TO_OBJ(body->CACHE, NAME);                           \
 		RET_VALUE(NAME);                                          \
 	}
 
 #define CACHE_CAS(CACHE, V)                                       \
-	if (body->CACHE == V) {                                        \
+	if (body->CACHE == V) {                                       \
 		return;                                                   \
 	}                                                             \
 	body->CACHE = V;
@@ -41,7 +41,7 @@ using namespace std;
 Persistent<Function> Body::_constructor;
 
 
-void Body::init(Handle<Object> target) { NAN_HS;
+void Body::init(Handle<Object> target) {
 	
 	Local<FunctionTemplate> ctor = Nan::New<FunctionTemplate>(newCtor);
 	ctor->InstanceTemplate()->SetInternalFieldCount(1);
@@ -73,7 +73,7 @@ void Body::init(Handle<Object> target) { NAN_HS;
 }
 
 
-NAN_METHOD(Body::newCtor) { NAN_HS;
+NAN_METHOD(Body::newCtor) {
 	
 	REQ_OBJ_ARG(0, owner);
 	Scene *scene = ObjectWrap::Unwrap<Scene>(owner);
@@ -165,6 +165,11 @@ void Body::unrefJoint(Joint* joint) {
 }
 
 
+btDynamicsWorld *Body::getWorld() {
+	return _scene->getWorld();
+}
+
+
 void Body::__update()
 {
 	if (_body->isStaticObject() || ! _body->isActive()) {
@@ -182,18 +187,16 @@ void Body::__update()
 }
 
 
-NAN_GETTER(Body::typeGetter) { NAN_HS; THIS_BODY;
+NAN_GETTER(Body::typeGetter) { THIS_BODY;
 	
 	RET_VALUE(JS_STR(body->_cacheType.c_str()));
 	
 }
 
 
-NAN_SETTER(Body::typeSetter) { THIS_BODY;
+NAN_SETTER(Body::typeSetter) { THIS_BODY; SETTER_UTF8_ARG;
 	
-	REQ_UTF8_ARG(0, str);
-	
-	CACHE_CAS(_cacheType, std::string(*str))
+	CACHE_CAS(_cacheType, std::string(*v))
 	
 	body->_rebuild();
 	
@@ -210,20 +213,18 @@ V3_GETTER(factl, _cacheFactl);
 V3_GETTER(facta, _cacheFacta);
 
 
-NAN_SETTER(Body::posSetter) { THIS_BODY;
-	
-	REQ_VEC3_ARG(0, v);
+NAN_SETTER(Body::posSetter) { THIS_BODY; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cachePos, v);
 	
-	_rebuild(); // FIXME: ???
+	body->_rebuild(); // FIXME: ???
 	
 	// EMIT
 	
 }
 
 
-NAN_GETTER(Body::rotGetter) { NAN_HS; THIS_BODY;
+NAN_GETTER(Body::rotGetter) { THIS_BODY;
 	
 	btScalar w = body->_cacheRot.getW();
 	btScalar x = body->_cacheRot.getX();
@@ -242,17 +243,15 @@ NAN_GETTER(Body::rotGetter) { NAN_HS; THIS_BODY;
 	
 	VEC3_TO_OBJ(r, rot)
 	
-	RET_VALUE(pos);
+	RET_VALUE(rot);
 	
 }
 
 
-NAN_SETTER(Body::rotSetter) { THIS_BODY;
-	
-	REQ_VEC3_ARG(0, v);
+NAN_SETTER(Body::rotSetter) { THIS_BODY; SETTER_VEC3_ARG;
 	
 	btQuaternion q;
-	q.setEuler(v.getY() * 0.01745329, v.getX() * 0.01745329, v.getZ() * 0.01745329);
+	q.setEuler(v.getY() * 0.01745329f, v.getX() * 0.01745329f, v.getZ() * 0.01745329f);
 	
 	CACHE_CAS(_cacheRot, q);
 	
@@ -265,43 +264,37 @@ NAN_SETTER(Body::rotSetter) { THIS_BODY;
 }
 
 
-NAN_SETTER(Body::vellSetter) { THIS_BODY;
-	
-	REQ_VEC3_ARG(0, v);
+NAN_SETTER(Body::vellSetter) { THIS_BODY; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheVell, v);
 	
-	if (cacheSleepy) {
-		body->body->setActivationState(ACTIVE_TAG);
+	if (body->_cacheSleepy) {
+		body->_body->setActivationState(ACTIVE_TAG);
 	}
 	
-	body->body->setLinearVelocity(body->_cacheVell);
+	body->_body->setLinearVelocity(body->_cacheVell);
 	
 	// EMIT
 	
 }
 
 
-NAN_SETTER(Body::velaSetter) { THIS_BODY;
-	
-	REQ_VEC3_ARG(0, v);
+NAN_SETTER(Body::velaSetter) { THIS_BODY; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheVela, v);
 	
-	if (cacheSleepy) {
-		body->body->setActivationState(ACTIVE_TAG);
+	if (body->_cacheSleepy) {
+		body->_body->setActivationState(ACTIVE_TAG);
 	}
 	
-	body->body->setAngularVelocity(body->_cacheVela);
+	body->_body->setAngularVelocity(body->_cacheVela);
 	
 	// EMIT
 	
 }
 
 
-NAN_SETTER(Body::sizeSetter) { THIS_BODY;
-	
-	REQ_VEC3_ARG(0, v);
+NAN_SETTER(Body::sizeSetter) { THIS_BODY; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheSize, v);
 	
@@ -312,35 +305,29 @@ NAN_SETTER(Body::sizeSetter) { THIS_BODY;
 }
 
 
-NAN_SETTER(Body::factlSetter) { THIS_BODY;
-	
-	REQ_VEC3_ARG(0, v);
+NAN_SETTER(Body::factlSetter) { THIS_BODY; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheFactl, v);
 	
-	body->body->setLinearFactor(body->_cacheFactl);
+	body->_body->setLinearFactor(body->_cacheFactl);
 	
 	// EMIT
 	
 }
 
 
-NAN_SETTER(Body::factaSetter) { THIS_BODY;
-	
-	REQ_VEC3_ARG(0, v);
+NAN_SETTER(Body::factaSetter) { THIS_BODY; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheFacta, v);
 	
-	body->body->setAngularFactor(body->_cacheFacta);
+	body->_body->setAngularFactor(body->_cacheFacta);
 	
 	// EMIT
 	
 }
 
 
-NAN_SETTER(Body::mapSetter) { THIS_BODY;
-	
-	REQ_OBJ_ARG(0, v);
+NAN_SETTER(Body::mapSetter) { THIS_BODY; SETTER_OBJ_ARG;
 	
 	// TODO
 	
@@ -349,9 +336,7 @@ NAN_SETTER(Body::mapSetter) { THIS_BODY;
 }
 
 
-NAN_SETTER(Body::meshSetter) { THIS_BODY;
-	
-	REQ_OBJ_ARG(0, v);
+NAN_SETTER(Body::meshSetter) { THIS_BODY; SETTER_OBJ_ARG;
 	
 	// TODO
 	
@@ -360,9 +345,7 @@ NAN_SETTER(Body::meshSetter) { THIS_BODY;
 }
 
 
-NAN_SETTER(Body::massSetter) { THIS_BODY;
-	
-	REQ_FLOAT_ARG(0, v);
+NAN_SETTER(Body::massSetter) { THIS_BODY; SETTER_FLOAT_ARG;
 	
 	CACHE_CAS(_cacheMass, v);
 	
@@ -373,22 +356,18 @@ NAN_SETTER(Body::massSetter) { THIS_BODY;
 }
 
 
-NAN_SETTER(Body::restSetter) { THIS_BODY;
-	
-	REQ_FLOAT_ARG(0, v);
+NAN_SETTER(Body::restSetter) { THIS_BODY; SETTER_FLOAT_ARG;
 	
 	CACHE_CAS(_cacheRest, v);
 	
-	body->_body->setRestitution();
+	body->_body->setRestitution(body->_cacheRest);
 	
 	// EMIT
 	
 }
 
 
-NAN_SETTER(Body::damplSetter) { THIS_BODY;
-	
-	REQ_FLOAT_ARG(0, v);
+NAN_SETTER(Body::damplSetter) { THIS_BODY; SETTER_FLOAT_ARG;
 	
 	CACHE_CAS(_cacheDampl, v);
 	
@@ -399,9 +378,7 @@ NAN_SETTER(Body::damplSetter) { THIS_BODY;
 }
 
 
-NAN_SETTER(Body::dampaSetter) { THIS_BODY;
-	
-	REQ_FLOAT_ARG(0, v);
+NAN_SETTER(Body::dampaSetter) { THIS_BODY; SETTER_FLOAT_ARG;
 	
 	CACHE_CAS(_cacheDampa, v);
 	
@@ -412,22 +389,18 @@ NAN_SETTER(Body::dampaSetter) { THIS_BODY;
 }
 
 
-NAN_SETTER(Body::frictSetter) { THIS_BODY;
-	
-	REQ_FLOAT_ARG(0, v);
+NAN_SETTER(Body::frictSetter) { THIS_BODY; SETTER_FLOAT_ARG;
 	
 	CACHE_CAS(_cacheFrict, v);
 	
-	body->_body->setDamping(body->_cacheFrict);
+	body->_body->setFriction(body->_cacheFrict);
 	
 	// EMIT
 	
 }
 
 
-NAN_SETTER(Body::sleepySetter) { THIS_BODY;
-	
-	REQ_BOOL_ARG(0, v);
+NAN_SETTER(Body::sleepySetter) { THIS_BODY; SETTER_BOOL_ARG;
 	
 	CACHE_CAS(_cacheSleepy, v);
 	
@@ -449,14 +422,14 @@ void Body::_rebuild() {
 		_cshape = new btCylinderShape(btVector3(0.5f, 0.5f, 0.5f));
 	} else if (_cacheType == "caps") {
 		_cshape = new btCapsuleShape(0.5f, 1);
-	} else if (_cacheType == "map" && _cacheMap) {
+	} /*else if (_cacheType == "map" && _cacheMap) {
 		_cshape = new btHeightfieldTerrainShape(
 			_cacheMap->w(), _cacheMap->h(),
 			_cacheMap->data(),
 			1, 1,
 			true, false
 		);
-	} else /*if (type == "box")*/ {
+	} */else /*if (type == "box")*/ {
 		_cshape = new btBoxShape(btVector3(0.5f, 0.5f, 0.5f));
 	}
 	
@@ -497,7 +470,7 @@ void Body::_rebuild() {
 	
 	vector<Joint*>::iterator it = _joints.begin();
 	while (it != _joints.end()) {
-		(*it)->rebuild();
+		(*it)->_rebuild();
 	}
 	
 	if (oldb) {
@@ -510,18 +483,18 @@ void Body::_rebuild() {
 }
 
 
-const btVector3 &VecBody::calcScale() const {
+const btVector3 &Body::_calcScale() const {
 	
-	if (_cacheType != "map" || ! cacheMap) {
-		return cacheSizeBt;
+	if (_cacheType != "map" || ! _cacheMap) {
+		return _cacheSize;
 	}
 	
 	btVector3 sz;
-	sz.setValue(
-		cacheSizeBt.getX() / (cacheMap->w() - 1),
-		cacheSizeBt.getY(),
-		cacheSizeBt.getZ() / (cacheMap->h() - 1)
-	);
+	// sz.setValue( TODO
+	// 	_cacheSize.getX() / (_cacheMap->w() - 1),
+	// 	_cacheSize.getY(),
+	// 	_cacheSize.getZ() / (_cacheMap->h() - 1)
+	// );
 	
 	return sz;
 	

@@ -2,6 +2,9 @@
 #include <iostream>
 #include <vector>
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 #include <BulletDynamics/Dynamics/btRigidBody.h>
 #include <BulletDynamics/ConstraintSolver/btTypedConstraint.h>
 #include <BulletDynamics/Dynamics/btDynamicsWorld.h>
@@ -21,7 +24,7 @@ using namespace std;
 	Joint *joint = ObjectWrap::Unwrap<Joint>(info.This());
 
 #define V3_GETTER(NAME, CACHE)                                     \
-	NAN_GETTER(Joint::NAME ## Getter) { NAN_HS; THIS_JOINT;        \
+	NAN_GETTER(Joint::NAME ## Getter) { THIS_JOINT;                \
 		VEC3_TO_OBJ(joint->CACHE, NAME);                           \
 		RET_VALUE(NAME);                                           \
 	}
@@ -43,7 +46,7 @@ using namespace std;
 Persistent<Function> Joint::_constructor;
 
 
-void Joint::init(Handle<Object> target) { NAN_HS;
+void Joint::init(Handle<Object> target) {
 	
 	Local<FunctionTemplate> ctor = Nan::New<FunctionTemplate>(newCtor);
 	ctor->InstanceTemplate()->SetInternalFieldCount(1);
@@ -83,7 +86,7 @@ void Joint::init(Handle<Object> target) { NAN_HS;
 }
 
 
-NAN_METHOD(Joint::newCtor) { NAN_HS;
+NAN_METHOD(Joint::newCtor) {
 	
 	Joint *joint = new Joint();
 	joint->Wrap(info.This());
@@ -171,63 +174,59 @@ V3_GETTER(motorav, _cacheMotorav);
 
 
 
-NAN_SETTER(Joint::entaSetter) { THIS_JOINT;
+NAN_SETTER(Joint::entaSetter) { THIS_JOINT; SETTER_OBJ_ARG;
 	
-	REQ_OBJ_ARG(0, a);
-	Body *body = ObjectWrap::Unwrap<Body>(a);
+	Body *body = ObjectWrap::Unwrap<Body>(v);
 	
-	if (_cacheEnta == body) {
+	if (joint->_cacheEnta == body) {
 		return;
 	}
 	
-	if (_cacheEnta) {
-		_cacheEnta->unrefJoint(this);
-		_removeConstraint(_cacheEnta->getWorld());
+	if (joint->_cacheEnta) {
+		joint->_cacheEnta->unrefJoint(joint);
+		joint->_removeConstraint(joint->_cacheEnta->getWorld());
 	}
 	
-	_cacheEnta = body;
+	joint->_cacheEnta = body;
 	
-	if (_cacheEnta) {
-		_cacheEnta->refJoint(this);
+	if (joint->_cacheEnta) {
+		joint->_cacheEnta->refJoint(joint);
 	}
 	
-	rebuild();
+	joint->_rebuild();
 	
 	// EMIT
 	
 }
 
 
-NAN_SETTER(Joint::entbSetter) { THIS_JOINT;
+NAN_SETTER(Joint::entbSetter) { THIS_JOINT; SETTER_OBJ_ARG;
 	
-	REQ_OBJ_ARG(0, b);
-	Body *body = ObjectWrap::Unwrap<Body>(b);
+	Body *body = ObjectWrap::Unwrap<Body>(v);
 	
-	if (_cacheEntb == body) {
+	if (joint->_cacheEntb == body) {
 		return;
 	}
 	
-	if (_cacheEntb) {
-		_cacheEntb->unrefJoint(this);
-		_removeConstraint(_cacheEntb->getWorld());
+	if (joint->_cacheEntb) {
+		joint->_cacheEntb->unrefJoint(joint);
+		joint->_removeConstraint(joint->_cacheEntb->getWorld());
 	}
 	
-	_cacheEntb = body;
+	joint->_cacheEntb = body;
 	
-	if (_cacheEntb) {
-		_cacheEntb->refJoint(this);
+	if (joint->_cacheEntb) {
+		joint->_cacheEntb->refJoint(joint);
 	}
 	
-	rebuild();
+	joint->_rebuild();
 	
 	// EMIT
 	
 }
 
 
-NAN_SETTER(Joint::brokenSetter) { THIS_JOINT;
-	
-	REQ_BOOL_ARG(0, v);
+NAN_SETTER(Joint::brokenSetter) { THIS_JOINT; SETTER_BOOL_ARG;
 	
 	CACHE_CAS(_cacheBroken, v);
 	CHECK_CONSTRAINT;
@@ -239,9 +238,7 @@ NAN_SETTER(Joint::brokenSetter) { THIS_JOINT;
 }
 
 
-NAN_SETTER(Joint::maximpSetter) { THIS_JOINT;
-	
-	REQ_FLOAT_ARG(0, v);
+NAN_SETTER(Joint::maximpSetter) { THIS_JOINT; SETTER_FLOAT_ARG;
 	
 	CACHE_CAS(_cacheMaximp, v);
 	CHECK_CONSTRAINT;
@@ -253,31 +250,27 @@ NAN_SETTER(Joint::maximpSetter) { THIS_JOINT;
 }
 
 
-NAN_SETTER(Joint::posaSetter) { THIS_JOINT;
-	
-	REQ_VEC3_ARG(0, v);
+NAN_SETTER(Joint::posaSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cachePosa, v);
 	CHECK_CONSTRAINT;
 	
-	btTransform transformA = _constraint->getFrameOffsetA();
-	transformA.setOrigin(_cachePosa);
-	_constraint->setFrames(transformA, _constraint->getFrameOffsetB());
+	btTransform transformA = joint->_constraint->getFrameOffsetA();
+	transformA.setOrigin(joint->_cachePosa);
+	joint->_constraint->setFrames(transformA, joint->_constraint->getFrameOffsetB());
 	
 	// EMIT
 	
 }
 
 
-NAN_SETTER(Joint::posbSetter) { THIS_JOINT;
-	
-	REQ_VEC3_ARG(0, v);
+NAN_SETTER(Joint::posbSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cachePosb, v);
 	CHECK_CONSTRAINT;
 	
-	btTransform transformB = _constraint->getFrameOffsetB();
-	transformA.setOrigin(_cachePosb);
+	btTransform transformB = joint->_constraint->getFrameOffsetB();
+	transformB.setOrigin(joint->_cachePosb);
 	joint->_constraint->setFrames(joint->_constraint->getFrameOffsetA(), transformB);
 	
 	// EMIT
@@ -285,9 +278,7 @@ NAN_SETTER(Joint::posbSetter) { THIS_JOINT;
 }
 
 
-NAN_SETTER(Joint::rotaSetter) { THIS_JOINT;
-	
-	REQ_VEC3_ARG(0, v);
+NAN_SETTER(Joint::rotaSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheRota, v);
 	CHECK_CONSTRAINT;
@@ -305,9 +296,7 @@ NAN_SETTER(Joint::rotaSetter) { THIS_JOINT;
 }
 
 
-NAN_SETTER(Joint::rotbSetter) { THIS_JOINT;
-	
-	REQ_VEC3_ARG(0, v);
+NAN_SETTER(Joint::rotbSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheRotb, v);
 	CHECK_CONSTRAINT;
@@ -325,9 +314,7 @@ NAN_SETTER(Joint::rotbSetter) { THIS_JOINT;
 }
 
 
-NAN_SETTER(Joint::minlSetter) { THIS_JOINT;
-	
-	REQ_VEC3_ARG(0, v);
+NAN_SETTER(Joint::minlSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMinl, v);
 	CHECK_CONSTRAINT;
@@ -339,9 +326,7 @@ NAN_SETTER(Joint::minlSetter) { THIS_JOINT;
 }
 
 
-NAN_SETTER(Joint::maxlSetter) { THIS_JOINT;
-	
-	REQ_VEC3_ARG(0, v);
+NAN_SETTER(Joint::maxlSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMaxl, v);
 	CHECK_CONSTRAINT;
@@ -353,37 +338,31 @@ NAN_SETTER(Joint::maxlSetter) { THIS_JOINT;
 }
 
 
-NAN_SETTER(Joint::minaSetter) { THIS_JOINT;
-	
-	REQ_VEC3_ARG(0, v);
+NAN_SETTER(Joint::minaSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMina, v);
 	CHECK_CONSTRAINT;
 	
-	joint->_constraint->setAngularLowerLimit(M_PI * v);
+	joint->_constraint->setAngularLowerLimit(static_cast<float>(M_PI) * v);
 	
 	// EMIT
 	
 }
 
 
-NAN_SETTER(Joint::maxaSetter) { THIS_JOINT;
-	
-	REQ_VEC3_ARG(0, v);
+NAN_SETTER(Joint::maxaSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMaxa, v);
 	CHECK_CONSTRAINT;
 	
-	joint->_constraint->setAngularUpperLimit(M_PI * v);
+	joint->_constraint->setAngularUpperLimit(static_cast<float>(M_PI) * v);
 	
 	// EMIT
 	
 }
 
 
-NAN_SETTER(Joint::damplSetter) { THIS_JOINT;
-	
-	REQ_VEC3_ARG(0, v);
+NAN_SETTER(Joint::damplSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheDampl, v);
 	CHECK_CONSTRAINT;
@@ -397,9 +376,7 @@ NAN_SETTER(Joint::damplSetter) { THIS_JOINT;
 }
 
 
-NAN_SETTER(Joint::dampaSetter) { THIS_JOINT;
-	
-	REQ_VEC3_ARG(0, v);
+NAN_SETTER(Joint::dampaSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheDampa, v);
 	CHECK_CONSTRAINT;
@@ -413,9 +390,7 @@ NAN_SETTER(Joint::dampaSetter) { THIS_JOINT;
 }
 
 
-NAN_SETTER(Joint::stiflSetter) { THIS_JOINT;
-	
-	REQ_VEC3_ARG(0, v);
+NAN_SETTER(Joint::stiflSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheStifl, v);
 	CHECK_CONSTRAINT;
@@ -429,9 +404,7 @@ NAN_SETTER(Joint::stiflSetter) { THIS_JOINT;
 }
 
 
-NAN_SETTER(Joint::stifaSetter) { THIS_JOINT;
-	
-	REQ_VEC3_ARG(0, v);
+NAN_SETTER(Joint::stifaSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheStifa, v);
 	CHECK_CONSTRAINT;
@@ -445,9 +418,7 @@ NAN_SETTER(Joint::stifaSetter) { THIS_JOINT;
 }
 
 
-NAN_SETTER(Joint::springlSetter) { THIS_JOINT;
-	
-	REQ_VEC3_ARG(0, v);
+NAN_SETTER(Joint::springlSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheSpringl, v);
 	CHECK_CONSTRAINT;
@@ -461,9 +432,7 @@ NAN_SETTER(Joint::springlSetter) { THIS_JOINT;
 }
 
 
-NAN_SETTER(Joint::springaSetter) { THIS_JOINT;
-	
-	REQ_VEC3_ARG(0, v);
+NAN_SETTER(Joint::springaSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheSpringa, v);
 	CHECK_CONSTRAINT;
@@ -477,9 +446,7 @@ NAN_SETTER(Joint::springaSetter) { THIS_JOINT;
 }
 
 
-NAN_SETTER(Joint::motorlSetter) { THIS_JOINT;
-	
-	REQ_VEC3_ARG(0, v);
+NAN_SETTER(Joint::motorlSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotorl, v);
 	CHECK_CONSTRAINT;
@@ -493,25 +460,21 @@ NAN_SETTER(Joint::motorlSetter) { THIS_JOINT;
 }
 
 
-NAN_SETTER(Joint::motoraSetter) { THIS_JOINT;
-	
-	REQ_VEC3_ARG(0, v);
+NAN_SETTER(Joint::motoraSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotora, v);
 	CHECK_CONSTRAINT;
 	
-	joint->_constraint->getRotationalLimitMotor(0)->m_enableMotor = value.x() != 0;
-	joint->_constraint->getRotationalLimitMotor(1)->m_enableMotor = value.y() != 0;
-	joint->_constraint->getRotationalLimitMotor(2)->m_enableMotor = value.z() != 0;
+	joint->_constraint->getRotationalLimitMotor(0)->m_enableMotor = v.x() != 0;
+	joint->_constraint->getRotationalLimitMotor(1)->m_enableMotor = v.y() != 0;
+	joint->_constraint->getRotationalLimitMotor(2)->m_enableMotor = v.z() != 0;
 	
 	// EMIT
 	
 }
 
 
-NAN_SETTER(Joint::motorlfSetter) { THIS_JOINT;
-	
-	REQ_VEC3_ARG(0, v);
+NAN_SETTER(Joint::motorlfSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotorlf, v);
 	CHECK_CONSTRAINT;
@@ -523,25 +486,21 @@ NAN_SETTER(Joint::motorlfSetter) { THIS_JOINT;
 }
 
 
-NAN_SETTER(Joint::motorafSetter) { THIS_JOINT;
-	
-	REQ_VEC3_ARG(0, v);
+NAN_SETTER(Joint::motorafSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotoraf, v);
 	CHECK_CONSTRAINT;
 	
-	joint->_constraint->getRotationalLimitMotor(0)->m_maxMotorForce = value.x();
-	joint->_constraint->getRotationalLimitMotor(1)->m_maxMotorForce = value.y();
-	joint->_constraint->getRotationalLimitMotor(2)->m_maxMotorForce = value.z();
+	joint->_constraint->getRotationalLimitMotor(0)->m_maxMotorForce = v.x();
+	joint->_constraint->getRotationalLimitMotor(1)->m_maxMotorForce = v.y();
+	joint->_constraint->getRotationalLimitMotor(2)->m_maxMotorForce = v.z();
 	
 	// EMIT
 	
 }
 
 
-NAN_SETTER(Joint::motorlvSetter) { THIS_JOINT;
-	
-	REQ_VEC3_ARG(0, v);
+NAN_SETTER(Joint::motorlvSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotorlv, v);
 	CHECK_CONSTRAINT;
@@ -553,16 +512,14 @@ NAN_SETTER(Joint::motorlvSetter) { THIS_JOINT;
 }
 
 
-NAN_SETTER(Joint::motoravSetter) { THIS_JOINT;
-	
-	REQ_VEC3_ARG(0, v);
+NAN_SETTER(Joint::motoravSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotorav, v);
 	CHECK_CONSTRAINT;
 	
-	joint->_constraint->getRotationalLimitMotor(0)->m_targetVelocity = value.x();
-	joint->_constraint->getRotationalLimitMotor(1)->m_targetVelocity = value.y();
-	joint->_constraint->getRotationalLimitMotor(2)->m_targetVelocity = value.z();
+	joint->_constraint->getRotationalLimitMotor(0)->m_targetVelocity = v.x();
+	joint->_constraint->getRotationalLimitMotor(1)->m_targetVelocity = v.y();
+	joint->_constraint->getRotationalLimitMotor(2)->m_targetVelocity = v.z();
 	
 	// EMIT
 	
@@ -594,9 +551,9 @@ void Joint::_dropBody(Body *body) {
 void Joint::_rebuild() {
 	
 	if (_cacheEnta) {
-		_removeConstraint();
+		_removeConstraint(_cacheEnta->getWorld());
 	} else if (_cacheEntb) {
-		_removeConstraint();
+		_removeConstraint(_cacheEntb->getWorld());
 	}
 	
 	if( ! (_cacheEnta && _cacheEntb) ) {
@@ -627,8 +584,8 @@ void Joint::_rebuild() {
 	
 	_constraint->setLinearLowerLimit(_cacheMinl);
 	_constraint->setLinearUpperLimit(_cacheMaxl);
-	_constraint->setAngularLowerLimit(M_PI * _cacheMina);
-	_constraint->setAngularUpperLimit(M_PI * _cacheMaxa);
+	_constraint->setAngularLowerLimit(static_cast<float>(M_PI) * _cacheMina);
+	_constraint->setAngularUpperLimit(static_cast<float>(M_PI) * _cacheMaxa);
 	
 	// Holy fucking props
 	_constraint->setBreakingImpulseThreshold(_cacheMaximp);

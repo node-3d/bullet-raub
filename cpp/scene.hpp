@@ -41,8 +41,9 @@ public:
 	
 	void doUpdate(float dt);
 	void doUpdate();
-	Trace *doHit(const btVector3 &from, const btVector3 &to);
-	const std::vector<Trace*> &doTrace(const btVector3 &from, const btVector3 &to);
+	
+	v8::Local<v8::Value> doHit(const btVector3 &from, const btVector3 &to);
+	const std::vector< v8::Local<v8::Value> > &doTrace(const btVector3 &from, const btVector3 &to);
 	
 	
 protected:

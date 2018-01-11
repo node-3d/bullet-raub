@@ -26,22 +26,22 @@ class Body : public Nan::ObjectWrap {
 public:
 	
 	static void init(v8::Handle<v8::Object> target);
-	static void deinit();
 	
 	void refJoint(Joint *joint);
 	void unrefJoint(Joint *joint);
 	
-	btDynamicsWorld *getWorld() { return _scene->getWorld(); }
+	btDynamicsWorld *getWorld();
 	btRigidBody *getBody() { return _body; }
 	
 	// called within engine
 	void __update();
 	
+	virtual ~Body();
+	
 	
 protected:
 	
 	explicit Body(Scene *scene);
-	virtual ~Body();
 	
 	static NAN_METHOD(newCtor);
 	

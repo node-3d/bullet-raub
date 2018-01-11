@@ -19,7 +19,6 @@ class Joint : public Nan::ObjectWrap {
 public:
 	
 	static void init(v8::Handle<v8::Object> target);
-	static void deinit();
 	
 	void _rebuild(); // called internally and by Body
 	void _dropBody(Body *body); // called by Body
