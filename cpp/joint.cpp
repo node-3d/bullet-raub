@@ -90,7 +90,10 @@ NAN_METHOD(Joint::newCtor) {
 	
 	CTOR_CHECK("Joint");
 	
+	REQ_OBJ_ARG(0, emitter);
+	
 	Joint *joint = new Joint();
+	joint->_emitter.Reset(emitter);
 	joint->Wrap(info.This());
 	
 	RET_VALUE(info.This());

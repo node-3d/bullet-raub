@@ -24,6 +24,6 @@
   "dependencies": {
     "nan": "2.8.0",
     "node-deps-bullet-raub": "0.0.3",
-    "node-addon-tools-raub": "0.0.4"
+    "node-addon-tools-raub": "0.0.5"
   }
 }

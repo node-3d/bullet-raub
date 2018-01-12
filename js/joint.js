@@ -12,19 +12,18 @@ class JsJoint extends EventEmitter {
 		
 		super();
 		
-		const emitter = { emit: this.emit.bind(this) };
+		this.emit = this.emit.bind(this);
 		
-		this._joint = new Joint(emitter);
-		
+		this._joint = new Joint(this);
 		
 	}
 	
 	
 	get enta() { return this._joint.enta; }
-	set enta(v) { this._joint.enta = v; }
+	set enta(v) { this._joint.enta = v._body; }
 	
 	get entb() { return this._joint.entb; }
-	set entb(v) { this._joint.entb = v; }
+	set entb(v) { this._joint.entb = v._body; }
 	
 	get broken() { return this._joint.broken; }
 	set broken(v) { this._joint.broken = v; }
@@ -94,6 +93,10 @@ class JsJoint extends EventEmitter {
 	
 	
 	[util.inspect.custom]() { return this.toString(); }
+	
+	toString() {
+		return `Joints { broken: ${this.broken} }`
+	}
 	
 }
 

@@ -62,6 +62,9 @@ private:
 	static std::vector<Scene*> _scenes;
 	static Nan::Persistent<v8::Function> _constructor;
 	
+	Nan::Persistent<v8::Object> _emitter;
+	inline void _emit(int argc, v8::Local<v8::Value> argv[]);
+	
 	btClock *_clock;
 	std::vector<Body*> _bodies;
 	

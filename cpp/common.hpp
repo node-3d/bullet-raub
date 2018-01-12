@@ -13,19 +13,6 @@
 	#pragma warning(pop)
 #endif
 
-// TODO: transfer to addon-tools
-
-#define CTOR_CHECK(T)                                          \
-	if ( ! info.IsConstructCall() )                                    \
-		return Nan::ThrowTypeError(T " must be called with the 'new' keyword.");
-
-#define ACCESSOR_RW(OBJ, NAME)                                      \
-	Nan::SetAccessor(OBJ, JS_STR(#NAME), NAME ## Getter, NAME ## Setter);
-
-#define ACCESSOR_R(OBJ, NAME)                                       \
-	Nan::SetAccessor(OBJ, JS_STR(#NAME), NAME ## Getter);
-
-#define SET_I(ARR, I, VAL) ARR->Set(I, VAL);
 
 // Bullet stuff
 
@@ -56,51 +43,6 @@
 
 
 // TODO: transfer to addon tools
-
-#define SETTER_CHECK(C, T)                                              \
-	if ( ! value->C )                                                   \
-		return Nan::ThrowTypeError("Value must be " T);
-
-
-#define SETTER_UTF8_ARG                                                 \
-	SETTER_CHECK(IsString(), "string");                                 \
-	Nan::Utf8String v(value);
-
-#define SETTER_INT32_ARG                                                \
-	SETTER_CHECK(IsInt32(), "int32");                                   \
-	int v = value->Int32Value();
-
-#define SETTER_BOOL_ARG                                                 \
-	SETTER_CHECK(IsBoolean(), "bool");                                  \
-	bool v = value->BooleanValue(); // TODO APPLY bool TO REQ_BOOL_ARG
-
-#define SETTER_UINT32_ARG                                               \
-	SETTER_CHECK(IsUint32(), "uint32");                                 \
-	unsigned int v = value->Uint32Value();
-
-#define SETTER_OFFS_ARG                                                 \
-	SETTER_CHECK(IsNumber(), "number");                                 \
-	size_t v = static_cast<size_t>(value->IntegerValue());
-
-#define SETTER_DOUBLE_ARG                                               \
-	SETTER_CHECK(IsNumber(), "number");                                 \
-	double v = value->NumberValue();
-
-#define SETTER_FLOAT_ARG                                                \
-	SETTER_CHECK(IsNumber(), "number");                                 \
-	float v = static_cast<float>(value->NumberValue());
-
-#define SETTER_EXT_ARG                                                  \
-	SETTER_CHECK(IsExternal(), "void*");                                \
-	Local<External> v = Local<External>::Cast(value);
-
-#define SETTER_FUN_ARG                                                  \
-	SETTER_CHECK(IsFunction(), "function");                             \
-	Local<Function> v = Local<Function>::Cast(value);
-
-#define SETTER_OBJ_ARG                                                  \
-	SETTER_CHECK(IsObject(), "object");                                 \
-	Local<Object> v = Local<Object>::Cast(value);
 
 #define SETTER_VEC3_ARG                                                 \
 	SETTER_CHECK(IsObject(), "object");                                 \

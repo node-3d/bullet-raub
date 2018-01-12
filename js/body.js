@@ -8,13 +8,13 @@ const { Body } = require('../core');
 
 class JsBody extends EventEmitter {
 	
-	constructor() {
+	constructor(opts) {
 		
 		super();
 		
-		const emitter = { emit: this.emit.bind(this) };
+		this.emit = this.emit.bind(this);
 		
-		this._body = new Body(emitter);
+		this._body = new Body(this, opts.scene._scene);
 		
 		
 	}
@@ -70,6 +70,10 @@ class JsBody extends EventEmitter {
 	
 	
 	[util.inspect.custom]() { return this.toString(); }
+	
+	toString() {
+		return `Body { type: ${this.type}, pos: [${this.pos}] }`
+	}
 	
 }
 

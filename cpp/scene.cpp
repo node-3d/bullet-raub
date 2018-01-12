@@ -63,11 +63,29 @@ void Scene::init(Handle<Object> target) {
 }
 
 
+void Scene::_emit(int argc, Local<Value> argv[]) {
+	
+	if ( ! Nan::New(_emitter)->Has(JS_STR("emit")) ) {
+		return;
+	}
+	
+	Nan::Callback callback(Nan::New(_emitter)->Get(JS_STR("emit")).As<Function>());
+	
+	if ( ! callback.IsEmpty() ) {
+		callback.Call(argc, argv);
+	}
+	
+}
+
+
 NAN_METHOD(Scene::newCtor) {
 	
 	CTOR_CHECK("Scene");
 	
+	REQ_OBJ_ARG(0, emitter);
+	
 	Scene *scene = new Scene();
+	scene->_emitter.Reset(emitter);
 	scene->Wrap(info.This());
 	
 	RET_VALUE(info.This());
@@ -206,6 +224,9 @@ NAN_SETTER(Scene::gravitySetter) { THIS_SCENE; SETTER_VEC3_ARG;
 	scene->_physWorld->setGravity(scene->_cacheGrav);
 	
 	// EMIT
+	Local<Value> argv[2] = { JS_STR("gravity"), value };
+	
+	scene->_emit(2, argv);
 	
 }
 

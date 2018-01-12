@@ -4,6 +4,7 @@ const util = require('util');
 const EventEmitter = require('events');
 
 const { Scene } = require('../core');
+const Trace = require('./trace');
 
 
 class JsScene extends EventEmitter {
@@ -12,10 +13,9 @@ class JsScene extends EventEmitter {
 		
 		super();
 		
-		const emitter = { emit: this.emit.bind(this) };
+		this.emit = this.emit.bind(this);
 		
-		this._scene = new Scene(emitter);
-		
+		this._scene = new Scene(this);
 		
 	}
 	
@@ -24,10 +24,17 @@ class JsScene extends EventEmitter {
 	set gravity(v) { this._scene.gravity = v; }
 	
 	update(...args) { return this._scene.update(...args); }
-	hit(...args) { return this._scene.hit(...args); }
-	trace(...args) { return this._scene.trace(...args); }
+	
+	hit(...args) { return new Trace({ _trace: this._scene.hit(...args) }); }
+	
+	trace(...args) { return this._scene.trace(...args).map(_trace => new Trace({ _trace })); }
+	
 	
 	[util.inspect.custom]() { return this.toString(); }
+	
+	toString() {
+		return `Scene { gravity: [${this.gravity}] }`
+	}
 	
 }
 

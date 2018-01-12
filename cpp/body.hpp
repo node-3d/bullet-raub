@@ -98,6 +98,8 @@ private:
 	
 	static Nan::Persistent<v8::Function> _constructor;
 	
+	Nan::Persistent<v8::Object> _emitter;
+	
 	Scene *_scene;
 	std::vector<Joint*> _joints;
 	

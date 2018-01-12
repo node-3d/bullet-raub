@@ -98,7 +98,7 @@ NAN_METHOD(Trace::newCtor) {
 	} else {
 		
 		REQ_BOOL_ARG(0, hit);
-		REQ_EXT_ARG(1, body);
+		LET_EXT_ARG(1, body);
 		REQ_VEC3_ARG(2, pos);
 		REQ_VEC3_ARG(3, norm);
 		

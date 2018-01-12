@@ -76,10 +76,14 @@ void Body::init(Handle<Object> target) {
 NAN_METHOD(Body::newCtor) {
 	
 	CTOR_CHECK("Body");
-	REQ_OBJ_ARG(0, owner);
+	
+	REQ_OBJ_ARG(0, emitter);
+	REQ_OBJ_ARG(1, owner);
 	
 	Scene *scene = ObjectWrap::Unwrap<Scene>(owner);
 	Body *body = new Body(scene);
+	body->_emitter.Reset(emitter);
+	
 	body->Wrap(info.This());
 	
 	RET_VALUE(info.This());

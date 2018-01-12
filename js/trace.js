@@ -1,21 +1,23 @@
 'use strict';
 
 const util = require('util');
-const EventEmitter = require('events');
 
 const { Trace } = require('../core');
 
 
-class JsTrace extends EventEmitter {
+class JsTrace {
 	
-	constructor() {
+	constructor(opts = {}) {
 		
-		super();
-		
-		const emitter = { emit: this.emit.bind(this) };
-		
-		this._trace = new Trace(emitter);
-		
+		if (opts._trace) {
+			this._trace = opts._trace;
+		} else if (opts.scene) {
+			this._trace = new Trace(opts.scene._scene, opts.from, opts.to);
+		} else if (opts.pos) {
+			this._trace = new Trace(opts.hit, opts.body._body, opts.pos, opts.norm);
+		} else {
+			this._trace = new Trace(false, null, [0, 0, 0], [0, 1, 0]);
+		}
 		
 	}
 	
@@ -27,6 +29,10 @@ class JsTrace extends EventEmitter {
 	
 	
 	[util.inspect.custom]() { return this.toString(); }
+	
+	toString() {
+		return `Trace { hit: ${this.hit}, pos: [${this.pos}] }`
+	}
 	
 }
 
