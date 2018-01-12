@@ -96,7 +96,7 @@ protected:
 	
 private:
 	
-	static v8::Persistent<v8::Function> _constructor;
+	static Nan::Persistent<v8::Function> _constructor;
 	
 	Scene *_scene;
 	std::vector<Joint*> _joints;
@@ -107,7 +107,7 @@ private:
 	
 private: // helpers
 	void _rebuild();
-	const btVector3 &_calcScale() const;
+	btVector3 _calcScale() const;
 	
 	
 private: // prop cache

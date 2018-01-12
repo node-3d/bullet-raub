@@ -29,10 +29,6 @@ class Scene : public Nan::ObjectWrap {
 public:
 	
 	static void init(v8::Handle<v8::Object> target);
-	static void deinit();
-	
-	static void remember(Scene *scene);
-	static void forget(Scene* scene);
 	
 	void refBody(Body *body);
 	void unrefBody(Body *body);
@@ -43,7 +39,7 @@ public:
 	void doUpdate();
 	
 	v8::Local<v8::Value> doHit(const btVector3 &from, const btVector3 &to);
-	const std::vector< v8::Local<v8::Value> > &doTrace(const btVector3 &from, const btVector3 &to);
+	std::vector< v8::Local<v8::Value> > doTrace(const btVector3 &from, const btVector3 &to);
 	
 	
 protected:
@@ -64,7 +60,7 @@ protected:
 private:
 	
 	static std::vector<Scene*> _scenes;
-	static v8::Persistent<v8::Function> _constructor;
+	static Nan::Persistent<v8::Function> _constructor;
 	
 	btClock *_clock;
 	std::vector<Body*> _bodies;

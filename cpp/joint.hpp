@@ -105,9 +105,7 @@ protected:
 	
 private:
 	
-	static v8::Persistent<v8::Function> _constructor;
-	
-	Body *_body;
+	static Nan::Persistent<v8::Function> _constructor;
 	
 	btGeneric6DofSpringConstraint *_constraint;
 	

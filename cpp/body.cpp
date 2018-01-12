@@ -38,12 +38,13 @@ using namespace std;
 
 
 
-Persistent<Function> Body::_constructor;
+Nan::Persistent<v8::Function> Body::_constructor;
 
 
 void Body::init(Handle<Object> target) {
 	
 	Local<FunctionTemplate> ctor = Nan::New<FunctionTemplate>(newCtor);
+	
 	ctor->InstanceTemplate()->SetInternalFieldCount(1);
 	ctor->SetClassName(JS_STR("Body"));
 	
@@ -66,18 +67,18 @@ void Body::init(Handle<Object> target) {
 	ACCESSOR_RW(proto, frict);
 	ACCESSOR_RW(proto, sleepy);
 	
-	Nan::Set(target, JS_STR("Body"), ctor->GetFunction());
-	
-	_constructor.Reset(Isolate::GetCurrent(), ctor->GetFunction());
+	_constructor.Reset(Nan::GetFunction(ctor).ToLocalChecked());
+	Nan::Set(target, JS_STR("Body"), Nan::GetFunction(ctor).ToLocalChecked());
 	
 }
 
 
 NAN_METHOD(Body::newCtor) {
 	
+	CTOR_CHECK("Body");
 	REQ_OBJ_ARG(0, owner);
-	Scene *scene = ObjectWrap::Unwrap<Scene>(owner);
 	
+	Scene *scene = ObjectWrap::Unwrap<Scene>(owner);
 	Body *body = new Body(scene);
 	body->Wrap(info.This());
 	
@@ -335,12 +336,28 @@ NAN_SETTER(Body::mapSetter) { THIS_BODY; SETTER_OBJ_ARG;
 	
 }
 
+NAN_GETTER(Body::mapGetter) { THIS_BODY;
+	
+	Local<Object> obj = Nan::New<Object>();
+	
+	RET_VALUE(obj);
+	
+}
+
 
 NAN_SETTER(Body::meshSetter) { THIS_BODY; SETTER_OBJ_ARG;
 	
 	// TODO
 	
 	// EMIT
+	
+}
+
+NAN_GETTER(Body::meshGetter) { THIS_BODY;
+	
+	Local<Object> obj = Nan::New<Object>();
+	
+	RET_VALUE(obj);
 	
 }
 
@@ -355,6 +372,12 @@ NAN_SETTER(Body::massSetter) { THIS_BODY; SETTER_FLOAT_ARG;
 	
 }
 
+NAN_GETTER(Body::massGetter) { THIS_BODY;
+	
+	RET_VALUE(JS_NUM(body->_cacheMass));
+	
+}
+
 
 NAN_SETTER(Body::restSetter) { THIS_BODY; SETTER_FLOAT_ARG;
 	
@@ -363,6 +386,12 @@ NAN_SETTER(Body::restSetter) { THIS_BODY; SETTER_FLOAT_ARG;
 	body->_body->setRestitution(body->_cacheRest);
 	
 	// EMIT
+	
+}
+
+NAN_GETTER(Body::restGetter) { THIS_BODY;
+	
+	RET_VALUE(JS_NUM(body->_cacheRest));
 	
 }
 
@@ -377,6 +406,12 @@ NAN_SETTER(Body::damplSetter) { THIS_BODY; SETTER_FLOAT_ARG;
 	
 }
 
+NAN_GETTER(Body::damplGetter) { THIS_BODY;
+	
+	RET_VALUE(JS_NUM(body->_cacheDampl));
+	
+}
+
 
 NAN_SETTER(Body::dampaSetter) { THIS_BODY; SETTER_FLOAT_ARG;
 	
@@ -385,6 +420,12 @@ NAN_SETTER(Body::dampaSetter) { THIS_BODY; SETTER_FLOAT_ARG;
 	body->_body->setDamping(body->_cacheDampl, body->_cacheDampa);
 	
 	// EMIT
+	
+}
+
+NAN_GETTER(Body::dampaGetter) { THIS_BODY;
+	
+	RET_VALUE(JS_NUM(body->_cacheDampa));
 	
 }
 
@@ -399,6 +440,12 @@ NAN_SETTER(Body::frictSetter) { THIS_BODY; SETTER_FLOAT_ARG;
 	
 }
 
+NAN_GETTER(Body::frictGetter) { THIS_BODY;
+	
+	RET_VALUE(JS_NUM(body->_cacheFrict));
+	
+}
+
 
 NAN_SETTER(Body::sleepySetter) { THIS_BODY; SETTER_BOOL_ARG;
 	
@@ -410,6 +457,11 @@ NAN_SETTER(Body::sleepySetter) { THIS_BODY; SETTER_BOOL_ARG;
 	
 }
 
+NAN_GETTER(Body::sleepyGetter) { THIS_BODY;
+	
+	RET_VALUE(JS_BOOL(body->_cacheSleepy));
+	
+}
 
 
 void Body::_rebuild() {
@@ -483,7 +535,7 @@ void Body::_rebuild() {
 }
 
 
-const btVector3 &Body::_calcScale() const {
+btVector3 Body::_calcScale() const {
 	
 	if (_cacheType != "map" || ! _cacheMap) {
 		return _cacheSize;

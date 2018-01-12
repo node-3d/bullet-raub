@@ -15,8 +15,6 @@ extern "C" {
 
 void init(Handle<Object> target) {
 	
-	atexit(Scene::deinit);
-	
 	Scene::init(target);
 	Body::init(target);
 	Joint::init(target);

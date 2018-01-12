@@ -21,8 +21,8 @@ public:
 	
 	static void init(v8::Handle<v8::Object> target);
 	
-	static v8::Local<v8::Value> instance(bool hit, Body *body, const btVector3 &pos, const btVector3 &norm);
-	static v8::Local<v8::Value> instance(Scene *scene, const btVector3 &from, const btVector3 &to);
+	static v8::Local<v8::Object> instance(bool hit, Body *body, const btVector3 &pos, const btVector3 &norm);
+	static v8::Local<v8::Object> instance(Scene *scene, const btVector3 &from, const btVector3 &to);
 	
 	Trace(bool hit, Body *body, const btVector3 &pos, const btVector3 &norm);
 	Trace(Scene *scene, const btVector3 &from, const btVector3 &to);
@@ -36,6 +36,8 @@ protected:
 	
 	static NAN_METHOD(newCtor);
 	
+	static NAN_METHOD(toString);
+	
 	static NAN_GETTER(hitGetter);
 	static NAN_GETTER(bodyGetter);
 	static NAN_GETTER(posGetter);
@@ -44,7 +46,7 @@ protected:
 	
 private:
 	
-	static v8::Persistent<v8::Function> _constructor;
+	static Nan::Persistent<v8::Function> _constructor;
 	
 	
 private: // prop cache

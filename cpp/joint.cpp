@@ -43,12 +43,13 @@ using namespace std;
 
 
 
-Persistent<Function> Joint::_constructor;
+Nan::Persistent<v8::Function> Joint::_constructor;
 
 
 void Joint::init(Handle<Object> target) {
 	
 	Local<FunctionTemplate> ctor = Nan::New<FunctionTemplate>(newCtor);
+	
 	ctor->InstanceTemplate()->SetInternalFieldCount(1);
 	ctor->SetClassName(JS_STR("Joint"));
 	
@@ -79,14 +80,15 @@ void Joint::init(Handle<Object> target) {
 	ACCESSOR_RW(proto, motorlv);
 	ACCESSOR_RW(proto, motorav);
 	
-	Nan::Set(target, JS_STR("Joint"), ctor->GetFunction());
-	
-	_constructor.Reset(Isolate::GetCurrent(), ctor->GetFunction());
+	_constructor.Reset(Nan::GetFunction(ctor).ToLocalChecked());
+	Nan::Set(target, JS_STR("Joint"), Nan::GetFunction(ctor).ToLocalChecked());
 	
 }
 
 
 NAN_METHOD(Joint::newCtor) {
+	
+	CTOR_CHECK("Joint");
 	
 	Joint *joint = new Joint();
 	joint->Wrap(info.This());
@@ -199,6 +201,14 @@ NAN_SETTER(Joint::entaSetter) { THIS_JOINT; SETTER_OBJ_ARG;
 	
 }
 
+NAN_GETTER(Joint::entaGetter) { THIS_JOINT;
+	
+	Local<Object> obj = Nan::New<Object>();
+	
+	RET_VALUE(obj);
+	
+}
+
 
 NAN_SETTER(Joint::entbSetter) { THIS_JOINT; SETTER_OBJ_ARG;
 	
@@ -225,6 +235,14 @@ NAN_SETTER(Joint::entbSetter) { THIS_JOINT; SETTER_OBJ_ARG;
 	
 }
 
+NAN_GETTER(Joint::entbGetter) { THIS_JOINT;
+	
+	Local<Object> obj = Nan::New<Object>();
+	
+	RET_VALUE(obj);
+	
+}
+
 
 NAN_SETTER(Joint::brokenSetter) { THIS_JOINT; SETTER_BOOL_ARG;
 	
@@ -237,6 +255,12 @@ NAN_SETTER(Joint::brokenSetter) { THIS_JOINT; SETTER_BOOL_ARG;
 	
 }
 
+NAN_GETTER(Joint::brokenGetter) { THIS_JOINT;
+	
+	RET_VALUE(JS_BOOL(joint->_cacheBroken));
+	
+}
+
 
 NAN_SETTER(Joint::maximpSetter) { THIS_JOINT; SETTER_FLOAT_ARG;
 	
@@ -246,6 +270,12 @@ NAN_SETTER(Joint::maximpSetter) { THIS_JOINT; SETTER_FLOAT_ARG;
 	joint->_constraint->setBreakingImpulseThreshold(joint->_cacheMaximp);
 	
 	// EMIT
+	
+}
+
+NAN_GETTER(Joint::maximpGetter) { THIS_JOINT;
+	
+	RET_VALUE(JS_NUM(joint->_cacheMaximp));
 	
 }
 

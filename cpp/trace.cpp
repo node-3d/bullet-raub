@@ -2,7 +2,6 @@
 #include <iostream>
 
 #include <BulletDynamics/Dynamics/btDynamicsWorld.h>
-#include <btBulletDynamicsCommon.h>
 #include <LinearMath/btAabbUtil2.h>
 #include <BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
 
@@ -30,30 +29,32 @@ using namespace std;
 	trace->CACHE = V;
 
 
-Persistent<Function> Trace::_constructor;
+Nan::Persistent<v8::Function> Trace::_constructor;
 
 
 void Trace::init(Handle<Object> target) {
 	
 	Local<FunctionTemplate> ctor = Nan::New<FunctionTemplate>(newCtor);
+	
 	ctor->InstanceTemplate()->SetInternalFieldCount(1);
 	ctor->SetClassName(JS_STR("Trace"));
 	
 	// prototype
+	Nan::SetPrototypeMethod(ctor, "toString", toString);
+	
 	Local<ObjectTemplate> proto = ctor->PrototypeTemplate();
 	ACCESSOR_R(proto, hit);
 	ACCESSOR_R(proto, body);
 	ACCESSOR_R(proto, pos);
 	ACCESSOR_R(proto, norm);
 	
-	Nan::Set(target, JS_STR("Trace"), ctor->GetFunction());
-	
-	_constructor.Reset(Isolate::GetCurrent(), ctor->GetFunction());
+	_constructor.Reset(Nan::GetFunction(ctor).ToLocalChecked());
+	Nan::Set(target, JS_STR("Trace"), Nan::GetFunction(ctor).ToLocalChecked());
 	
 }
 
 
-Local<Value> Trace::instance(bool hit, Body *body, const btVector3 &pos, const btVector3 &norm) {
+Local<Object> Trace::instance(bool hit, Body *body, const btVector3 &pos, const btVector3 &norm) {
 	
 	Local<Function> cons = Nan::New(_constructor);
 	
@@ -63,12 +64,14 @@ Local<Value> Trace::instance(bool hit, Body *body, const btVector3 &pos, const b
 	const int argc = 4;
 	Local<Value> argv[argc] = { JS_BOOL(hit), Nan::New<External>(body), p, n };
 	
-	return Nan::NewInstance(cons, argc, argv).ToLocalChecked();
+	Local<Object> inst = cons->NewInstance(argc, argv);
+	
+	return inst;
 	
 }
 
 
-Local<Value> Trace::instance(Scene *scene, const btVector3 &from, const btVector3 &to) {
+Local<Object> Trace::instance(Scene *scene, const btVector3 &from, const btVector3 &to) {
 	
 	Trace helper(scene, from, to);
 	
@@ -79,7 +82,7 @@ Local<Value> Trace::instance(Scene *scene, const btVector3 &from, const btVector
 
 NAN_METHOD(Trace::newCtor) {
 	
-	Local<Object> result = Nan::New<Object>();
+	CTOR_CHECK("Trace");
 	
 	Trace *traceResult = NULL;
 	
@@ -99,15 +102,15 @@ NAN_METHOD(Trace::newCtor) {
 		REQ_VEC3_ARG(2, pos);
 		REQ_VEC3_ARG(3, norm);
 		
-		void *external = body->Value();
+		Body *external = reinterpret_cast<Body*>(body->Value());
 		
-		traceResult = new Trace(hit, reinterpret_cast<Body*>(external), pos, norm);
+		traceResult = new Trace(hit, external, pos, norm);
 		
 	}
 	
-	traceResult->Wrap(result);
+	traceResult->Wrap(info.This());
 	
-	RET_VALUE(result);
+	RET_VALUE(info.This());
 	
 }
 
@@ -147,5 +150,26 @@ Trace::~Trace() {
 }
 
 
+NAN_METHOD(Trace::toString) { THIS_TRACE;
+	
+	RET_VALUE(JS_STR("oh hai!"));
+	
+}
+
+
 V3_GETTER(pos, _cachePos);
 V3_GETTER(norm, _cacheNorm);
+
+NAN_GETTER(Trace::bodyGetter) { THIS_TRACE;
+	
+	Local<Object> obj = Nan::New<Object>();
+	
+	RET_VALUE(obj);
+	
+}
+
+NAN_GETTER(Trace::hitGetter) { THIS_TRACE;
+	
+	RET_VALUE(JS_BOOL(trace->_cacheHit));
+	
+}

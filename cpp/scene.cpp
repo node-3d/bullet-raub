@@ -1,13 +1,18 @@
 #include <cstdlib>
 #include <iostream>
 
-#include <btBulletDynamicsCommon.h>
-#include <BulletCollision/CollisionShapes/btStaticPlaneShape.h>
-#include <BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
-#include <BulletDynamics/ConstraintSolver/btSolverConstraint.h>
-#include <BulletDynamics/Dynamics/btDynamicsWorld.h>
-#include <LinearMath/btAabbUtil2.h>
-#include <LinearMath/btAlignedObjectArray.h>
+#include <btQuickprof.h>
+#include <btDefaultCollisionConfiguration.h>
+#include <btDbvtBroadphase.h>
+#include <btSequentialImpulseConstraintSolver.h>
+#include <btDiscreteDynamicsWorld.h>
+#include <btConstraintSolver.h>
+#include <btStaticPlaneShape.h>
+#include <btRaycastCallback.h>
+#include <btSolverConstraint.h>
+#include <btDynamicsWorld.h>
+#include <btAabbUtil2.h>
+#include <btAlignedObjectArray.h>
 
 #include "body.hpp"
 #include "trace.hpp"
@@ -34,12 +39,13 @@ using namespace std;
 
 
 vector<Scene*> Scene::_scenes;
-Persistent<Function> Scene::_constructor;
+Nan::Persistent<v8::Function> Scene::_constructor;
 
 
 void Scene::init(Handle<Object> target) {
 	
 	Local<FunctionTemplate> ctor = Nan::New<FunctionTemplate>(newCtor);
+	
 	ctor->InstanceTemplate()->SetInternalFieldCount(1);
 	ctor->SetClassName(JS_STR("Scene"));
 	
@@ -51,49 +57,15 @@ void Scene::init(Handle<Object> target) {
 	Local<ObjectTemplate> proto = ctor->PrototypeTemplate();
 	ACCESSOR_RW(proto, gravity);
 	
-	Nan::Set(target, JS_STR("Image"), ctor->GetFunction());
-	
-	_constructor.Reset(Isolate::GetCurrent(), ctor->GetFunction());
-	
-}
-
-void Scene::deinit() {
-	
-	vector<Scene*>::iterator it = _scenes.begin();
-	
-	while (it != _scenes.end()) {
-		delete (*it);
-		it++;
-	}
-	
-	_scenes.clear();
-	
-}
-
-
-void Scene::remember(Scene *scene) {
-	_scenes.push_back(scene);
-}
-
-void Scene::forget(Scene* scene) {
-	
-	vector<Scene*>::iterator it = _scenes.begin();
-	
-	while (it != _scenes.end()) {
-		
-		if (*it == scene) {
-			_scenes.erase(it);
-			break;
-		}
-		
-		it++;
-		
-	}
+	_constructor.Reset(Nan::GetFunction(ctor).ToLocalChecked());
+	Nan::Set(target, JS_STR("Scene"), Nan::GetFunction(ctor).ToLocalChecked());
 	
 }
 
 
 NAN_METHOD(Scene::newCtor) {
+	
+	CTOR_CHECK("Scene");
 	
 	Scene *scene = new Scene();
 	scene->Wrap(info.This());
@@ -117,8 +89,6 @@ Scene::Scene() {
 	_cacheGrav.setValue(0, -10, 0);
 	_physWorld->setGravity(_cacheGrav);
 	
-	remember(this);
-	
 	// A SUDDEN STATIC PLANE
 	// btStaticPlaneShape *cshape = new btStaticPlaneShape(btVector3(0.0f, 1.0f, 0.0f), 0);
 	// btVector3 localInertia(0,0,0);
@@ -138,8 +108,6 @@ Scene::~Scene() {
 		it++;
 	}
 	_bodies.clear();
-	
-	forget(this);
 	
 	delete _physWorld;
 	_physWorld = NULL;
@@ -205,7 +173,7 @@ void Scene::doUpdate() {
 }
 
 
-const vector< Local<Value> > &Scene::doTrace(const btVector3 &from, const btVector3 &to) {
+vector< Local<Value> > Scene::doTrace(const btVector3 &from, const btVector3 &to) {
 	
 	btCollisionWorld::AllHitsRayResultCallback allResults(from, to);
 	_physWorld->rayTest(from, to, allResults);
@@ -260,8 +228,9 @@ NAN_METHOD(Scene::hit) { THIS_SCENE;
 	REQ_VEC3_ARG(0, f);
 	REQ_VEC3_ARG(1, t);
 	
-	RET_VALUE(Trace::instance(scene, f, t));
+	Local<Value> trace = Trace::instance(scene, f, t);
 	
+	RET_VALUE(trace);
 }
 
 

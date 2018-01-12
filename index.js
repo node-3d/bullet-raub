@@ -1,9 +1,8 @@
 'use strict';
 
-// Add deps dll dirs
-require('node-deps-bullet-raub');
-
-const bullet = require('./binary/bullet');
-
-
-module.exports = bullet;
+module.exports = {
+	Scene : require('./js/scene'),
+	Body  : require('./js/body'),
+	Joint : require('./js/joint'),
+	Trace : require('./js/trace'),
+};

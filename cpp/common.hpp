@@ -15,6 +15,10 @@
 
 // TODO: transfer to addon-tools
 
+#define CTOR_CHECK(T)                                          \
+	if ( ! info.IsConstructCall() )                                    \
+		return Nan::ThrowTypeError(T " must be called with the 'new' keyword.");
+
 #define ACCESSOR_RW(OBJ, NAME)                                      \
 	Nan::SetAccessor(OBJ, JS_STR(#NAME), NAME ## Getter, NAME ## Setter);
 
@@ -47,7 +51,7 @@
 	}
 
 #define REQ_VEC3_ARG(I, VAR)                                        \
-	REQ_OBJ_ARG(0, _obj_##VAR);                                     \
+	REQ_OBJ_ARG(I, _obj_##VAR);                                     \
 	OBJ_TO_VEC3(_obj_##VAR, VAR);
 
 
@@ -55,7 +59,7 @@
 
 #define SETTER_CHECK(C, T)                                              \
 	if ( ! value->C )                                                   \
-		Nan::ThrowTypeError("Value must be " T);
+		return Nan::ThrowTypeError("Value must be " T);
 
 
 #define SETTER_UTF8_ARG                                                 \
