@@ -198,7 +198,7 @@ void Body::__update() {
 		return;
 	}
 	
-	btTransform  transform = _body->getCenterOfMassTransform();
+	btTransform transform = _body->getCenterOfMassTransform();
 	_cachePos = transform.getOrigin();
 	_cacheRot = transform.getRotation();
 	_cacheVell = _body->getLinearVelocity();
@@ -206,13 +206,13 @@ void Body::__update() {
 	
 	// Emit "update"
 	VEC3_TO_OBJ(_cachePos, pos);
-	VEC3_TO_OBJ(_cacheRot, rot);
+	QUAT_TO_OBJ(_cacheRot, quat);
 	VEC3_TO_OBJ(_cacheVell, vell);
 	VEC3_TO_OBJ(_cacheVela, vela);
 	
 	Local<Object> obj = Nan::New<Object>();
 	SET_PROP(obj, "pos", pos);
-	SET_PROP(obj, "rot", rot);
+	SET_PROP(obj, "quat", quat);
 	SET_PROP(obj, "vell", vell);
 	SET_PROP(obj, "vela", vela);
 	
