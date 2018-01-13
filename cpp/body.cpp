@@ -1,16 +1,18 @@
 #include <cstdlib>
 #include <iostream>
 
-#include <BulletCollision/CollisionShapes/btBoxShape.h>
-#include <BulletCollision/CollisionShapes/btCapsuleShape.h>
-#include <BulletCollision/CollisionShapes/btCollisionShape.h>
-#include <BulletCollision/CollisionShapes/btConvexTriangleMeshShape.h>
-#include <BulletCollision/CollisionShapes/btCylinderShape.h>
-#include <BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
-#include <BulletCollision/CollisionShapes/btSphereShape.h>
-#include <BulletDynamics/Dynamics/btDynamicsWorld.h>
-#include <BulletDynamics/Dynamics/btRigidBody.h>
-#include <LinearMath/btDefaultMotionState.h>
+#include <btDynamicsWorld.h>
+#include <btRigidBody.h>
+#include <btDefaultMotionState.h>
+
+#include <btBoxShape.h>
+#include <btCapsuleShape.h>
+#include <btCollisionShape.h>
+#include <btConvexTriangleMeshShape.h>
+#include <btCylinderShape.h>
+#include <btHeightfieldTerrainShape.h>
+#include <btSphereShape.h>
+#include <btStaticPlaneShape.h>
 
 #include "scene.hpp"
 #include "joint.hpp"
@@ -69,6 +71,21 @@ void Body::init(Handle<Object> target) {
 	
 	_constructor.Reset(Nan::GetFunction(ctor).ToLocalChecked());
 	Nan::Set(target, JS_STR("Body"), Nan::GetFunction(ctor).ToLocalChecked());
+	
+}
+
+
+void Body::_emit(int argc, Local<Value> argv[]) {
+	
+	if ( ! Nan::New(_emitter)->Has(JS_STR("emit")) ) {
+		return;
+	}
+	
+	Nan::Callback callback(Nan::New(_emitter)->Get(JS_STR("emit")).As<Function>());
+	
+	if ( ! callback.IsEmpty() ) {
+		callback.Call(argc, argv);
+	}
 	
 }
 
@@ -175,8 +192,8 @@ btDynamicsWorld *Body::getWorld() {
 }
 
 
-void Body::__update()
-{
+void Body::__update() {
+	
 	if (_body->isStaticObject() || ! _body->isActive()) {
 		return;
 	}
@@ -187,7 +204,26 @@ void Body::__update()
 	_cacheVell = _body->getLinearVelocity();
 	_cacheVela = _body->getAngularVelocity();
 	
-	// EMIT
+	// Emit "update"
+	VEC3_TO_OBJ(_cachePos, pos);
+	VEC3_TO_OBJ(_cacheRot, rot);
+	VEC3_TO_OBJ(_cacheVell, vell);
+	VEC3_TO_OBJ(_cacheVela, vela);
+	
+	Local<Object> obj = Nan::New<Object>();
+	SET_PROP(obj, "pos", pos);
+	SET_PROP(obj, "rot", rot);
+	SET_PROP(obj, "vell", vell);
+	SET_PROP(obj, "vela", vela);
+	
+	Local<Value> argv[2] = { JS_STR("update"), obj };
+	_emit(2, argv);
+	
+	vector<Joint*>::iterator it = _joints.begin();
+	while (it != _joints.end()) {
+		(*it)->__update();
+		it++;
+	}
 	
 }
 
@@ -205,7 +241,9 @@ NAN_SETTER(Body::typeSetter) { THIS_BODY; SETTER_UTF8_ARG;
 	
 	body->_rebuild();
 	
-	// EMIT
+	// Emit "type"
+	Local<Value> argv[2] = { JS_STR("type"), value };
+	body->_emit(2, argv);
 	
 }
 
@@ -224,7 +262,9 @@ NAN_SETTER(Body::posSetter) { THIS_BODY; SETTER_VEC3_ARG;
 	
 	body->_rebuild(); // FIXME: ???
 	
-	// EMIT
+	// Emit "pos"
+	Local<Value> argv[2] = { JS_STR("pos"), value };
+	body->_emit(2, argv);
 	
 }
 
@@ -264,7 +304,9 @@ NAN_SETTER(Body::rotSetter) { THIS_BODY; SETTER_VEC3_ARG;
 	transform.setRotation(body->_cacheRot);
 	body->_body->setCenterOfMassTransform(transform);
 	
-	// EMIT
+	// Emit "rot"
+	Local<Value> argv[2] = { JS_STR("rot"), value };
+	body->_emit(2, argv);
 	
 }
 
@@ -279,7 +321,9 @@ NAN_SETTER(Body::vellSetter) { THIS_BODY; SETTER_VEC3_ARG;
 	
 	body->_body->setLinearVelocity(body->_cacheVell);
 	
-	// EMIT
+	// Emit "vell"
+	Local<Value> argv[2] = { JS_STR("vell"), value };
+	body->_emit(2, argv);
 	
 }
 
@@ -294,7 +338,9 @@ NAN_SETTER(Body::velaSetter) { THIS_BODY; SETTER_VEC3_ARG;
 	
 	body->_body->setAngularVelocity(body->_cacheVela);
 	
-	// EMIT
+	// Emit "vela"
+	Local<Value> argv[2] = { JS_STR("vela"), value };
+	body->_emit(2, argv);
 	
 }
 
@@ -305,7 +351,9 @@ NAN_SETTER(Body::sizeSetter) { THIS_BODY; SETTER_VEC3_ARG;
 	
 	body->_rebuild(); // ??
 	
-	// EMIT
+	// Emit "size"
+	Local<Value> argv[2] = { JS_STR("size"), value };
+	body->_emit(2, argv);
 	
 }
 
@@ -316,7 +364,9 @@ NAN_SETTER(Body::factlSetter) { THIS_BODY; SETTER_VEC3_ARG;
 	
 	body->_body->setLinearFactor(body->_cacheFactl);
 	
-	// EMIT
+	// Emit "factl"
+	Local<Value> argv[2] = { JS_STR("factl"), value };
+	body->_emit(2, argv);
 	
 }
 
@@ -327,7 +377,9 @@ NAN_SETTER(Body::factaSetter) { THIS_BODY; SETTER_VEC3_ARG;
 	
 	body->_body->setAngularFactor(body->_cacheFacta);
 	
-	// EMIT
+	// Emit "facta"
+	Local<Value> argv[2] = { JS_STR("facta"), value };
+	body->_emit(2, argv);
 	
 }
 
@@ -336,7 +388,9 @@ NAN_SETTER(Body::mapSetter) { THIS_BODY; SETTER_OBJ_ARG;
 	
 	// TODO
 	
-	// EMIT
+	// Emit "map"
+	Local<Value> argv[2] = { JS_STR("map"), value };
+	body->_emit(2, argv);
 	
 }
 
@@ -353,7 +407,9 @@ NAN_SETTER(Body::meshSetter) { THIS_BODY; SETTER_OBJ_ARG;
 	
 	// TODO
 	
-	// EMIT
+	// Emit "mest"
+	Local<Value> argv[2] = { JS_STR("mest"), value };
+	body->_emit(2, argv);
 	
 }
 
@@ -372,7 +428,9 @@ NAN_SETTER(Body::massSetter) { THIS_BODY; SETTER_FLOAT_ARG;
 	
 	body->_rebuild();
 	
-	// EMIT
+	// Emit "mass"
+	Local<Value> argv[2] = { JS_STR("mass"), value };
+	body->_emit(2, argv);
 	
 }
 
@@ -389,7 +447,9 @@ NAN_SETTER(Body::restSetter) { THIS_BODY; SETTER_FLOAT_ARG;
 	
 	body->_body->setRestitution(body->_cacheRest);
 	
-	// EMIT
+	// Emit "rest"
+	Local<Value> argv[2] = { JS_STR("rest"), value };
+	body->_emit(2, argv);
 	
 }
 
@@ -406,7 +466,9 @@ NAN_SETTER(Body::damplSetter) { THIS_BODY; SETTER_FLOAT_ARG;
 	
 	body->_body->setDamping(body->_cacheDampl, body->_cacheDampa);
 	
-	// EMIT
+	// Emit "dampl"
+	Local<Value> argv[2] = { JS_STR("dampl"), value };
+	body->_emit(2, argv);
 	
 }
 
@@ -423,7 +485,9 @@ NAN_SETTER(Body::dampaSetter) { THIS_BODY; SETTER_FLOAT_ARG;
 	
 	body->_body->setDamping(body->_cacheDampl, body->_cacheDampa);
 	
-	// EMIT
+	// Emit "dampa"
+	Local<Value> argv[2] = { JS_STR("dampa"), value };
+	body->_emit(2, argv);
 	
 }
 
@@ -440,7 +504,9 @@ NAN_SETTER(Body::frictSetter) { THIS_BODY; SETTER_FLOAT_ARG;
 	
 	body->_body->setFriction(body->_cacheFrict);
 	
-	// EMIT
+	// Emit "frict"
+	Local<Value> argv[2] = { JS_STR("frict"), value };
+	body->_emit(2, argv);
 	
 }
 
@@ -457,7 +523,9 @@ NAN_SETTER(Body::sleepySetter) { THIS_BODY; SETTER_BOOL_ARG;
 	
 	body->_body->setActivationState(body->_cacheSleepy ? ACTIVE_TAG : DISABLE_DEACTIVATION);
 	
-	// EMIT
+	// Emit "sleepy"
+	Local<Value> argv[2] = { JS_STR("sleepy"), value };
+	body->_emit(2, argv);
 	
 }
 
@@ -478,6 +546,8 @@ void Body::_rebuild() {
 		_cshape = new btCylinderShape(btVector3(0.5f, 0.5f, 0.5f));
 	} else if (_cacheType == "caps") {
 		_cshape = new btCapsuleShape(0.5f, 1);
+	} else if (_cacheType == "plane") {
+		_cshape = new btStaticPlaneShape(btVector3(0.0f, 1.0f, 0.0f), 0);
 	} /*else if (_cacheType == "map" && _cacheMap) {
 		_cshape = new btHeightfieldTerrainShape(
 			_cacheMap->w(), _cacheMap->h(),
@@ -493,7 +563,7 @@ void Body::_rebuild() {
 	
 	btRigidBody *oldb = _body;
 	
-	bool isDynamic = (_cacheMass != 0.f);
+	bool isDynamic = _cacheMass != 0.f && _cacheType != "plane";
 	
 	btVector3 localInertia(0,0,0);
 	if (isDynamic) {
@@ -508,7 +578,9 @@ void Body::_rebuild() {
 	transform.setRotation(_cacheRot);
 	myMotionState->setWorldTransform(transform);
 	
-	btRigidBody::btRigidBodyConstructionInfo rbInfo(_cacheMass, myMotionState, _cshape, localInertia);
+	btRigidBody::btRigidBodyConstructionInfo rbInfo(
+		_cacheType != "plane" ? _cacheMass : 0.f, myMotionState, _cshape, localInertia
+	);
 	
 	_body = new btRigidBody(rbInfo);
 	
@@ -518,7 +590,9 @@ void Body::_rebuild() {
 	_body->setLinearFactor(_cacheFactl);
 	_body->setAngularFactor(_cacheFacta);
 	_body->setFriction(_cacheFrict);
+	
 	_body->setActivationState(_cacheSleepy ? ACTIVE_TAG : DISABLE_DEACTIVATION);
+	_body->setSleepingThresholds(8.f, 8.f);
 	
 	_body->setUserPointer(this);
 	

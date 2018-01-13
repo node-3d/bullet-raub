@@ -20,8 +20,11 @@ public:
 	
 	static void init(v8::Handle<v8::Object> target);
 	
+	// called within engine
 	void _rebuild(); // called internally and by Body
 	void _dropBody(Body *body); // called by Body
+	inline void _emit(int argc, v8::Local<v8::Value> argv[]);
+	void __update();
 	
 protected:
 	
@@ -111,6 +114,7 @@ private:
 	
 	btGeneric6DofSpringConstraint *_constraint;
 	
+	bool _throttle;
 	
 private: // prop cache
 	Body *_cacheEnta;

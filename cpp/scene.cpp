@@ -7,7 +7,6 @@
 #include <btSequentialImpulseConstraintSolver.h>
 #include <btDiscreteDynamicsWorld.h>
 #include <btConstraintSolver.h>
-#include <btStaticPlaneShape.h>
 #include <btRaycastCallback.h>
 #include <btSolverConstraint.h>
 #include <btDynamicsWorld.h>
@@ -169,7 +168,7 @@ void Scene::unrefBody(Body* body) {
 
 void Scene::doUpdate(float dt) {
 	
-	_physWorld->stepSimulation(dt * 0.5f, 10, 1.f / 120.f);
+	_physWorld->stepSimulation(dt/* * 0.5f*/, 10, 1.f / 120.f);
 	
 	vector<Body*>::iterator it = _bodies.begin();
 	while (it != _bodies.end()) {
@@ -223,9 +222,8 @@ NAN_SETTER(Scene::gravitySetter) { THIS_SCENE; SETTER_VEC3_ARG;
 	
 	scene->_physWorld->setGravity(scene->_cacheGrav);
 	
-	// EMIT
+	// Emit "gravity"
 	Local<Value> argv[2] = { JS_STR("gravity"), value };
-	
 	scene->_emit(2, argv);
 	
 }

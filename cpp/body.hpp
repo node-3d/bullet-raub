@@ -32,6 +32,8 @@ public:
 	
 	btDynamicsWorld *getWorld();
 	btRigidBody *getBody() { return _body; }
+	const btVector3 &getPos() { return _cachePos; }
+	Nan::Persistent<v8::Object> &getEmitter() { return _emitter; }
 	
 	// called within engine
 	void __update();
@@ -99,6 +101,7 @@ private:
 	static Nan::Persistent<v8::Function> _constructor;
 	
 	Nan::Persistent<v8::Object> _emitter;
+	inline void _emit(int argc, v8::Local<v8::Value> argv[]);
 	
 	Scene *_scene;
 	std::vector<Joint*> _joints;
