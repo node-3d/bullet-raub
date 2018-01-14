@@ -19,11 +19,11 @@ class JsJoint extends EventEmitter {
 	}
 	
 	
-	get enta() { return this._joint.enta; }
-	set enta(v) { this._joint.enta = v._body; }
+	get a() { return this._joint.a; }
+	set a(v) { this._joint.a = v._body; }
 	
-	get entb() { return this._joint.entb; }
-	set entb(v) { this._joint.entb = v._body; }
+	get b() { return this._joint.b; }
+	set b(v) { this._joint.b = v._body; }
 	
 	get broken() { return this._joint.broken; }
 	set broken(v) { this._joint.broken = v; }
@@ -95,7 +95,7 @@ class JsJoint extends EventEmitter {
 	[util.inspect.custom]() { return this.toString(); }
 	
 	toString() {
-		return `Joints { broken: ${this.broken} }`
+		return `Joint { broken: ${this.broken} }`
 	}
 	
 }

@@ -15,11 +15,11 @@ console.log('PLANE', plane);
 
 
 const bodyA = new Body({ scene });
-bodyA.pos = [10, 100, 10];
+bodyA.pos = [0, 100, 0];
 bodyA.mass = 1;
 // bodyA.on('update', u => console.log('update A', u.pos.x, u.pos.y, u.pos.z));
 const bodyB = new Body({ scene });
-bodyB.pos = [10, 101, 10];
+bodyB.pos = [0, 101, 0];
 bodyB.mass = 1;
 
 console.log('A', bodyA);
@@ -30,26 +30,26 @@ const joint = new Joint();
 console.log('JOINT', scene);
 joint.on('a', a => console.log('joint A', a));
 joint.on('b', a => console.log('joint B', a));
-joint.on('update', u => console.log('update J', u.posa, u.posb));
+// joint.on('update', u => console.log('update J', u.posa, u.posb));
 
-joint.enta = bodyA;
-console.log('J-A', joint.enta);
+joint.a = bodyA;
+console.log('J-A', joint.a);
 
-joint.entb = bodyB;
-console.log('J-B', joint.entb);
+joint.b = bodyB;
+console.log('J-B', joint.b);
 
 
-const trace1 = new Trace({ scene, from: [0, 10, 0], to: [0, -10, 0] });
+const trace1 = new Trace({ scene, from: [0, 200, 0], to: [0, -10, 0] });
 console.log('TRACE 1', trace1);
 
 const trace2 = new Trace();
 console.log('TRACE 2', trace2);
 
 
-const hitRes = scene.hit([0, 10, 0], [0, -10, 0]);
+const hitRes = scene.hit([0, 200, 0], [0, -10, 0]);
 console.log('hitRes', hitRes);
 
-const traceRes = scene.trace([0, 10, 0], [0, -10, 0]);
+const traceRes = scene.trace([0, 200, 0], [0, -10, 0]);
 console.log('traceRes', traceRes);
 
 

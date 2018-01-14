@@ -55,8 +55,8 @@ void Joint::init(Handle<Object> target) {
 	
 	// prototype
 	Local<ObjectTemplate> proto = ctor->PrototypeTemplate();
-	ACCESSOR_RW(proto, enta);
-	ACCESSOR_RW(proto, entb);
+	ACCESSOR_RW(proto, a);
+	ACCESSOR_RW(proto, b);
 	ACCESSOR_RW(proto, broken);
 	ACCESSOR_RW(proto, posa);
 	ACCESSOR_RW(proto, posb);
@@ -120,8 +120,8 @@ Joint::Joint() {
 	
 	_constraint = NULL;
 	
-	_cacheEnta = NULL;
-	_cacheEntb = NULL;
+	_cacheA = NULL;
+	_cacheB = NULL;
 	_cacheBroken = false;
 	_cacheMaximp = 9001.f*9001.f;
 	_cachePosa = btVector3(0.f, 0.f, 0.f);
@@ -146,26 +146,27 @@ Joint::Joint() {
 	_cacheMotoraf = btVector3(0.f, 0.f, 0.f);
 	
 	_throttle = false;
+	_asleep = false;
 	
 }
 
 
 Joint::~Joint() {
 	
-	if (_cacheEnta) {
-		_cacheEnta->unrefJoint(this);
+	if (_cacheA) {
+		_cacheA->unrefJoint(this);
 	}
 	
-	if (_cacheEntb) {
-		_cacheEntb->unrefJoint(this);
+	if (_cacheB) {
+		_cacheB->unrefJoint(this);
 	}
 	
 	if (_constraint) {
-		_cacheEnta->getWorld()->removeConstraint(_constraint);
+		_cacheA->getWorld()->removeConstraint(_constraint);
 	}
 	
-	_cacheEnta = NULL;
-	_cacheEntb = NULL;
+	_cacheA = NULL;
+	_cacheB = NULL;
 	
 	delete _constraint;
 	_constraint = NULL;
@@ -173,7 +174,7 @@ Joint::~Joint() {
 }
 
 
-void Joint::__update() {
+void Joint::__update(bool asleep) {
 	
 	if ( ! _constraint ) {
 		return;
@@ -181,12 +182,17 @@ void Joint::__update() {
 	
 	_throttle = !_throttle;
 	
-	if ( _throttle ) {
+	if (_throttle) {
+		_asleep = asleep;
 		return;
 	}
 	
-	const btVector3 &a = _cacheEnta->getPos();
-	const btVector3 &b = _cacheEntb->getPos();
+	if (_asleep && asleep) {
+		return;
+	}
+	
+	const btVector3 &a = _cacheA->getPos();
+	const btVector3 &b = _cacheB->getPos();
 	
 	// Emit "update"
 	VEC3_TO_OBJ(a, posa);
@@ -226,31 +232,31 @@ V3_GETTER(motorav, _cacheMotorav);
 
 
 
-NAN_SETTER(Joint::entaSetter) { THIS_JOINT; SETTER_OBJ_ARG;
+NAN_SETTER(Joint::aSetter) { THIS_JOINT; SETTER_OBJ_ARG;
 	
 	Body *body = ObjectWrap::Unwrap<Body>(v);
 	
-	if (joint->_cacheEnta == body) {
+	if (joint->_cacheA == body) {
 		return;
 	}
 	
-	if (joint->_cacheEnta) {
-		joint->_cacheEnta->unrefJoint(joint);
-		joint->_removeConstraint(joint->_cacheEnta->getWorld());
+	if (joint->_cacheA) {
+		joint->_cacheA->unrefJoint(joint);
+		joint->_removeConstraint(joint->_cacheA->getWorld());
 	}
 	
-	joint->_cacheEnta = body;
+	joint->_cacheA = body;
 	
-	if (joint->_cacheEnta) {
-		joint->_cacheEnta->refJoint(joint);
+	if (joint->_cacheA) {
+		joint->_cacheA->refJoint(joint);
 	}
 	
 	joint->_rebuild();
 	
 	// Emit "a"
-	if (joint->_cacheEnta) {
+	if (joint->_cacheA) {
 		Local<Value> argv[2] = {
-			JS_STR("a"), Nan::New(joint->_cacheEnta->getEmitter())
+			JS_STR("a"), Nan::New(joint->_cacheA->getEmitter())
 		};
 		joint->_emit(2, argv);
 	} else {
@@ -260,40 +266,42 @@ NAN_SETTER(Joint::entaSetter) { THIS_JOINT; SETTER_OBJ_ARG;
 	
 }
 
-NAN_GETTER(Joint::entaGetter) { THIS_JOINT;
+NAN_GETTER(Joint::aGetter) { THIS_JOINT;
 	
-	Local<Object> obj = Nan::New<Object>();
-	
-	RET_VALUE(obj);
+	if (joint->_cacheA) {
+		RET_VALUE(Nan::New(joint->_cacheA->getEmitter()));
+	} else {
+		RET_VALUE(Nan::Null());
+	}
 	
 }
 
 
-NAN_SETTER(Joint::entbSetter) { THIS_JOINT; SETTER_OBJ_ARG;
+NAN_SETTER(Joint::bSetter) { THIS_JOINT; SETTER_OBJ_ARG;
 	
 	Body *body = ObjectWrap::Unwrap<Body>(v);
 	
-	if (joint->_cacheEntb == body) {
+	if (joint->_cacheB == body) {
 		return;
 	}
 	
-	if (joint->_cacheEntb) {
-		joint->_cacheEntb->unrefJoint(joint);
-		joint->_removeConstraint(joint->_cacheEntb->getWorld());
+	if (joint->_cacheB) {
+		joint->_cacheB->unrefJoint(joint);
+		joint->_removeConstraint(joint->_cacheB->getWorld());
 	}
 	
-	joint->_cacheEntb = body;
+	joint->_cacheB = body;
 	
-	if (joint->_cacheEntb) {
-		joint->_cacheEntb->refJoint(joint);
+	if (joint->_cacheB) {
+		joint->_cacheB->refJoint(joint);
 	}
 	
 	joint->_rebuild();
 	
 	// Emit "b"
-	if (joint->_cacheEntb) {
+	if (joint->_cacheB) {
 		Local<Value> argv[2] = {
-			JS_STR("b"), Nan::New(joint->_cacheEntb->getEmitter())
+			JS_STR("b"), Nan::New(joint->_cacheB->getEmitter())
 		};
 		joint->_emit(2, argv);
 	} else {
@@ -303,11 +311,13 @@ NAN_SETTER(Joint::entbSetter) { THIS_JOINT; SETTER_OBJ_ARG;
 	
 }
 
-NAN_GETTER(Joint::entbGetter) { THIS_JOINT;
+NAN_GETTER(Joint::bGetter) { THIS_JOINT;
 	
-	Local<Object> obj = Nan::New<Object>();
-	
-	RET_VALUE(obj);
+	if (joint->_cacheB) {
+		RET_VALUE(Nan::New(joint->_cacheB->getEmitter()));
+	} else {
+		RET_VALUE(Nan::Null());
+	}
 	
 }
 
@@ -675,12 +685,12 @@ void Joint::_dropBody(Body *body) {
 		return;
 	}
 	
-	if (body == _cacheEnta) {
-		_removeConstraint(_cacheEnta->getWorld());
-		_cacheEnta = NULL;
-	} else if (body == _cacheEntb) {
-		_removeConstraint(_cacheEntb->getWorld());
-		_cacheEntb = NULL;
+	if (body == _cacheA) {
+		_removeConstraint(_cacheA->getWorld());
+		_cacheA = NULL;
+	} else if (body == _cacheB) {
+		_removeConstraint(_cacheB->getWorld());
+		_cacheB = NULL;
 	} else {
 		return;
 	}
@@ -692,18 +702,18 @@ void Joint::_dropBody(Body *body) {
 
 void Joint::_rebuild() {
 	
-	if (_cacheEnta) {
-		_removeConstraint(_cacheEnta->getWorld());
-	} else if (_cacheEntb) {
-		_removeConstraint(_cacheEntb->getWorld());
+	if (_cacheA) {
+		_removeConstraint(_cacheA->getWorld());
+	} else if (_cacheB) {
+		_removeConstraint(_cacheB->getWorld());
 	}
 	
-	if( ! (_cacheEnta && _cacheEntb) ) {
+	if( ! (_cacheA && _cacheB) ) {
 		return;
 	}
 	
-	btRigidBody *rb1 = _cacheEnta->getBody();
-	btRigidBody *rb2 = _cacheEntb->getBody();
+	btRigidBody *rb1 = _cacheA->getBody();
+	btRigidBody *rb2 = _cacheB->getBody();
 	
 	btTransform transformA;
 	transformA.setIdentity();
@@ -721,7 +731,7 @@ void Joint::_rebuild() {
 	transformB.setRotation(q);
 	
 	_constraint = new btGeneric6DofSpringConstraint(*rb1, *rb2, transformA, transformB, true);
-	_cacheEnta->getWorld()->addConstraint(_constraint, true);
+	_cacheA->getWorld()->addConstraint(_constraint, true);
 	_constraint->setEnabled( ! _cacheBroken );
 	
 	_constraint->setLinearLowerLimit(_cacheMinl);

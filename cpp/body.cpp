@@ -195,6 +195,11 @@ btDynamicsWorld *Body::getWorld() {
 void Body::__update() {
 	
 	if (_body->isStaticObject() || ! _body->isActive()) {
+		vector<Joint*>::iterator it = _joints.begin();
+		while (it != _joints.end()) {
+			(*it)->__update(true);
+			it++;
+		}
 		return;
 	}
 	

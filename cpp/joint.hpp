@@ -24,7 +24,7 @@ public:
 	void _rebuild(); // called internally and by Body
 	void _dropBody(Body *body); // called by Body
 	inline void _emit(int argc, v8::Local<v8::Value> argv[]);
-	void __update();
+	void __update(bool asleep = false);
 	
 protected:
 	
@@ -33,11 +33,11 @@ protected:
 	
 	static NAN_METHOD(newCtor);
 	
-	static NAN_GETTER(entaGetter);
-	static NAN_SETTER(entaSetter);
+	static NAN_GETTER(aGetter);
+	static NAN_SETTER(aSetter);
 	
-	static NAN_GETTER(entbGetter);
-	static NAN_SETTER(entbSetter);
+	static NAN_GETTER(bGetter);
+	static NAN_SETTER(bSetter);
 	
 	static NAN_GETTER(brokenGetter);
 	static NAN_SETTER(brokenSetter);
@@ -114,11 +114,14 @@ private:
 	
 	btGeneric6DofSpringConstraint *_constraint;
 	
+	// Throttle every first __update, pass every second call
 	bool _throttle;
+	// Remember asleep every first __update, compare every second call, both asleep -> nop
+	bool _asleep;
 	
 private: // prop cache
-	Body *_cacheEnta;
-	Body *_cacheEntb;
+	Body *_cacheA;
+	Body *_cacheB;
 	bool _cacheBroken;
 	float _cacheMaximp;
 	btVector3 _cachePosa;
