@@ -116,17 +116,17 @@ Body::Body(Scene *scene) {
 	_body = NULL;
 	
 	_cacheType = "box";
-	_cachePos = btVector3(0,0,0);
-	_cacheRot = btQuaternion(0,0,0,1);
-	_cacheSize = btVector3(1,1,1);
-	_cacheVell = btVector3(0,0,0);
-	_cacheVela = btVector3(0,0,0);
-	_cacheMass = 0;
+	_cachePos = btVector3(0, 0, 0);
+	_cacheRot = btQuaternion(0, 0, 0, 1);
+	_cacheSize = btVector3(1, 1, 1);
+	_cacheVell = btVector3(0, 0, 0);
+	_cacheVela = btVector3(0, 0, 0);
+	_cacheMass = 0.0f;
 	_cacheRest = 0.0f;
 	_cacheDampl = 0.1f;
 	_cacheDampa = 0.1f;
-	_cacheFactl = btVector3(1,1,1);
-	_cacheFacta = btVector3(1,1,1);
+	_cacheFactl = btVector3(1, 1, 1);
+	_cacheFacta = btVector3(1, 1, 1);
 	_cacheFrict = 0.5f;
 	_cacheSleepy = true;
 	_cacheMap = NULL;
@@ -592,7 +592,7 @@ void Body::_rebuild() {
 	_body->setFriction(_cacheFrict);
 	
 	_body->setActivationState(_cacheSleepy ? ACTIVE_TAG : DISABLE_DEACTIVATION);
-	_body->setSleepingThresholds(8.f, 8.f);
+	_body->setSleepingThresholds(1.f, 1.f);
 	
 	_body->setUserPointer(this);
 	

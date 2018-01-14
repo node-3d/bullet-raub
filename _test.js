@@ -1,7 +1,5 @@
 'use strict';
 
-const util = require('util');
-
 const { Scene, Body, Joint, Trace } = require('.');
 
 
