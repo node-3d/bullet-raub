@@ -114,7 +114,11 @@
 					] } ],
 					[ 'OS=="mac"', { 'action' : [
 						'rm',
-						'<(module_root_dir)/build/Release/obj.target/bullet/cpp/bullet.o',
+						'<(module_root_dir)/build/Release/obj.target/bullet/cpp/bindings.o',
+						'<(module_root_dir)/build/Release/obj.target/bullet/cpp/body.o',
+						'<(module_root_dir)/build/Release/obj.target/bullet/cpp/joint.o',
+						'<(module_root_dir)/build/Release/obj.target/bullet/cpp/scene.o',
+						'<(module_root_dir)/build/Release/obj.target/bullet/cpp/trace.o',
 						'<(module_root_dir)/build/Release/bullet.node'
 					] } ],
 					[ 'OS=="win"', { 'action' : [
