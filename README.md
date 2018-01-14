@@ -32,6 +32,8 @@ a limited set of info on what was updated by the engine. If getters are called w
 update-handler, they get the newest values as well.
 
 
+---
+
 ### class Scene
 
 Wraps around `btPhysicsWorld` (as if this was relevant). Scene works as a container
@@ -45,7 +47,7 @@ const scene = new Scene();
 
 
 Constructor:
-* Scene()
+* `Scene()`
 
 
 Properties:
@@ -62,6 +64,7 @@ containing the result of the first hit against body, if any.
 whole list of hits occuring on its way.
 
 
+---
 
 ### class Body
 
@@ -76,7 +79,7 @@ const body = new Body({ scene });
 
 
 Constructor:
-* Body({ Scene scene })
+* `Body({ Scene scene })`
 
 
 Properties:
@@ -99,7 +102,7 @@ scene with a locked z-axis, then just set it [1,1,0].
 create a controlled dynamic character capsule which does not tilt , then just set it [0,0,0].
 * `get/set {} map null` - WIP
 * `get/set {} mesh null` - WIP
-* `get/set number mass 0.0` - body mass, if 0 - body is static. NOTE: set is expensive.
+* `get/set number mass 0.0` - body mass, if 0 - body is **static**. NOTE: set is expensive.
 * `get/set number rest 0.0` - restitution, bounciness.
 * `get/set number dampl 0.1` - something like air friction and how much it is applied to
 the linear velocity.
@@ -125,6 +128,7 @@ body.on('update', ({ pos, quat }) => {
 });
 ```
 
+---
 
 ### class Joint
 
@@ -144,7 +148,7 @@ joint.b = bodyB;
 
 
 Constructor:
-* Joint()
+* `Joint()`
 
 
 Properties:
@@ -194,6 +198,7 @@ joint.on('update', ({ posa, posb, broken }) => {
 });
 ```
 
+---
 
 ### class Trace
 
@@ -216,12 +221,12 @@ console.log('traceRes', traceRes);
 
 
 Constructor:
-* Trace({ Scene scene, vec3 from, vec3 to })
+* `Trace({ Scene scene, vec3 from, vec3 to })`
 
 
 Properties:
 
-* get boolean hit - if ray hit any body
-* get Body body - the body or null
-* get vec3 pos - where did it hit
-* get vec3 norm - body surface normal
+* `get boolean hit` - if ray hit any body
+* `get Body body` - the body or null
+* `get vec3 pos` - where did it hit
+* `get vec3 norm` - body surface normal
