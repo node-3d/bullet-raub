@@ -14,8 +14,13 @@ class JsBody extends EventEmitter {
 		
 		this.emit = this.emit.bind(this);
 		
-		this._body = new Body(this, opts.scene._scene);
-		
+		if (opts._body) {
+			this._body = opts._body;
+		} else if (opts.scene) {
+			this._body = new Body(this, opts.scene._scene);
+		} else {
+			throw new Error('Argument opts.scene is required.');
+		}
 		
 	}
 	

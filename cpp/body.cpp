@@ -75,6 +75,13 @@ void Body::init(Handle<Object> target) {
 }
 
 
+Nan::Persistent<Object> &Body::getJsWrapper() {
+	
+	return _emitter;
+	
+}
+
+
 void Body::_emit(int argc, Local<Value> argv[]) {
 	
 	if ( ! Nan::New(_emitter)->Has(JS_STR("emit")) ) {

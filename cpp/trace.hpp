@@ -27,8 +27,6 @@ public:
 	Trace(bool hit, Body *body, const btVector3 &pos, const btVector3 &norm);
 	Trace(Scene *scene, const btVector3 &from, const btVector3 &to);
 	
-	// apply(Scene *scene, const btVector3 &from, const btVector3 &to);
-	
 	
 protected:
 	

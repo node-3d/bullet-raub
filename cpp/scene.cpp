@@ -168,7 +168,7 @@ void Scene::unrefBody(Body* body) {
 
 void Scene::doUpdate(float dt) {
 	
-	_physWorld->stepSimulation(dt/* * 0.5f*/, 10, 1.f / 120.f);
+	_physWorld->stepSimulation(dt, 10, 1.f / 120.f);
 	
 	vector<Body*>::iterator it = _bodies.begin();
 	while (it != _bodies.end()) {

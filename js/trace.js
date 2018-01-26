@@ -3,6 +3,7 @@
 const util = require('util');
 
 const { Trace } = require('../core');
+const Body = require('./body');
 
 
 class JsTrace {
@@ -20,7 +21,6 @@ class JsTrace {
 		}
 		
 	}
-	
 	
 	get hit() { return this._trace.hit; }
 	get body() { return this._trace.body; }

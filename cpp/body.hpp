@@ -30,6 +30,8 @@ public:
 	void refJoint(Joint *joint);
 	void unrefJoint(Joint *joint);
 	
+	Nan::Persistent<v8::Object> &getJsWrapper();
+	
 	btDynamicsWorld *getWorld();
 	btRigidBody *getBody() { return _body; }
 	const btVector3 &getPos() { return _cachePos; }

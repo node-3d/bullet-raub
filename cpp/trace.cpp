@@ -63,6 +63,7 @@ Local<Object> Trace::instance(bool hit, Body *body, const btVector3 &pos, const 
 	Local<Value> argv[argc] = { JS_BOOL(hit), Nan::New<External>(body), p, n };
 	
 	Local<Object> inst = cons->NewInstance(argc, argv);
+	// Nan::NewInstance(cons, argc, argv).ToLocalChecked();
 	
 	return inst;
 	
@@ -153,9 +154,11 @@ V3_GETTER(norm, _cacheNorm);
 
 NAN_GETTER(Trace::bodyGetter) { THIS_TRACE;
 	
-	Local<Value> obj = Nan::New<External>(trace->_cacheBody);
-	
-	RET_VALUE(obj);
+	if (trace->_cacheBody) {
+		RET_VALUE(Nan::New(trace->_cacheBody->getJsWrapper()));
+	} else {
+		RET_VALUE(Nan::Null());
+	}
 	
 }
 
