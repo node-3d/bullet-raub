@@ -1,5 +1,7 @@
 {
 	'variables': {
+		'_del'           : '<!(node -e "console.log(require(\'node-addon-tools-raub\')._del)")',
+		'_rd'            : '<!(node -e "console.log(require(\'node-addon-tools-raub\')._rd)")',
 		'bullet_include' : '<!(node -e "console.log(require(\'node-deps-bullet-raub\').include)")',
 		'bullet_bin'     : '<!(node -e "console.log(require(\'node-deps-bullet-raub\').bin)")',
 	},
@@ -14,9 +16,9 @@
 				'cpp/trace.cpp',
 			],
 			'include_dirs': [
-				'<!(node -e "require(\'nan\')")',
+				'<!(node -e "require(\'node-addon-tools-raub\').printNan()")',
+				'<!(node -e "console.log(require(\'node-addon-tools-raub\').include)")',
 				'<(bullet_include)',
-				'<!(node -e "require(\'node-addon-tools-raub\')")',
 			],
 			'library_dirs': [ '<(bullet_bin)' ],
 			'libraries'    : [ '-lbullet' ],
@@ -65,7 +67,7 @@
 					[ 'OS=="linux"', { 'action': ['mkdir', '-p', 'binary'] } ],
 					[ 'OS=="mac"', { 'action': ['mkdir', '-p', 'binary'] } ],
 					[ 'OS=="win"', { 'action': [
-						'<(module_root_dir)/_rd "<(module_root_dir)/binary" && ' +
+						'<(_rd) "<(module_root_dir)/binary" && ' +
 						'md "<(module_root_dir)/binary"'
 					] } ],
 				],
@@ -122,8 +124,8 @@
 						'<(module_root_dir)/build/Release/bullet.node'
 					] } ],
 					[ 'OS=="win"', { 'action' : [
-						'<(module_root_dir)/_del "<(module_root_dir)/build/Release/bullet.*" && ' +
-						'<(module_root_dir)/_del "<(module_root_dir)/build/Release/obj/bullet/*.*"'
+						'<(_del) "<(module_root_dir)/build/Release/bullet.*" && ' +
+						'<(_del) "<(module_root_dir)/build/Release/obj/bullet/*.*"'
 					] } ],
 				],
 			}],

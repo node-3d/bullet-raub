@@ -36,8 +36,6 @@ protected:
 	
 	static NAN_METHOD(newCtor);
 	
-	static NAN_METHOD(toString);
-	
 	static NAN_GETTER(hitGetter);
 	static NAN_GETTER(bodyGetter);
 	static NAN_GETTER(posGetter);

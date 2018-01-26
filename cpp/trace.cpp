@@ -150,19 +150,12 @@ Trace::~Trace() {
 }
 
 
-NAN_METHOD(Trace::toString) { THIS_TRACE;
-	
-	RET_VALUE(JS_STR("oh hai!"));
-	
-}
-
-
 V3_GETTER(pos, _cachePos);
 V3_GETTER(norm, _cacheNorm);
 
 NAN_GETTER(Trace::bodyGetter) { THIS_TRACE;
 	
-	Local<Object> obj = Nan::New<Object>();
+	Local<Object> obj = Nan::New<External>(trace->_cacheBody)
 	
 	RET_VALUE(obj);
 	
