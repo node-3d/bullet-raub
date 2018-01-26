@@ -40,8 +40,6 @@ void Trace::init(Handle<Object> target) {
 	ctor->SetClassName(JS_STR("Trace"));
 	
 	// prototype
-	Nan::SetPrototypeMethod(ctor, "toString", toString);
-	
 	Local<ObjectTemplate> proto = ctor->PrototypeTemplate();
 	ACCESSOR_R(proto, hit);
 	ACCESSOR_R(proto, body);
@@ -155,7 +153,7 @@ V3_GETTER(norm, _cacheNorm);
 
 NAN_GETTER(Trace::bodyGetter) { THIS_TRACE;
 	
-	Local<Object> obj = Nan::New<External>(trace->_cacheBody)
+	Local<Value> obj = Nan::New<External>(trace->_cacheBody);
 	
 	RET_VALUE(obj);
 	
