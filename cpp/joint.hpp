@@ -34,6 +34,8 @@ protected:
 	
 	static NAN_METHOD(newCtor);
 	
+	static NAN_METHOD(destroy);
+	
 	static NAN_GETTER(aGetter);
 	static NAN_SETTER(aSetter);
 	

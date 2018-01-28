@@ -25,8 +25,11 @@ using namespace std;
 #define THIS_BODY                                                             \
 	Body *body = ObjectWrap::Unwrap<Body>(info.This());
 
+#define THIS_CHECK                                                            \
+	if (body->_isDestroyed) return;
+
 #define V3_GETTER(NAME, CACHE)                                                \
-	NAN_GETTER(Body::NAME ## Getter) { DES_CHECK; THIS_BODY;                  \
+	NAN_GETTER(Body::NAME ## Getter) { THIS_BODY; THIS_CHECK;                 \
 		VEC3_TO_OBJ(body->CACHE, NAME);                                       \
 		RET_VALUE(NAME);                                                      \
 	}
@@ -184,7 +187,7 @@ void Body::_destroy() { DES_CHECK;
 	
 	// Emit "destroy"
 	Local<Value> argv = JS_STR("destroy");
-	body->_emit(1, &argv);
+	_emit(1, &argv);
 	
 }
 
@@ -258,21 +261,21 @@ void Body::__update() { DES_CHECK;
 
 
 
-NAN_METHOD(Body::destroy) { DES_CHECK; THIS_BODY;
+NAN_METHOD(Body::destroy) { THIS_BODY; THIS_CHECK;
 	
 	body->_destroy();
 	
 }
 
 
-NAN_GETTER(Body::typeGetter) { DES_CHECK; THIS_BODY;
+NAN_GETTER(Body::typeGetter) { THIS_BODY; THIS_CHECK;
 	
 	RET_VALUE(JS_STR(body->_cacheType.c_str()));
 	
 }
 
 
-NAN_SETTER(Body::typeSetter) { DES_CHECK; THIS_BODY; SETTER_UTF8_ARG;
+NAN_SETTER(Body::typeSetter) { THIS_BODY; THIS_CHECK; SETTER_UTF8_ARG;
 	
 	CACHE_CAS(_cacheType, std::string(*v))
 	
@@ -293,7 +296,7 @@ V3_GETTER(factl, _cacheFactl);
 V3_GETTER(facta, _cacheFacta);
 
 
-NAN_SETTER(Body::posSetter) { DES_CHECK; THIS_BODY; SETTER_VEC3_ARG;
+NAN_SETTER(Body::posSetter) { THIS_BODY; THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cachePos, v);
 	
@@ -306,7 +309,7 @@ NAN_SETTER(Body::posSetter) { DES_CHECK; THIS_BODY; SETTER_VEC3_ARG;
 }
 
 
-NAN_GETTER(Body::rotGetter) { DES_CHECK; THIS_BODY;
+NAN_GETTER(Body::rotGetter) { THIS_BODY; THIS_CHECK;
 	
 	btScalar w = body->_cacheRot.getW();
 	btScalar x = body->_cacheRot.getX();
@@ -330,7 +333,7 @@ NAN_GETTER(Body::rotGetter) { DES_CHECK; THIS_BODY;
 }
 
 
-NAN_SETTER(Body::rotSetter) { DES_CHECK; THIS_BODY; SETTER_VEC3_ARG;
+NAN_SETTER(Body::rotSetter) { THIS_BODY; THIS_CHECK; SETTER_VEC3_ARG;
 	
 	btQuaternion q;
 	q.setEuler(v.getY() * 0.01745329f, v.getX() * 0.01745329f, v.getZ() * 0.01745329f);
@@ -348,7 +351,7 @@ NAN_SETTER(Body::rotSetter) { DES_CHECK; THIS_BODY; SETTER_VEC3_ARG;
 }
 
 
-NAN_SETTER(Body::vellSetter) { DES_CHECK; THIS_BODY; SETTER_VEC3_ARG;
+NAN_SETTER(Body::vellSetter) { THIS_BODY; THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheVell, v);
 	
@@ -365,7 +368,7 @@ NAN_SETTER(Body::vellSetter) { DES_CHECK; THIS_BODY; SETTER_VEC3_ARG;
 }
 
 
-NAN_SETTER(Body::velaSetter) { DES_CHECK; THIS_BODY; SETTER_VEC3_ARG;
+NAN_SETTER(Body::velaSetter) { THIS_BODY; THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheVela, v);
 	
@@ -382,7 +385,7 @@ NAN_SETTER(Body::velaSetter) { DES_CHECK; THIS_BODY; SETTER_VEC3_ARG;
 }
 
 
-NAN_SETTER(Body::sizeSetter) { DES_CHECK; THIS_BODY; SETTER_VEC3_ARG;
+NAN_SETTER(Body::sizeSetter) { THIS_BODY; THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheSize, v);
 	
@@ -395,7 +398,7 @@ NAN_SETTER(Body::sizeSetter) { DES_CHECK; THIS_BODY; SETTER_VEC3_ARG;
 }
 
 
-NAN_SETTER(Body::factlSetter) { DES_CHECK; THIS_BODY; SETTER_VEC3_ARG;
+NAN_SETTER(Body::factlSetter) { THIS_BODY; THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheFactl, v);
 	
@@ -408,7 +411,7 @@ NAN_SETTER(Body::factlSetter) { DES_CHECK; THIS_BODY; SETTER_VEC3_ARG;
 }
 
 
-NAN_SETTER(Body::factaSetter) { DES_CHECK; THIS_BODY; SETTER_VEC3_ARG;
+NAN_SETTER(Body::factaSetter) { THIS_BODY; THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheFacta, v);
 	
@@ -421,7 +424,7 @@ NAN_SETTER(Body::factaSetter) { DES_CHECK; THIS_BODY; SETTER_VEC3_ARG;
 }
 
 
-NAN_SETTER(Body::mapSetter) { DES_CHECK; THIS_BODY; SETTER_OBJ_ARG;
+NAN_SETTER(Body::mapSetter) { THIS_BODY; THIS_CHECK; SETTER_OBJ_ARG;
 	
 	// TODO
 	
@@ -431,7 +434,7 @@ NAN_SETTER(Body::mapSetter) { DES_CHECK; THIS_BODY; SETTER_OBJ_ARG;
 	
 }
 
-NAN_GETTER(Body::mapGetter) { DES_CHECK; THIS_BODY;
+NAN_GETTER(Body::mapGetter) { THIS_BODY; THIS_CHECK;
 	
 	Local<Object> obj = Nan::New<Object>();
 	
@@ -440,7 +443,7 @@ NAN_GETTER(Body::mapGetter) { DES_CHECK; THIS_BODY;
 }
 
 
-NAN_SETTER(Body::meshSetter) { DES_CHECK; THIS_BODY; SETTER_OBJ_ARG;
+NAN_SETTER(Body::meshSetter) { THIS_BODY; THIS_CHECK; SETTER_OBJ_ARG;
 	
 	// TODO
 	
@@ -450,7 +453,7 @@ NAN_SETTER(Body::meshSetter) { DES_CHECK; THIS_BODY; SETTER_OBJ_ARG;
 	
 }
 
-NAN_GETTER(Body::meshGetter) { DES_CHECK; THIS_BODY;
+NAN_GETTER(Body::meshGetter) { THIS_BODY; THIS_CHECK;
 	
 	Local<Object> obj = Nan::New<Object>();
 	
@@ -459,7 +462,7 @@ NAN_GETTER(Body::meshGetter) { DES_CHECK; THIS_BODY;
 }
 
 
-NAN_SETTER(Body::massSetter) { DES_CHECK; THIS_BODY; SETTER_FLOAT_ARG;
+NAN_SETTER(Body::massSetter) { THIS_BODY; THIS_CHECK; SETTER_FLOAT_ARG;
 	
 	CACHE_CAS(_cacheMass, v);
 	
@@ -471,14 +474,14 @@ NAN_SETTER(Body::massSetter) { DES_CHECK; THIS_BODY; SETTER_FLOAT_ARG;
 	
 }
 
-NAN_GETTER(Body::massGetter) { DES_CHECK; THIS_BODY;
+NAN_GETTER(Body::massGetter) { THIS_BODY; THIS_CHECK;
 	
 	RET_VALUE(JS_NUM(body->_cacheMass));
 	
 }
 
 
-NAN_SETTER(Body::restSetter) { DES_CHECK; THIS_BODY; SETTER_FLOAT_ARG;
+NAN_SETTER(Body::restSetter) { THIS_BODY; THIS_CHECK; SETTER_FLOAT_ARG;
 	
 	CACHE_CAS(_cacheRest, v);
 	
@@ -490,14 +493,14 @@ NAN_SETTER(Body::restSetter) { DES_CHECK; THIS_BODY; SETTER_FLOAT_ARG;
 	
 }
 
-NAN_GETTER(Body::restGetter) { DES_CHECK; THIS_BODY;
+NAN_GETTER(Body::restGetter) { THIS_BODY; THIS_CHECK;
 	
 	RET_VALUE(JS_NUM(body->_cacheRest));
 	
 }
 
 
-NAN_SETTER(Body::damplSetter) { DES_CHECK; THIS_BODY; SETTER_FLOAT_ARG;
+NAN_SETTER(Body::damplSetter) { THIS_BODY; THIS_CHECK; SETTER_FLOAT_ARG;
 	
 	CACHE_CAS(_cacheDampl, v);
 	
@@ -509,14 +512,14 @@ NAN_SETTER(Body::damplSetter) { DES_CHECK; THIS_BODY; SETTER_FLOAT_ARG;
 	
 }
 
-NAN_GETTER(Body::damplGetter) { DES_CHECK; THIS_BODY;
+NAN_GETTER(Body::damplGetter) { THIS_BODY; THIS_CHECK;
 	
 	RET_VALUE(JS_NUM(body->_cacheDampl));
 	
 }
 
 
-NAN_SETTER(Body::dampaSetter) { DES_CHECK; THIS_BODY; SETTER_FLOAT_ARG;
+NAN_SETTER(Body::dampaSetter) { THIS_BODY; THIS_CHECK; SETTER_FLOAT_ARG;
 	
 	CACHE_CAS(_cacheDampa, v);
 	
@@ -528,14 +531,14 @@ NAN_SETTER(Body::dampaSetter) { DES_CHECK; THIS_BODY; SETTER_FLOAT_ARG;
 	
 }
 
-NAN_GETTER(Body::dampaGetter) { DES_CHECK; THIS_BODY;
+NAN_GETTER(Body::dampaGetter) { THIS_BODY; THIS_CHECK;
 	
 	RET_VALUE(JS_NUM(body->_cacheDampa));
 	
 }
 
 
-NAN_SETTER(Body::frictSetter) { DES_CHECK; THIS_BODY; SETTER_FLOAT_ARG;
+NAN_SETTER(Body::frictSetter) { THIS_BODY; THIS_CHECK; SETTER_FLOAT_ARG;
 	
 	CACHE_CAS(_cacheFrict, v);
 	
@@ -554,7 +557,7 @@ NAN_GETTER(Body::frictGetter) { THIS_BODY;
 }
 
 
-NAN_SETTER(Body::sleepySetter) { DES_CHECK; THIS_BODY; SETTER_BOOL_ARG;
+NAN_SETTER(Body::sleepySetter) { THIS_BODY; THIS_CHECK; SETTER_BOOL_ARG;
 	
 	CACHE_CAS(_cacheSleepy, v);
 	
@@ -566,7 +569,7 @@ NAN_SETTER(Body::sleepySetter) { DES_CHECK; THIS_BODY; SETTER_BOOL_ARG;
 	
 }
 
-NAN_GETTER(Body::sleepyGetter) { DES_CHECK; THIS_BODY;
+NAN_GETTER(Body::sleepyGetter) { THIS_BODY; THIS_CHECK;
 	
 	RET_VALUE(JS_BOOL(body->_cacheSleepy));
 	

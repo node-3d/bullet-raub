@@ -24,8 +24,11 @@ using namespace std;
 #define THIS_SCENE                                                            \
 	Scene *scene = ObjectWrap::Unwrap<Scene>(info.This());
 
+#define THIS_CHECK                                                            \
+	if (scene->_isDestroyed) return;
+
 #define V3_GETTER(NAME, CACHE)                                                \
-	NAN_GETTER(Scene::NAME ## Getter) { DES_CHECK; THIS_SCENE;                \
+	NAN_GETTER(Scene::NAME ## Getter) { THIS_SCENE; THIS_CHECK;               \
 		VEC3_TO_OBJ(scene->CACHE, NAME);                                      \
 		RET_VALUE(NAME);                                                      \
 	}
@@ -146,7 +149,7 @@ void Scene::_destroy() { DES_CHECK;
 	
 	// Emit "destroy"
 	Local<Value> argv = JS_STR("destroy");
-	body->_emit(1, &argv);
+	_emit(1, &argv);
 	
 }
 
@@ -223,7 +226,7 @@ vector< Local<Value> > Scene::doTrace(const btVector3 &from, const btVector3 &to
 
 V3_GETTER(gravity, _cacheGrav);
 
-NAN_SETTER(Scene::gravitySetter) { DES_CHECK; THIS_SCENE; SETTER_VEC3_ARG;
+NAN_SETTER(Scene::gravitySetter) { THIS_SCENE; THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheGrav, v);
 	
@@ -236,7 +239,7 @@ NAN_SETTER(Scene::gravitySetter) { DES_CHECK; THIS_SCENE; SETTER_VEC3_ARG;
 }
 
 
-NAN_METHOD(Scene::update) { DES_CHECK; THIS_SCENE;
+NAN_METHOD(Scene::update) { THIS_SCENE; THIS_CHECK;
 	
 	LET_FLOAT_ARG(0, dt);
 	
@@ -249,7 +252,7 @@ NAN_METHOD(Scene::update) { DES_CHECK; THIS_SCENE;
 }
 
 
-NAN_METHOD(Scene::hit) { DES_CHECK; THIS_SCENE;
+NAN_METHOD(Scene::hit) { THIS_SCENE; THIS_CHECK;
 	
 	REQ_VEC3_ARG(0, f);
 	REQ_VEC3_ARG(1, t);
@@ -260,7 +263,7 @@ NAN_METHOD(Scene::hit) { DES_CHECK; THIS_SCENE;
 }
 
 
-NAN_METHOD(Scene::trace) { DES_CHECK; THIS_SCENE;
+NAN_METHOD(Scene::trace) { THIS_SCENE; THIS_CHECK;
 	
 	REQ_VEC3_ARG(0, f);
 	REQ_VEC3_ARG(1, t);
@@ -279,7 +282,7 @@ NAN_METHOD(Scene::trace) { DES_CHECK; THIS_SCENE;
 }
 
 
-NAN_METHOD(Scene::destroy) { DES_CHECK; THIS_SCENE;
+NAN_METHOD(Scene::destroy) { THIS_SCENE; THIS_CHECK;
 	
 	scene->_destroy();
 	

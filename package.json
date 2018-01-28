@@ -22,7 +22,7 @@
     "url": "https://github.com/raub/node-bullet.git"
   },
   "dependencies": {
-    "deps-bullet-raub": "0.0.1",
+    "deps-bullet-raub": "0.0.2",
     "addon-tools-raub": "0.0.3"
   }
 }

@@ -49,14 +49,14 @@ protected:
 	
 	static NAN_METHOD(newCtor);
 	
+	static NAN_METHOD(destroy);
+	
 	static NAN_GETTER(gravityGetter);
 	static NAN_SETTER(gravitySetter);
 	
 	static NAN_METHOD(update);
 	static NAN_METHOD(hit);
 	static NAN_METHOD(trace);
-	
-	static NAN_METHOD(destroy);
 	
 	
 private:
