@@ -91,6 +91,8 @@ class JsJoint extends EventEmitter {
 	get motorav() { return this._joint.motorav; }
 	set motorav(v) { this._joint.motorav = v; }
 	
+	destroy(...args) { return this._joint.destroy(...args); }
+	
 	
 	[util.inspect.custom]() { return this.toString(); }
 	

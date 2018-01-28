@@ -57,6 +57,8 @@ void Joint::init(Handle<Object> target) {
 	ctor->SetClassName(JS_STR("Joint"));
 	
 	// prototype
+	Nan::SetPrototypeMethod(ctor, "destroy", destroy);
+	
 	Local<ObjectTemplate> proto = ctor->PrototypeTemplate();
 	ACCESSOR_RW(proto, a);
 	ACCESSOR_RW(proto, b);

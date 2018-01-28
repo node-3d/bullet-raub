@@ -62,6 +62,11 @@ timer is used instead. Therefore it is prefered to call `scene.update()` without
 containing the result of the first hit against body, if any.
 * [Trace] trace( vec3 from, vec3 to ) - conducts a ray trace within the scene and returns a
 whole list of hits occuring on its way.
+* void destroy() - destroys the scene and all the contained bodies, `'destroy'` event is emitted.
+
+
+Events:
+* `'destroy'` - emitted when the scene is destroyed.
 
 
 ---
@@ -114,7 +119,12 @@ a while. This is a good way to optimize calculation and throughput of the scene.
 set it to `false` for specific body if its sleepiness causes issues.
 
 
+Methods:
+* void destroy() - destroys the body, `'destroy'` event is emitted.
+
+
 Events:
+* `'destroy'` - emitted when the body is destroyed.
 * `'update' { vec3 pos, quat quat, vec3 vell, vec3 vela }` - emitted for every non-sleeping
 Body per every `scene.update()` call. Instead of `rot` value it caries a raw quaternion.
 However you can get the newest `body.rot` yourself. It is done to minimize calculation,
@@ -184,7 +194,12 @@ NOTE: this is not the rotation of the body in scene.
 * `get/set vec3 motorav [0,0,0]` - angular motor target velocity.
 
 
+Methods:
+* void destroy() - destroys the joint, `'destroy'` event is emitted.
+
+
 Events:
+* `'destroy'` - emitted when the joint is destroyed.
 * `'update' { vec3 posa, vec3 posb, boolean broken }` - emitted for every joint, connecting
 two bodies, at least one of which is non-sleeping, per every `scene.update()` call.
 Instead of `getter posa/posb`, values passed represent current positions of connected bodies.

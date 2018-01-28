@@ -29,6 +29,8 @@ class JsScene extends EventEmitter {
 	
 	trace(...args) { return this._scene.trace(...args).map(_trace => new Trace({ _trace })); }
 	
+	destroy(...args) { return this._scene.destroy(...args); }
+	
 	
 	[util.inspect.custom]() { return this.toString(); }
 	

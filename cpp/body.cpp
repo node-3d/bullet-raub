@@ -54,6 +54,8 @@ void Body::init(Handle<Object> target) {
 	ctor->SetClassName(JS_STR("Body"));
 	
 	// prototype
+	Nan::SetPrototypeMethod(ctor, "destroy", destroy);
+	
 	Local<ObjectTemplate> proto = ctor->PrototypeTemplate();
 	ACCESSOR_RW(proto, type);
 	ACCESSOR_RW(proto, pos);

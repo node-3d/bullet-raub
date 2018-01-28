@@ -55,6 +55,7 @@ void Scene::init(Handle<Object> target) {
 	Nan::SetPrototypeMethod(ctor, "update", update);
 	Nan::SetPrototypeMethod(ctor, "trace", trace);
 	Nan::SetPrototypeMethod(ctor, "hit", hit);
+	Nan::SetPrototypeMethod(ctor, "destroy", destroy);
 	
 	Local<ObjectTemplate> proto = ctor->PrototypeTemplate();
 	ACCESSOR_RW(proto, gravity);

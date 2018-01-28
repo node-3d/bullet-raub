@@ -73,6 +73,8 @@ class JsBody extends EventEmitter {
 	get sleepy() { return this._body.sleepy; }
 	set sleepy(v) { this._body.sleepy = v; }
 	
+	destroy(...args) { return this._body.destroy(...args); }
+	
 	
 	[util.inspect.custom]() { return this.toString(); }
 	
