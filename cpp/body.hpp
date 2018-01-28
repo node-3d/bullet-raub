@@ -105,6 +105,7 @@ private:
 	Nan::Persistent<v8::Object> _emitter;
 	inline void _emit(int argc, v8::Local<v8::Value> argv[]);
 	
+	bool _isDestroyed;
 	Scene *_scene;
 	std::vector<Joint*> _joints;
 	
@@ -114,6 +115,7 @@ private:
 	
 private: // helpers
 	void _rebuild();
+	void _destroy();
 	btVector3 _calcScale() const;
 	
 	

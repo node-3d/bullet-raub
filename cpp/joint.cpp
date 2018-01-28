@@ -20,24 +20,24 @@ using namespace v8;
 using namespace node;
 using namespace std;
 
-#define THIS_JOINT                                                 \
+#define THIS_JOINT                                                            \
 	Joint *joint = ObjectWrap::Unwrap<Joint>(info.This());
 
-#define V3_GETTER(NAME, CACHE)                                     \
-	NAN_GETTER(Joint::NAME ## Getter) { THIS_JOINT;                \
-		VEC3_TO_OBJ(joint->CACHE, NAME);                           \
-		RET_VALUE(NAME);                                           \
+#define V3_GETTER(NAME, CACHE)                                                \
+	NAN_GETTER(Joint::NAME ## Getter) { DES_CHECK; THIS_JOINT;                \
+		VEC3_TO_OBJ(joint->CACHE, NAME);                                      \
+		RET_VALUE(NAME);                                                      \
 	}
 
-#define CACHE_CAS(CACHE, V)                                        \
-	if (joint->CACHE == V) {                                       \
-		return;                                                    \
-	}                                                              \
+#define CACHE_CAS(CACHE, V)                                                   \
+	if (joint->CACHE == V) {                                                  \
+		return;                                                               \
+	}                                                                         \
 	joint->CACHE = V;
 
-#define CHECK_CONSTRAINT                                           \
-	if ( ! joint->_constraint ) {                                  \
-		return;                                                    \
+#define CHECK_CONSTRAINT                                                      \
+	if ( ! joint->_constraint ) {                                             \
+		return;                                                               \
 	}
 
 
@@ -118,6 +118,8 @@ void Joint::_emit(int argc, Local<Value> argv[]) {
 
 Joint::Joint() {
 	
+	_isDestroyed = false;
+	
 	_constraint = NULL;
 	
 	_cacheA = NULL;
@@ -153,6 +155,12 @@ Joint::Joint() {
 
 Joint::~Joint() {
 	
+	_destroy();
+	
+}
+
+void Joint::_destroy() { DES_CHECK;
+	
 	if (_cacheA) {
 		_cacheA->unrefJoint(this);
 	}
@@ -171,10 +179,16 @@ Joint::~Joint() {
 	delete _constraint;
 	_constraint = NULL;
 	
+	_isDestroyed = true;
+	
+	// Emit "destroy"
+	Local<Value> argv = JS_STR("destroy");
+	body->_emit(1, &argv);
+	
 }
 
 
-void Joint::__update(bool asleep) {
+void Joint::__update(bool asleep) { DES_CHECK;
 	
 	if ( ! _constraint ) {
 		return;
@@ -209,6 +223,13 @@ void Joint::__update(bool asleep) {
 }
 
 
+NAN_METHOD(Joint::destroy) { DES_CHECK; THIS_JOINT;
+	
+	joint->_destroy();
+	
+}
+
+
 V3_GETTER(posa, _cachePosa);
 V3_GETTER(posb, _cachePosb);
 V3_GETTER(rota, _cacheRota);
@@ -232,7 +253,7 @@ V3_GETTER(motorav, _cacheMotorav);
 
 
 
-NAN_SETTER(Joint::aSetter) { THIS_JOINT; SETTER_OBJ_ARG;
+NAN_SETTER(Joint::aSetter) { DES_CHECK; THIS_JOINT; SETTER_OBJ_ARG;
 	
 	Body *body = ObjectWrap::Unwrap<Body>(v);
 	
@@ -266,7 +287,7 @@ NAN_SETTER(Joint::aSetter) { THIS_JOINT; SETTER_OBJ_ARG;
 	
 }
 
-NAN_GETTER(Joint::aGetter) { THIS_JOINT;
+NAN_GETTER(Joint::aGetter) { DES_CHECK; THIS_JOINT;
 	
 	if (joint->_cacheA) {
 		RET_VALUE(Nan::New(joint->_cacheA->getEmitter()));
@@ -277,7 +298,7 @@ NAN_GETTER(Joint::aGetter) { THIS_JOINT;
 }
 
 
-NAN_SETTER(Joint::bSetter) { THIS_JOINT; SETTER_OBJ_ARG;
+NAN_SETTER(Joint::bSetter) { DES_CHECK; THIS_JOINT; SETTER_OBJ_ARG;
 	
 	Body *body = ObjectWrap::Unwrap<Body>(v);
 	
@@ -311,7 +332,7 @@ NAN_SETTER(Joint::bSetter) { THIS_JOINT; SETTER_OBJ_ARG;
 	
 }
 
-NAN_GETTER(Joint::bGetter) { THIS_JOINT;
+NAN_GETTER(Joint::bGetter) { DES_CHECK; THIS_JOINT;
 	
 	if (joint->_cacheB) {
 		RET_VALUE(Nan::New(joint->_cacheB->getEmitter()));
@@ -322,7 +343,7 @@ NAN_GETTER(Joint::bGetter) { THIS_JOINT;
 }
 
 
-NAN_SETTER(Joint::brokenSetter) { THIS_JOINT; SETTER_BOOL_ARG;
+NAN_SETTER(Joint::brokenSetter) { DES_CHECK; THIS_JOINT; SETTER_BOOL_ARG;
 	
 	CACHE_CAS(_cacheBroken, v);
 	CHECK_CONSTRAINT;
@@ -335,14 +356,14 @@ NAN_SETTER(Joint::brokenSetter) { THIS_JOINT; SETTER_BOOL_ARG;
 	
 }
 
-NAN_GETTER(Joint::brokenGetter) { THIS_JOINT;
+NAN_GETTER(Joint::brokenGetter) { DES_CHECK; THIS_JOINT;
 	
 	RET_VALUE(JS_BOOL(joint->_cacheBroken));
 	
 }
 
 
-NAN_SETTER(Joint::maximpSetter) { THIS_JOINT; SETTER_FLOAT_ARG;
+NAN_SETTER(Joint::maximpSetter) { DES_CHECK; THIS_JOINT; SETTER_FLOAT_ARG;
 	
 	CACHE_CAS(_cacheMaximp, v);
 	CHECK_CONSTRAINT;
@@ -355,14 +376,14 @@ NAN_SETTER(Joint::maximpSetter) { THIS_JOINT; SETTER_FLOAT_ARG;
 	
 }
 
-NAN_GETTER(Joint::maximpGetter) { THIS_JOINT;
+NAN_GETTER(Joint::maximpGetter) { DES_CHECK; THIS_JOINT;
 	
 	RET_VALUE(JS_NUM(joint->_cacheMaximp));
 	
 }
 
 
-NAN_SETTER(Joint::posaSetter) { THIS_JOINT; SETTER_VEC3_ARG;
+NAN_SETTER(Joint::posaSetter) { DES_CHECK; THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cachePosa, v);
 	CHECK_CONSTRAINT;
@@ -378,7 +399,7 @@ NAN_SETTER(Joint::posaSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 }
 
 
-NAN_SETTER(Joint::posbSetter) { THIS_JOINT; SETTER_VEC3_ARG;
+NAN_SETTER(Joint::posbSetter) { DES_CHECK; THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cachePosb, v);
 	CHECK_CONSTRAINT;
@@ -394,7 +415,7 @@ NAN_SETTER(Joint::posbSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 }
 
 
-NAN_SETTER(Joint::rotaSetter) { THIS_JOINT; SETTER_VEC3_ARG;
+NAN_SETTER(Joint::rotaSetter) { DES_CHECK; THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheRota, v);
 	CHECK_CONSTRAINT;
@@ -414,7 +435,7 @@ NAN_SETTER(Joint::rotaSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 }
 
 
-NAN_SETTER(Joint::rotbSetter) { THIS_JOINT; SETTER_VEC3_ARG;
+NAN_SETTER(Joint::rotbSetter) { DES_CHECK; THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheRotb, v);
 	CHECK_CONSTRAINT;
@@ -434,7 +455,7 @@ NAN_SETTER(Joint::rotbSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 }
 
 
-NAN_SETTER(Joint::minlSetter) { THIS_JOINT; SETTER_VEC3_ARG;
+NAN_SETTER(Joint::minlSetter) { DES_CHECK; THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMinl, v);
 	CHECK_CONSTRAINT;
@@ -448,7 +469,7 @@ NAN_SETTER(Joint::minlSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 }
 
 
-NAN_SETTER(Joint::maxlSetter) { THIS_JOINT; SETTER_VEC3_ARG;
+NAN_SETTER(Joint::maxlSetter) { DES_CHECK; THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMaxl, v);
 	CHECK_CONSTRAINT;
@@ -462,7 +483,7 @@ NAN_SETTER(Joint::maxlSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 }
 
 
-NAN_SETTER(Joint::minaSetter) { THIS_JOINT; SETTER_VEC3_ARG;
+NAN_SETTER(Joint::minaSetter) { DES_CHECK; THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMina, v);
 	CHECK_CONSTRAINT;
@@ -476,7 +497,7 @@ NAN_SETTER(Joint::minaSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 }
 
 
-NAN_SETTER(Joint::maxaSetter) { THIS_JOINT; SETTER_VEC3_ARG;
+NAN_SETTER(Joint::maxaSetter) { DES_CHECK; THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMaxa, v);
 	CHECK_CONSTRAINT;
@@ -490,7 +511,7 @@ NAN_SETTER(Joint::maxaSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 }
 
 
-NAN_SETTER(Joint::damplSetter) { THIS_JOINT; SETTER_VEC3_ARG;
+NAN_SETTER(Joint::damplSetter) { DES_CHECK; THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheDampl, v);
 	CHECK_CONSTRAINT;
@@ -506,7 +527,7 @@ NAN_SETTER(Joint::damplSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 }
 
 
-NAN_SETTER(Joint::dampaSetter) { THIS_JOINT; SETTER_VEC3_ARG;
+NAN_SETTER(Joint::dampaSetter) { DES_CHECK; THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheDampa, v);
 	CHECK_CONSTRAINT;
@@ -522,7 +543,7 @@ NAN_SETTER(Joint::dampaSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 }
 
 
-NAN_SETTER(Joint::stiflSetter) { THIS_JOINT; SETTER_VEC3_ARG;
+NAN_SETTER(Joint::stiflSetter) { DES_CHECK; THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheStifl, v);
 	CHECK_CONSTRAINT;
@@ -538,7 +559,7 @@ NAN_SETTER(Joint::stiflSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 }
 
 
-NAN_SETTER(Joint::stifaSetter) { THIS_JOINT; SETTER_VEC3_ARG;
+NAN_SETTER(Joint::stifaSetter) { DES_CHECK; THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheStifa, v);
 	CHECK_CONSTRAINT;
@@ -554,7 +575,7 @@ NAN_SETTER(Joint::stifaSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 }
 
 
-NAN_SETTER(Joint::springlSetter) { THIS_JOINT; SETTER_VEC3_ARG;
+NAN_SETTER(Joint::springlSetter) { DES_CHECK; THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheSpringl, v);
 	CHECK_CONSTRAINT;
@@ -570,7 +591,7 @@ NAN_SETTER(Joint::springlSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 }
 
 
-NAN_SETTER(Joint::springaSetter) { THIS_JOINT; SETTER_VEC3_ARG;
+NAN_SETTER(Joint::springaSetter) { DES_CHECK; THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheSpringa, v);
 	CHECK_CONSTRAINT;
@@ -586,7 +607,7 @@ NAN_SETTER(Joint::springaSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 }
 
 
-NAN_SETTER(Joint::motorlSetter) { THIS_JOINT; SETTER_VEC3_ARG;
+NAN_SETTER(Joint::motorlSetter) { DES_CHECK; THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotorl, v);
 	CHECK_CONSTRAINT;
@@ -602,7 +623,7 @@ NAN_SETTER(Joint::motorlSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 }
 
 
-NAN_SETTER(Joint::motoraSetter) { THIS_JOINT; SETTER_VEC3_ARG;
+NAN_SETTER(Joint::motoraSetter) { DES_CHECK; THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotora, v);
 	CHECK_CONSTRAINT;
@@ -618,7 +639,7 @@ NAN_SETTER(Joint::motoraSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 }
 
 
-NAN_SETTER(Joint::motorlfSetter) { THIS_JOINT; SETTER_VEC3_ARG;
+NAN_SETTER(Joint::motorlfSetter) { DES_CHECK; THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotorlf, v);
 	CHECK_CONSTRAINT;
@@ -632,7 +653,7 @@ NAN_SETTER(Joint::motorlfSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 }
 
 
-NAN_SETTER(Joint::motorafSetter) { THIS_JOINT; SETTER_VEC3_ARG;
+NAN_SETTER(Joint::motorafSetter) { DES_CHECK; THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotoraf, v);
 	CHECK_CONSTRAINT;
@@ -648,7 +669,7 @@ NAN_SETTER(Joint::motorafSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 }
 
 
-NAN_SETTER(Joint::motorlvSetter) { THIS_JOINT; SETTER_VEC3_ARG;
+NAN_SETTER(Joint::motorlvSetter) { DES_CHECK; THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotorlv, v);
 	CHECK_CONSTRAINT;
@@ -662,7 +683,7 @@ NAN_SETTER(Joint::motorlvSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 }
 
 
-NAN_SETTER(Joint::motoravSetter) { THIS_JOINT; SETTER_VEC3_ARG;
+NAN_SETTER(Joint::motoravSetter) { DES_CHECK; THIS_JOINT; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotorav, v);
 	CHECK_CONSTRAINT;
@@ -679,7 +700,7 @@ NAN_SETTER(Joint::motoravSetter) { THIS_JOINT; SETTER_VEC3_ARG;
 
 
 
-void Joint::_dropBody(Body *body) {
+void Joint::_dropBody(Body *body) { DES_CHECK;
 	
 	if ( ! body ) {
 		return;
@@ -700,7 +721,7 @@ void Joint::_dropBody(Body *body) {
 }
 
 
-void Joint::_rebuild() {
+void Joint::_rebuild() { DES_CHECK;
 	
 	if (_cacheA) {
 		_removeConstraint(_cacheA->getWorld());
@@ -784,7 +805,7 @@ void Joint::_rebuild() {
 }
 
 
-void Joint::_removeConstraint(btDynamicsWorld *world) {
+void Joint::_removeConstraint(btDynamicsWorld *world) { DES_CHECK;
 	
 	if (_constraint) {
 		world->removeConstraint(_constraint);

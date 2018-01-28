@@ -26,6 +26,7 @@ public:
 	inline void _emit(int argc, v8::Local<v8::Value> argv[]);
 	void __update(bool asleep = false);
 	
+	
 protected:
 	
 	explicit Joint();
@@ -112,12 +113,15 @@ private:
 	
 	Nan::Persistent<v8::Object> _emitter;
 	
+	bool _isDestroyed;
+	
 	btGeneric6DofSpringConstraint *_constraint;
 	
 	// Throttle every first __update, pass every second call
 	bool _throttle;
 	// Remember asleep every first __update, compare every second call, both asleep -> nop
 	bool _asleep;
+	
 	
 private: // prop cache
 	Body *_cacheA;
@@ -147,7 +151,9 @@ private: // prop cache
 	
 	
 private:
+	
 	void _removeConstraint(btDynamicsWorld *world);
+	void _destroy();
 	
 };
 

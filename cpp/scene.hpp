@@ -56,6 +56,8 @@ protected:
 	static NAN_METHOD(hit);
 	static NAN_METHOD(trace);
 	
+	static NAN_METHOD(destroy);
+	
 	
 private:
 	
@@ -64,6 +66,10 @@ private:
 	
 	Nan::Persistent<v8::Object> _emitter;
 	inline void _emit(int argc, v8::Local<v8::Value> argv[]);
+	
+	void _destroy();
+	
+	bool _isDestroyed;
 	
 	btClock *_clock;
 	std::vector<Body*> _bodies;

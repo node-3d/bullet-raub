@@ -21,19 +21,19 @@ using namespace v8;
 using namespace node;
 using namespace std;
 
-#define THIS_SCENE                                                 \
+#define THIS_SCENE                                                            \
 	Scene *scene = ObjectWrap::Unwrap<Scene>(info.This());
 
-#define V3_GETTER(NAME, CACHE)                                     \
-	NAN_GETTER(Scene::NAME ## Getter) { THIS_SCENE;        \
-		VEC3_TO_OBJ(scene->CACHE, NAME);                           \
-		RET_VALUE(NAME);                                           \
+#define V3_GETTER(NAME, CACHE)                                                \
+	NAN_GETTER(Scene::NAME ## Getter) { DES_CHECK; THIS_SCENE;                \
+		VEC3_TO_OBJ(scene->CACHE, NAME);                                      \
+		RET_VALUE(NAME);                                                      \
 	}
 
-#define CACHE_CAS(CACHE, V)                                        \
-	if (scene->CACHE == V) {                                       \
-		return;                                                    \
-	}                                                              \
+#define CACHE_CAS(CACHE, V)                                                   \
+	if (scene->CACHE == V) {                                                  \
+		return;                                                               \
+	}                                                                         \
 	scene->CACHE = V;
 
 
@@ -94,6 +94,8 @@ NAN_METHOD(Scene::newCtor) {
 
 Scene::Scene() {
 	
+	_isDestroyed = false;
+	
 	_clock = new btClock();
 	_clock->reset();
 	
@@ -106,18 +108,17 @@ Scene::Scene() {
 	_cacheGrav.setValue(0, -10, 0);
 	_physWorld->setGravity(_cacheGrav);
 	
-	// A SUDDEN STATIC PLANE
-	// btStaticPlaneShape *cshape = new btStaticPlaneShape(btVector3(0.0f, 1.0f, 0.0f), 0);
-	// btVector3 localInertia(0,0,0);
-	// btDefaultMotionState* myMotionState = new btDefaultMotionState();
-	// btRigidBody::btRigidBodyConstructionInfo rbInfo(0, myMotionState, cshape, localInertia);
-	// btRigidBody *body = new btRigidBody(rbInfo);
-	// _physWorld->addRigidBody(body);
-	
 }
 
 
 Scene::~Scene() {
+	
+	_destroy();
+	
+}
+
+
+void Scene::_destroy() { DES_CHECK;
 	
 	vector<Body*>::iterator it = _bodies.begin();
 	while (it != _bodies.end()) {
@@ -141,14 +142,20 @@ Scene::~Scene() {
 	delete _physConfig;
 	_physConfig = NULL;
 	
+	_isDestroyed = true;
+	
+	// Emit "destroy"
+	Local<Value> argv = JS_STR("destroy");
+	body->_emit(1, &argv);
+	
 }
 
 
-void Scene::refBody(Body *body) {
+void Scene::refBody(Body *body) { DES_CHECK;
 	_bodies.push_back(body);
 }
 
-void Scene::unrefBody(Body* body) {
+void Scene::unrefBody(Body* body) { DES_CHECK;
 	
 	vector<Body*>::iterator it = _bodies.begin();
 	
@@ -166,7 +173,7 @@ void Scene::unrefBody(Body* body) {
 }
 
 
-void Scene::doUpdate(float dt) {
+void Scene::doUpdate(float dt) { DES_CHECK;
 	
 	_physWorld->stepSimulation(dt, 10, 1.f / 120.f);
 	
@@ -180,7 +187,7 @@ void Scene::doUpdate(float dt) {
 }
 
 
-void Scene::doUpdate() {
+void Scene::doUpdate() { DES_CHECK;
 	
 	btScalar dt = static_cast<btScalar>(_clock->getTimeMicroseconds())* 0.000001f;
 	_clock->reset();
@@ -216,7 +223,7 @@ vector< Local<Value> > Scene::doTrace(const btVector3 &from, const btVector3 &to
 
 V3_GETTER(gravity, _cacheGrav);
 
-NAN_SETTER(Scene::gravitySetter) { THIS_SCENE; SETTER_VEC3_ARG;
+NAN_SETTER(Scene::gravitySetter) { DES_CHECK; THIS_SCENE; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheGrav, v);
 	
@@ -229,7 +236,7 @@ NAN_SETTER(Scene::gravitySetter) { THIS_SCENE; SETTER_VEC3_ARG;
 }
 
 
-NAN_METHOD(Scene::update) { THIS_SCENE;
+NAN_METHOD(Scene::update) { DES_CHECK; THIS_SCENE;
 	
 	LET_FLOAT_ARG(0, dt);
 	
@@ -242,7 +249,7 @@ NAN_METHOD(Scene::update) { THIS_SCENE;
 }
 
 
-NAN_METHOD(Scene::hit) { THIS_SCENE;
+NAN_METHOD(Scene::hit) { DES_CHECK; THIS_SCENE;
 	
 	REQ_VEC3_ARG(0, f);
 	REQ_VEC3_ARG(1, t);
@@ -253,7 +260,7 @@ NAN_METHOD(Scene::hit) { THIS_SCENE;
 }
 
 
-NAN_METHOD(Scene::trace) { THIS_SCENE;
+NAN_METHOD(Scene::trace) { DES_CHECK; THIS_SCENE;
 	
 	REQ_VEC3_ARG(0, f);
 	REQ_VEC3_ARG(1, t);
@@ -268,5 +275,12 @@ NAN_METHOD(Scene::trace) { THIS_SCENE;
 	}
 	
 	RET_VALUE(result);
+	
+}
+
+
+NAN_METHOD(Scene::destroy) { DES_CHECK; THIS_SCENE;
+	
+	scene->_destroy();
 	
 }

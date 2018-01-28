@@ -83,6 +83,10 @@
 	OBJ_TO_QUAT(_obj_v, v);
 
 
+#define DES_CHECK                                                             \
+	if (_isDestroyed) return;
+
+
 // Fix bad defines
 
 #undef True
