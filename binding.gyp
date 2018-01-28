@@ -1,9 +1,9 @@
 {
 	'variables': {
-		'_del'           : '<!(node -e "console.log(require(\'node-addon-tools-raub\')._del)")',
-		'_rd'            : '<!(node -e "console.log(require(\'node-addon-tools-raub\')._rd)")',
-		'bullet_include' : '<!(node -e "console.log(require(\'node-deps-bullet-raub\').include)")',
-		'bullet_bin'     : '<!(node -e "console.log(require(\'node-deps-bullet-raub\').bin)")',
+		'_del'           : '<!(node -e "console.log(require(\'addon-tools-raub\')._del)")',
+		'_rd'            : '<!(node -e "console.log(require(\'addon-tools-raub\')._rd)")',
+		'bullet_include' : '<!(node -e "console.log(require(\'deps-bullet-raub\').include)")',
+		'bullet_bin'     : '<!(node -e "console.log(require(\'deps-bullet-raub\').bin)")',
 	},
 	'targets': [
 		{
@@ -16,8 +16,8 @@
 				'cpp/trace.cpp',
 			],
 			'include_dirs': [
-				'<!(node -e "require(\'node-addon-tools-raub\').printNan()")',
-				'<!(node -e "console.log(require(\'node-addon-tools-raub\').include)")',
+				'<!(node -e "require(\'addon-tools-raub\').printNan()")',
+				'<!(node -e "console.log(require(\'addon-tools-raub\').include)")',
 				'<(bullet_include)',
 			],
 			'library_dirs': [ '<(bullet_bin)' ],

@@ -6,14 +6,14 @@ Bullet-driven physics API. Offers high-order classes for building 3d simulations
 ## Install
 
 ```
-npm i -s node-bullet-raub
+npm i -s bullet-raub
 ```
 
 Note: as this is a compiled addon, compilation tools must be in place on your system.
-Such as MSVS13 for Windows, where `npm install --global windows-build-tools` most probably helps.
+Such as MSVS13 for Windows, where **ADMIN PRIVELEGED** `npm i -g windows-build-tools` most probably helps.
 
 
-## Use
+## Usage
 
 This library is not a direct mapping of Bullet API, rather it is more of a simplified
 interpretation for generic purposes.
@@ -41,7 +41,7 @@ for Bodies. Bodies only interact within the same scene. There can be multiple sc
 running simultaneously.
 
 ```
-const { Scene } = require('node-bullet-raub');
+const { Scene } = require('bullet-raub');
 const scene = new Scene();
 ```
 
@@ -72,7 +72,7 @@ Wraps around `btRigidBody` (as if this was relevant). Bodies only interact withi
 A body can take different shapes, and even change them on flight.
 
 ```
-const { Scene, Body } = require('node-bullet-raub');
+const { Scene, Body } = require('bullet-raub');
 const scene = new Scene();
 const body = new Body({ scene });
 ```
@@ -137,7 +137,7 @@ Bodies within the same scene. A generic constraint can be turned into any other 
 by a carefull setting of parameters. This is why we have a HUGE number of props here.
 
 ```
-const { Scene, Body } = require('node-bullet-raub');
+const { Scene, Body } = require('bullet-raub');
 const scene = new Scene();
 const bodyA = new Body({ scene });
 const bodyB = new Body({ scene });
@@ -205,7 +205,7 @@ joint.on('update', ({ posa, posb, broken }) => {
 A read-only trace result. Holds the information about ray trace.
 
 ```
-const { Scene, Body } = require('node-bullet-raub');
+const { Scene, Body } = require('bullet-raub');
 const scene = new Scene();
 const body = new Body({ scene });
 
