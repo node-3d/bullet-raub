@@ -121,8 +121,9 @@
 						'<(module_root_dir)/build/Release/bullet.node'
 					] } ],
 					[ 'OS=="win"', { 'action' : [
-						'<(_del) "<(module_root_dir)/build/Release/bullet.*" && ' +
-						'<(_del) "<(module_root_dir)/build/Release/obj/bullet/*.*"'
+						'<(_del)',
+						'<(module_root_dir)/build/Release/glfw.*',
+						'<(module_root_dir)/build/Release/obj/glfw/*.*'
 					] } ],
 				],
 			}],
