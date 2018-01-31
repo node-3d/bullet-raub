@@ -1,7 +1,8 @@
 {
 	'variables': {
-		'_del'           : '<!(node -e "console.log(require(\'addon-tools-raub\')._del)")',
-		'_md'            : '<!(node -e "console.log(require(\'addon-tools-raub\')._md)")',
+		'rm'             : '<!(node -e "console.log(require(\'addon-tools-raub\').rm)")',
+		'cp'             : '<!(node -e "console.log(require(\'addon-tools-raub\').cp)")',
+		'mkdir'          : '<!(node -e "console.log(require(\'addon-tools-raub\').mkdir)")',
 		'bullet_include' : '<!(node -e "console.log(require(\'deps-bullet-raub\').include)")',
 		'bullet_bin'     : '<!(node -e "console.log(require(\'deps-bullet-raub\').bin)")',
 	},
@@ -63,11 +64,7 @@
 				'action_name' : 'Directory created.',
 				'inputs'      : [],
 				'outputs'     : ['build'],
-				'conditions'  : [
-					[ 'OS=="linux"', { 'action': ['mkdir', '-p', 'binary'] } ],
-					[ 'OS=="mac"', { 'action': ['mkdir', '-p', 'binary'] } ],
-					[ 'OS=="win"', { 'action': ['<(_md)', 'binary'] } ],
-				],
+				'action': ['<(mkdir)', '-p', 'binary']
 			}],
 		},
 		{
@@ -78,22 +75,7 @@
 				'action_name' : 'Module copied.',
 				'inputs'      : [],
 				'outputs'     : ['binary'],
-				'conditions'  : [
-					[ 'OS=="linux"', { 'action' : [
-						'cp',
-						'<(module_root_dir)/build/Release/bullet.node',
-						'<(module_root_dir)/binary/bullet.node'
-					] } ],
-					[ 'OS=="mac"', { 'action' : [
-						'cp',
-						'<(module_root_dir)/build/Release/bullet.node',
-						'<(module_root_dir)/binary/bullet.node'
-					] } ],
-					[ 'OS=="win"', { 'action' : [
-						'copy "<(module_root_dir)/build/Release/bullet.node"' +
-						' "<(module_root_dir)/binary/bullet.node"'
-					] } ],
-				],
+				'action'      : ['<(cp)', 'build/Release/bullet.node', 'binary/bullet.node'],
 			}],
 		},
 		{
