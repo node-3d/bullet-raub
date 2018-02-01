@@ -17,7 +17,7 @@
 				'cpp/trace.cpp',
 			],
 			'include_dirs': [
-				'<!(node -e "require(\'addon-tools-raub\').include()")',
+				'<!@(node -e "require(\'addon-tools-raub\').include()")',
 				'<(bullet_include)',
 			],
 			'library_dirs': [ '<(bullet_bin)' ],
@@ -102,7 +102,7 @@
 						'<(module_root_dir)/build/Release/bullet.node'
 					] } ],
 					[ 'OS=="win"', { 'action' : [
-						'<(_del)',
+						'<(rm)',
 						'<(module_root_dir)/build/Release/glfw.*',
 						'<(module_root_dir)/build/Release/obj/glfw/*.*'
 					] } ],
