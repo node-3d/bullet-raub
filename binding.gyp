@@ -17,8 +17,7 @@
 				'cpp/trace.cpp',
 			],
 			'include_dirs': [
-				'<!(node -e "require(\'addon-tools-raub\').printNan()")',
-				'<!(node -e "console.log(require(\'addon-tools-raub\').include)")',
+				'<!(node -e "require(\'addon-tools-raub\').include()")',
 				'<(bullet_include)',
 			],
 			'library_dirs': [ '<(bullet_bin)' ],
