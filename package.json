@@ -1,6 +1,6 @@
 {
   "name": "bullet-raub",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Bullet-driven physics API",
   "main": "index.js",
   "author": "Luis Blanco <raubtierxxx@gmail.com>",
@@ -22,7 +22,7 @@
     "url": "https://github.com/raub/node-bullet.git"
   },
   "dependencies": {
-    "deps-bullet-raub": "https://github.com/raub/node-deps-bullet.git",
-    "addon-tools-raub": "https://github.com/raub/node-addon-tools.git"
+    "deps-bullet-raub": "0.0.3",
+    "addon-tools-raub": "0.0.5"
   }
 }
