@@ -1,10 +1,10 @@
 {
 	'variables': {
-		'rm'             : '<!(node -e "console.log(require(\'addon-tools-raub\').rm)")',
-		'cp'             : '<!(node -e "console.log(require(\'addon-tools-raub\').cp)")',
-		'mkdir'          : '<!(node -e "console.log(require(\'addon-tools-raub\').mkdir)")',
-		'bullet_include' : '<!(node -e "console.log(require(\'deps-bullet-raub\').include)")',
-		'bullet_bin'     : '<!(node -e "console.log(require(\'deps-bullet-raub\').bin)")',
+		'rm'             : '<!(node -e "require(\'addon-tools-raub\').rm()")',
+		'cp'             : '<!(node -e "require(\'addon-tools-raub\').cp()")',
+		'mkdir'          : '<!(node -e "require(\'addon-tools-raub\').mkdir()")',
+		'bullet_include' : '<!(node -e "require(\'deps-bullet-raub\').include()")',
+		'bullet_bin'     : '<!(node -e "require(\'deps-bullet-raub\').bin()")',
 	},
 	'targets': [
 		{
