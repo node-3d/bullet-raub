@@ -103,8 +103,8 @@
 					] } ],
 					[ 'OS=="win"', { 'action' : [
 						'<(rm)',
-						'<(module_root_dir)/build/Release/glfw.*',
-						'<(module_root_dir)/build/Release/obj/glfw/*.*'
+						'<(module_root_dir)/build/Release/bullet.*',
+						'<(module_root_dir)/build/Release/obj/bullet/*.*'
 					] } ],
 				],
 			}],
