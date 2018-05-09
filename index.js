@@ -1,8 +1,5 @@
 'use strict';
 
-module.exports = {
-	Scene : require('./js/scene'),
-	Body  : require('./js/body'),
-	Joint : require('./js/joint'),
-	Trace : require('./js/trace'),
-};
+const core = require('./core');
+
+module.exports = core;

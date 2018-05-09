@@ -1,5 +1,4 @@
 #include <cstdlib>
-#include <iostream>
 
 #include <BulletDynamics/Dynamics/btDynamicsWorld.h>
 #include <LinearMath/btAabbUtil2.h>
@@ -13,46 +12,73 @@ using namespace v8;
 using namespace node;
 using namespace std;
 
-#define THIS_TRACE                                                 \
+
+// ------ Aux macros
+
+#define THIS_TRACE                                                            \
 	Trace *trace = ObjectWrap::Unwrap<Trace>(info.This());
 
-#define V3_GETTER(NAME, CACHE)                                     \
-	NAN_GETTER(Trace::NAME ## Getter) { THIS_TRACE;                \
-		VEC3_TO_OBJ(trace->CACHE, NAME);                           \
-		RET_VALUE(NAME);                                           \
+#define V3_GETTER(NAME, CACHE)                                                \
+	NAN_GETTER(Trace::NAME ## Getter) { THIS_TRACE;                           \
+		VEC3_TO_OBJ(trace->CACHE, NAME);                                      \
+		RET_VALUE(NAME);                                                      \
 	}
 
-#define CACHE_CAS(CACHE, V)                                        \
-	if (trace->CACHE == V) {                                       \
-		return;                                                    \
-	}                                                              \
+#define CACHE_CAS(CACHE, V)                                                   \
+	if (trace->CACHE == V) {                                                  \
+		return;                                                               \
+	}                                                                         \
 	trace->CACHE = V;
 
 
-Nan::Persistent<v8::Function> Trace::_constructor;
+// ------ Constructor and Destructor
 
-
-void Trace::init(Handle<Object> target) {
+Trace::Trace(bool hit, Body *body, const btVector3 &pos, const btVector3 &norm) {
 	
-	Local<FunctionTemplate> ctor = Nan::New<FunctionTemplate>(newCtor);
-	
-	ctor->InstanceTemplate()->SetInternalFieldCount(1);
-	ctor->SetClassName(JS_STR("Trace"));
-	
-	// prototype
-	Local<ObjectTemplate> proto = ctor->PrototypeTemplate();
-	ACCESSOR_R(proto, hit);
-	ACCESSOR_R(proto, body);
-	ACCESSOR_R(proto, pos);
-	ACCESSOR_R(proto, norm);
-	
-	_constructor.Reset(Nan::GetFunction(ctor).ToLocalChecked());
-	Nan::Set(target, JS_STR("Trace"), Nan::GetFunction(ctor).ToLocalChecked());
+	_cacheHit = hit;
+	_cacheBody = body;
+	_cachePos = pos;
+	_cacheNorm = norm;
 	
 }
 
 
-Local<Object> Trace::instance(bool hit, Body *body, const btVector3 &pos, const btVector3 &norm) {
+Trace::Trace(Scene *scene, const btVector3 &from, const btVector3 &to) {
+	
+	btCollisionWorld::ClosestRayResultCallback closestResults(from, to);
+	scene->getWorld()->rayTest(from, to, closestResults);
+	
+	if (closestResults.hasHit()) {
+		_cacheHit = true;
+		_cacheBody = reinterpret_cast<Body *>(closestResults.m_collisionObject->getUserPointer());
+		_cachePos = from.lerp(to, closestResults.m_closestHitFraction);
+		_cacheNorm = closestResults.m_hitNormalWorld;
+	} else {
+		_cacheHit = false;
+		_cacheBody = NULL;
+		_cachePos = btVector3(0, 0, 0);
+		_cacheNorm = btVector3(0, 1, 0);
+	}
+	
+}
+
+
+Trace::~Trace() {
+	
+	_destroy();
+	
+}
+
+
+void Trace::_destroy() { DES_CHECK;
+	
+}
+
+
+// ------ Methods and props
+
+
+V8_VAR_OBJ Trace::instance(bool hit, Body *body, const btVector3 &pos, const btVector3 &norm) {
 	
 	Local<Function> cons = Nan::New(_constructor);
 	
@@ -62,7 +88,7 @@ Local<Object> Trace::instance(bool hit, Body *body, const btVector3 &pos, const 
 	const int argc = 4;
 	Local<Value> argv[argc] = { JS_BOOL(hit), Nan::New<External>(body), p, n };
 	
-	Local<Object> inst = cons->NewInstance(argc, argv);
+	V8_VAR_OBJ inst = cons->NewInstance(argc, argv);
 	// Nan::NewInstance(cons, argc, argv).ToLocalChecked();
 	
 	return inst;
@@ -70,13 +96,81 @@ Local<Object> Trace::instance(bool hit, Body *body, const btVector3 &pos, const 
 }
 
 
-Local<Object> Trace::instance(Scene *scene, const btVector3 &from, const btVector3 &to) {
+V8_VAR_OBJ Trace::instance(Scene *scene, const btVector3 &from, const btVector3 &to) {
 	
 	Trace helper(scene, from, to);
 	
 	return instance(helper._cacheHit, helper._cacheBody, helper._cachePos, helper._cacheNorm);
 	
 }
+
+
+V3_GETTER(pos, _cachePos);
+V3_GETTER(norm, _cacheNorm);
+
+NAN_GETTER(Trace::bodyGetter) { THIS_TRACE;
+	
+	if (trace->_cacheBody) {
+		RET_VALUE(Nan::New(trace->_cacheBody->getJsWrapper()));
+	} else {
+		RET_VALUE(Nan::Null());
+	}
+	
+}
+
+NAN_GETTER(Trace::hitGetter) { THIS_TRACE;
+	
+	RET_VALUE(JS_BOOL(Trace->_cacheHit));
+	
+}
+
+
+// ------ System methods and props for ObjectWrap
+
+V8_STORE_FT Trace::_protoTrace;
+V8_STORE_FUNC Trace::_ctorTrace;
+
+
+void Trace::init(V8_VAR_OBJ target) {
+	
+	V8_VAR_FT proto = Nan::New<FunctionTemplate>(newCtor);
+	
+	proto->InstanceTemplate()->SetInternalFieldCount(1);
+	proto->SetClassName(JS_STR("Trace"));
+	
+	
+	// Accessors
+	
+	V8_VAR_OT obj = proto->PrototypeTemplate();
+	
+	ACCESSOR_R(obj, isDestroyed);
+	
+	ACCESSOR_R(obj, hit);
+	ACCESSOR_R(obj, body);
+	ACCESSOR_R(obj, pos);
+	ACCESSOR_R(obj, norm);
+	
+	// -------- dynamic
+	
+	Nan::SetPrototypeMethod(proto, "destroy", destroy);
+	
+	
+	// -------- static
+	
+	V8_VAR_FUNC ctor = Nan::GetFunction(proto).ToLocalChecked();
+	
+	_protoTrace.Reset(proto);
+	_ctorTrace.Reset(ctor);
+	
+	Nan::Set(target, JS_STR("Trace"), ctor);
+	
+}
+
+
+bool Trace::isTrace(V8_VAR_OBJ obj) {
+	return Nan::New(_protoTrace)->HasInstance(obj);
+}
+
 
 
 NAN_METHOD(Trace::newCtor) {
@@ -114,56 +208,18 @@ NAN_METHOD(Trace::newCtor) {
 }
 
 
-Trace::Trace(bool hit, Body *body, const btVector3 &pos, const btVector3 &norm) {
+NAN_METHOD(Trace::destroy) { THIS_TRACE; THIS_CHECK;
 	
-	_cacheHit = hit;
-	_cacheBody = body;
-	_cachePos = pos;
-	_cacheNorm = norm;
+	trace->emit("destroy");
 	
-}
-
-
-Trace::Trace(Scene *scene, const btVector3 &from, const btVector3 &to) {
-	
-	btCollisionWorld::ClosestRayResultCallback closestResults(from, to);
-	scene->getWorld()->rayTest(from, to, closestResults);
-	
-	if (closestResults.hasHit()) {
-		_cacheHit = true;
-		_cacheBody = reinterpret_cast<Body *>(closestResults.m_collisionObject->getUserPointer());
-		_cachePos = from.lerp(to, closestResults.m_closestHitFraction);
-		_cacheNorm = closestResults.m_hitNormalWorld;
-	} else {
-		_cacheHit = false;
-		_cacheBody = NULL;
-		_cachePos = btVector3(0, 0, 0);
-		_cacheNorm = btVector3(0, 1, 0);
-	}
+	trace->_destroy();
 	
 }
 
 
-Trace::~Trace() {
+NAN_GETTER(Trace::isDestroyedGetter) { THIS_TRACE;
+	
+	RET_VALUE(JS_BOOL(trace->_isDestroyed));
 	
 }
 
-
-V3_GETTER(pos, _cachePos);
-V3_GETTER(norm, _cacheNorm);
-
-NAN_GETTER(Trace::bodyGetter) { THIS_TRACE;
-	
-	if (trace->_cacheBody) {
-		RET_VALUE(Nan::New(trace->_cacheBody->getJsWrapper()));
-	} else {
-		RET_VALUE(Nan::Null());
-	}
-	
-}
-
-NAN_GETTER(Trace::hitGetter) { THIS_TRACE;
-	
-	RET_VALUE(JS_BOOL(trace->_cacheHit));
-	
-}

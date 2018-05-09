@@ -4,10 +4,10 @@
 
 #include <vector>
 
-#include <nan.h>
-
 #include <LinearMath/btVector3.h>
 #include <LinearMath/btQuaternion.h>
+
+#include <event-emitter.hpp>
 
 #include "common.hpp"
 
@@ -21,35 +21,70 @@ class Scene;
 class Trimesh;
 
 
-class Body : public Nan::ObjectWrap {
+class Body : public EventEmitter {
 	
 public:
 	
-	static void init(v8::Handle<v8::Object> target);
+	~Body();
+	
+	static void init(V8_VAR_OBJ target);
+	static bool isBody(V8_VAR_OBJ obj);
+	
+	void _destroy();
 	
 	void refJoint(Joint *joint);
 	void unrefJoint(Joint *joint);
 	
-	Nan::Persistent<v8::Object> &getJsWrapper();
-	
 	btDynamicsWorld *getWorld();
 	btRigidBody *getBody() { return _body; }
 	const btVector3 &getPos() { return _cachePos; }
-	Nan::Persistent<v8::Object> &getEmitter() { return _emitter; }
 	
 	// called within engine
 	void __update();
-	
-	virtual ~Body();
 	
 	
 protected:
 	
 	explicit Body(Scene *scene);
 	
-	static NAN_METHOD(newCtor);
+	static V8_STORE_FT _protoBody; // for inheritance
+	static V8_STORE_FUNC _ctorBody;
 	
+	bool _isDestroyed;
+	
+	void _rebuild();
+	
+	btVector3 _calcScale() const;
+	
+	Scene *_scene;
+	std::vector<Joint*> _joints;
+	
+	btCollisionShape *_cshape;
+	btRigidBody *_body;
+	
+	std::string _cacheType;
+	btVector3 _cachePos;
+	btQuaternion _cacheRot;
+	btVector3 _cacheVell;
+	btVector3 _cacheVela;
+	btVector3 _cacheSize;
+	Heightmap *_cacheMap;
+	Trimesh *_cacheMesh;
+	float _cacheMass;
+	float _cacheRest;
+	float _cacheDampl;
+	float _cacheDampa;
+	btVector3 _cacheFactl;
+	btVector3 _cacheFacta;
+	float _cacheFrict;
+	bool _cacheSleepy;
+	
+	
+private:
+	
+	static NAN_METHOD(newCtor);
 	static NAN_METHOD(destroy);
+	static NAN_GETTER(isDestroyedGetter);
 	
 	static NAN_GETTER(typeGetter);
 	static NAN_SETTER(typeSetter);
@@ -98,46 +133,6 @@ protected:
 	
 	static NAN_GETTER(sleepyGetter);
 	static NAN_SETTER(sleepySetter);
-	
-	
-private:
-	
-	static Nan::Persistent<v8::Function> _constructor;
-	
-	Nan::Persistent<v8::Object> _emitter;
-	inline void _emit(int argc, v8::Local<v8::Value> argv[]);
-	
-	bool _isDestroyed;
-	Scene *_scene;
-	std::vector<Joint*> _joints;
-	
-	btCollisionShape *_cshape;
-	btRigidBody *_body;
-	
-	
-private: // helpers
-	void _rebuild();
-	void _destroy();
-	btVector3 _calcScale() const;
-	
-	
-private: // prop cache
-	std::string _cacheType;
-	btVector3 _cachePos;
-	btQuaternion _cacheRot;
-	btVector3 _cacheVell;
-	btVector3 _cacheVela;
-	btVector3 _cacheSize;
-	Heightmap *_cacheMap;
-	Trimesh *_cacheMesh;
-	float _cacheMass;
-	float _cacheRest;
-	float _cacheDampl;
-	float _cacheDampa;
-	btVector3 _cacheFactl;
-	btVector3 _cacheFacta;
-	float _cacheFrict;
-	bool _cacheSleepy;
 	
 };
 

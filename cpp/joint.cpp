@@ -1,5 +1,4 @@
 #include <cstdlib>
-#include <iostream>
 #include <vector>
 
 #define _USE_MATH_DEFINES
@@ -19,6 +18,9 @@
 using namespace v8;
 using namespace node;
 using namespace std;
+
+
+// ------ Aux macros
 
 #define THIS_JOINT                                                            \
 	Joint *joint = ObjectWrap::Unwrap<Joint>(info.This());
@@ -44,82 +46,7 @@ using namespace std;
 	}
 
 
-
-
-Nan::Persistent<v8::Function> Joint::_constructor;
-
-
-void Joint::init(Handle<Object> target) {
-	
-	Local<FunctionTemplate> ctor = Nan::New<FunctionTemplate>(newCtor);
-	
-	ctor->InstanceTemplate()->SetInternalFieldCount(1);
-	ctor->SetClassName(JS_STR("Joint"));
-	
-	// prototype
-	Nan::SetPrototypeMethod(ctor, "destroy", destroy);
-	
-	Local<ObjectTemplate> proto = ctor->PrototypeTemplate();
-	ACCESSOR_RW(proto, a);
-	ACCESSOR_RW(proto, b);
-	ACCESSOR_RW(proto, broken);
-	ACCESSOR_RW(proto, posa);
-	ACCESSOR_RW(proto, posb);
-	ACCESSOR_RW(proto, rota);
-	ACCESSOR_RW(proto, rotb);
-	ACCESSOR_RW(proto, minl);
-	ACCESSOR_RW(proto, maxl);
-	ACCESSOR_RW(proto, mina);
-	ACCESSOR_RW(proto, maxa);
-	ACCESSOR_RW(proto, maximp);
-	ACCESSOR_RW(proto, dampl);
-	ACCESSOR_RW(proto, dampa);
-	ACCESSOR_RW(proto, stifl);
-	ACCESSOR_RW(proto, stifa);
-	ACCESSOR_RW(proto, springl);
-	ACCESSOR_RW(proto, springa);
-	ACCESSOR_RW(proto, motorl);
-	ACCESSOR_RW(proto, motora);
-	ACCESSOR_RW(proto, motorlf);
-	ACCESSOR_RW(proto, motoraf);
-	ACCESSOR_RW(proto, motorlv);
-	ACCESSOR_RW(proto, motorav);
-	
-	_constructor.Reset(Nan::GetFunction(ctor).ToLocalChecked());
-	Nan::Set(target, JS_STR("Joint"), Nan::GetFunction(ctor).ToLocalChecked());
-	
-}
-
-
-NAN_METHOD(Joint::newCtor) {
-	
-	CTOR_CHECK("Joint");
-	
-	REQ_OBJ_ARG(0, emitter);
-	
-	Joint *joint = new Joint();
-	joint->_emitter.Reset(emitter);
-	joint->Wrap(info.This());
-	
-	RET_VALUE(info.This());
-	
-}
-
-
-void Joint::_emit(int argc, Local<Value> argv[]) {
-	
-	if ( ! Nan::New(_emitter)->Has(JS_STR("emit")) ) {
-		return;
-	}
-	
-	Nan::Callback callback(Nan::New(_emitter)->Get(JS_STR("emit")).As<Function>());
-	
-	if ( ! callback.IsEmpty() ) {
-		callback.Call(argc, argv);
-	}
-	
-}
-
+// ------ Constructor and Destructor
 
 Joint::Joint() {
 	
@@ -188,10 +115,12 @@ void Joint::_destroy() { DES_CHECK;
 	
 	// Emit "destroy"
 	Local<Value> argv = JS_STR("destroy");
-	_emit(1, &argv);
+	emit(1, &argv);
 	
 }
 
+
+// ------ Methods and props
 
 void Joint::__update(bool asleep) { DES_CHECK;
 	
@@ -223,14 +152,7 @@ void Joint::__update(bool asleep) { DES_CHECK;
 	SET_PROP(obj, "broken", JS_BOOL(_cacheBroken));
 	
 	Local<Value> argv[2] = { JS_STR("update"), obj };
-	_emit(2, argv);
-	
-}
-
-
-NAN_METHOD(Joint::destroy) { THIS_JOINT; THIS_CHECK;
-	
-	joint->_destroy();
+	emit(2, argv);
 	
 }
 
@@ -255,7 +177,6 @@ V3_GETTER(motorlf, _cacheMotorlf);
 V3_GETTER(motoraf, _cacheMotoraf);
 V3_GETTER(motorlv, _cacheMotorlv);
 V3_GETTER(motorav, _cacheMotorav);
-
 
 
 NAN_SETTER(Joint::aSetter) { THIS_JOINT; THIS_CHECK; SETTER_OBJ_ARG;
@@ -284,13 +205,11 @@ NAN_SETTER(Joint::aSetter) { THIS_JOINT; THIS_CHECK; SETTER_OBJ_ARG;
 		Local<Value> argv[2] = {
 			JS_STR("a"), Nan::New(joint->_cacheA->getEmitter())
 		};
-		joint->_emit(2, argv);
-	} else {
-		Local<Value> argv[2] = { JS_STR("a"), Nan::Null() };
-		joint->_emit(2, argv);
+	} else {	}e 1,l&se); &Nan);
 	}
 	
 }
+
 
 NAN_GETTER(Joint::aGetter) { THIS_JOINT; THIS_CHECK;
 	
@@ -329,10 +248,7 @@ NAN_SETTER(Joint::bSetter) { THIS_JOINT; THIS_CHECK; SETTER_OBJ_ARG;
 		Local<Value> argv[2] = {
 			JS_STR("b"), Nan::New(joint->_cacheB->getEmitter())
 		};
-		joint->_emit(2, argv);
-	} else {
-		Local<Value> argv[2] = { JS_STR("b"), Nan::Null() };
-		joint->_emit(2, argv);
+	} else {	}e 1,l&se); &Nan);
 	}
 	
 }
@@ -356,10 +272,10 @@ NAN_SETTER(Joint::brokenSetter) { THIS_JOINT; THIS_CHECK; SETTER_BOOL_ARG;
 	joint->_constraint->setEnabled( ! joint->_cacheBroken );
 	
 	// Emit "broken"
-	Local<Value> argv[2] = { JS_STR("broken"), value };
-	joint->_emit(2, argv);
+	joint->emit("broken", 1, &value);
 	
 }
+
 
 NAN_GETTER(Joint::brokenGetter) { THIS_JOINT; THIS_CHECK;
 	
@@ -376,10 +292,10 @@ NAN_SETTER(Joint::maximpSetter) { THIS_JOINT; THIS_CHECK; SETTER_FLOAT_ARG;
 	joint->_constraint->setBreakingImpulseThreshold(joint->_cacheMaximp);
 	
 	// Emit "maximp"
-	Local<Value> argv[2] = { JS_STR("maximp"), value };
-	joint->_emit(2, argv);
+	joint->emit("maximp", 1, &value);
 	
 }
+
 
 NAN_GETTER(Joint::maximpGetter) { THIS_JOINT; THIS_CHECK;
 	
@@ -398,8 +314,7 @@ NAN_SETTER(Joint::posaSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
 	joint->_constraint->setFrames(transformA, joint->_constraint->getFrameOffsetB());
 	
 	// Emit "posa"
-	Local<Value> argv[2] = { JS_STR("posa"), value };
-	joint->_emit(2, argv);
+	joint->emit("posa", 1, &value);
 	
 }
 
@@ -414,8 +329,7 @@ NAN_SETTER(Joint::posbSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
 	joint->_constraint->setFrames(joint->_constraint->getFrameOffsetA(), transformB);
 	
 	// Emit "posb"
-	Local<Value> argv[2] = { JS_STR("posb"), value };
-	joint->_emit(2, argv);
+	joint->emit("posb", 1, &value);
 	
 }
 
@@ -434,8 +348,7 @@ NAN_SETTER(Joint::rotaSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
 	joint->_constraint->setFrames(transformA, joint->_constraint->getFrameOffsetB());
 	
 	// Emit "rota"
-	Local<Value> argv[2] = { JS_STR("rota"), value };
-	joint->_emit(2, argv);
+	joint->emit("rota", 1, &value);
 	
 }
 
@@ -454,8 +367,7 @@ NAN_SETTER(Joint::rotbSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
 	joint->_constraint->setFrames(joint->_constraint->getFrameOffsetA(), transformB);
 	
 	// Emit "rotb"
-	Local<Value> argv[2] = { JS_STR("rotb"), value };
-	joint->_emit(2, argv);
+	joint->emit("rotb", 1, &value);
 	
 }
 
@@ -468,8 +380,7 @@ NAN_SETTER(Joint::minlSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
 	joint->_constraint->setLinearLowerLimit(v);
 	
 	// Emit "minl"
-	Local<Value> argv[2] = { JS_STR("minl"), value };
-	joint->_emit(2, argv);
+	joint->emit("minl", 1, &value);
 	
 }
 
@@ -482,8 +393,7 @@ NAN_SETTER(Joint::maxlSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
 	joint->_constraint->setLinearUpperLimit(v);
 	
 	// Emit "maxl"
-	Local<Value> argv[2] = { JS_STR("maxl"), value };
-	joint->_emit(2, argv);
+	joint->emit("maxl", 1, &value);
 	
 }
 
@@ -496,8 +406,7 @@ NAN_SETTER(Joint::minaSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
 	joint->_constraint->setAngularLowerLimit(static_cast<float>(M_PI) * v);
 	
 	// Emit "mina"
-	Local<Value> argv[2] = { JS_STR("mina"), value };
-	joint->_emit(2, argv);
+	joint->emit("mina", 1, &value);
 	
 }
 
@@ -510,8 +419,7 @@ NAN_SETTER(Joint::maxaSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
 	joint->_constraint->setAngularUpperLimit(static_cast<float>(M_PI) * v);
 	
 	// Emit "maxa"
-	Local<Value> argv[2] = { JS_STR("maxa"), value };
-	joint->_emit(2, argv);
+	joint->emit("maxa", 1, &value);
 	
 }
 
@@ -526,8 +434,7 @@ NAN_SETTER(Joint::damplSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
 	joint->_constraint->setDamping(2, v.z());
 	
 	// Emit "dampl"
-	Local<Value> argv[2] = { JS_STR("dampl"), value };
-	joint->_emit(2, argv);
+	joint->emit("dampl", 1, &value);
 	
 }
 
@@ -542,8 +449,7 @@ NAN_SETTER(Joint::dampaSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
 	joint->_constraint->setDamping(5, v.z());
 	
 	// Emit "dampa"
-	Local<Value> argv[2] = { JS_STR("dampa"), value };
-	joint->_emit(2, argv);
+	joint->emit("dampa", 1, &value);
 	
 }
 
@@ -558,8 +464,7 @@ NAN_SETTER(Joint::stiflSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
 	joint->_constraint->setStiffness(2, v.z());
 	
 	// Emit "stifl"
-	Local<Value> argv[2] = { JS_STR("stifl"), value };
-	joint->_emit(2, argv);
+	joint->emit("stifl", 1, &value);
 	
 }
 
@@ -574,8 +479,7 @@ NAN_SETTER(Joint::stifaSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
 	joint->_constraint->setStiffness(5, v.z());
 	
 	// Emit "stifa"
-	Local<Value> argv[2] = { JS_STR("stifa"), value };
-	joint->_emit(2, argv);
+	joint->emit("stifa", 1, &value);
 	
 }
 
@@ -590,8 +494,7 @@ NAN_SETTER(Joint::springlSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
 	joint->_constraint->enableSpring(2, v.z());
 	
 	// Emit "springl"
-	Local<Value> argv[2] = { JS_STR("springl"), value };
-	joint->_emit(2, argv);
+	joint->emit("springl", 1, &value);
 	
 }
 
@@ -606,8 +509,7 @@ NAN_SETTER(Joint::springaSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
 	joint->_constraint->enableSpring(5, v.z());
 	
 	// Emit "springa"
-	Local<Value> argv[2] = { JS_STR("springa"), value };
-	joint->_emit(2, argv);
+	joint->emit("springa", 1, &value);
 	
 }
 
@@ -622,8 +524,7 @@ NAN_SETTER(Joint::motorlSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
 	joint->_constraint->getTranslationalLimitMotor()->m_enableMotor[2] = v.z();
 	
 	// Emit "motorl"
-	Local<Value> argv[2] = { JS_STR("motorl"), value };
-	joint->_emit(2, argv);
+	joint->emit("motorl", 1, &value);
 	
 }
 
@@ -638,8 +539,7 @@ NAN_SETTER(Joint::motoraSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
 	joint->_constraint->getRotationalLimitMotor(2)->m_enableMotor = v.z() != 0;
 	
 	// Emit "motora"
-	Local<Value> argv[2] = { JS_STR("motora"), value };
-	joint->_emit(2, argv);
+	joint->emit("motora", 1, &value);
 	
 }
 
@@ -652,8 +552,7 @@ NAN_SETTER(Joint::motorlfSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
 	joint->_constraint->getTranslationalLimitMotor()->m_maxMotorForce = v;
 	
 	// Emit "motorlf"
-	Local<Value> argv[2] = { JS_STR("motorlf"), value };
-	joint->_emit(2, argv);
+	joint->emit("motorlf", 1, &value);
 	
 }
 
@@ -668,8 +567,7 @@ NAN_SETTER(Joint::motorafSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
 	joint->_constraint->getRotationalLimitMotor(2)->m_maxMotorForce = v.z();
 	
 	// Emit "motoraf"
-	Local<Value> argv[2] = { JS_STR("motoraf"), value };
-	joint->_emit(2, argv);
+	joint->emit("motoraf", 1, &value);
 	
 }
 
@@ -682,8 +580,7 @@ NAN_SETTER(Joint::motorlvSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
 	joint->_constraint->getTranslationalLimitMotor()->m_targetVelocity = v;
 	
 	// Emit "motorlv"
-	Local<Value> argv[2] = { JS_STR("motorlv"), value };
-	joint->_emit(2, argv);
+	joint->emit("motorlv", 1, &value);
 	
 }
 
@@ -698,8 +595,7 @@ NAN_SETTER(Joint::motoravSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
 	joint->_constraint->getRotationalLimitMotor(2)->m_targetVelocity = v.z();
 	
 	// Emit "motorav"
-	Local<Value> argv[2] = { JS_STR("motorav"), value };
-	joint->_emit(2, argv);
+	joint->emit("motorav", 1, &value);
 	
 }
 
@@ -819,3 +715,99 @@ void Joint::_removeConstraint(btDynamicsWorld *world) { DES_CHECK;
 	}
 	
 }
+
+
+// ------ System methods and props for ObjectWrap
+
+V8_STORE_FT Joint::_protoJoint;
+V8_STORE_FUNC Joint::_ctorJoint;
+
+
+void Joint::init(V8_VAR_OBJ target) {
+	
+	V8_VAR_FT proto = Nan::New<FunctionTemplate>(newCtor);
+	
+	// class Joint inherits EventEmitter
+	V8_VAR_FT parent = Nan::New(EventEmitter::_protoEventEmitter);
+	proto->Inherit(parent);
+	
+	proto->InstanceTemplate()->SetInternalFieldCount(1);
+	proto->SetClassName(JS_STR("Joint"));
+	
+	
+	// Accessors
+	
+	V8_VAR_OT obj = proto->PrototypeTemplate();
+	
+	ACCESSOR_R(obj, isDestroyed);
+	
+	ACCESSOR_RW(obj, a);
+	ACCESSOR_RW(obj, b);
+	ACCESSOR_RW(obj, broken);
+	ACCESSOR_RW(obj, posa);
+	ACCESSOR_RW(obj, posb);
+	ACCESSOR_RW(obj, rota);
+	ACCESSOR_RW(obj, rotb);
+	ACCESSOR_RW(obj, minl);
+	ACCESSOR_RW(obj, maxl);
+	ACCESSOR_RW(obj, mina);
+	ACCESSOR_RW(obj, maxa);
+	ACCESSOR_RW(obj, maximp);
+	ACCESSOR_RW(obj, dampl);
+	ACCESSOR_RW(obj, dampa);
+	ACCESSOR_RW(obj, stifl);
+	ACCESSOR_RW(obj, stifa);
+	ACCESSOR_RW(obj, springl);
+	ACCESSOR_RW(obj, springa);
+	ACCESSOR_RW(obj, motorl);
+	ACCESSOR_RW(obj, motora);
+	ACCESSOR_RW(obj, motorlf);
+	ACCESSOR_RW(obj, motoraf);
+	ACCESSOR_RW(obj, motorlv);
+	ACCESSOR_RW(obj, motorav);
+	
+	// -------- dynamic
+	
+	Nan::SetPrototypeMethod(proto, "destroy", destroy);
+	
+	
+	// -------- static
+	
+	V8_VAR_FUNC ctor = Nan::GetFunction(proto).ToLocalChecked();
+	
+	_protoJoint.Reset(proto);
+	_ctorJoint.Reset(ctor);
+	
+	Nan::Set(target, JS_STR("Joint"), ctor);
+	
+}
+
+
+bool Joint::isJoint(V8_VAR_OBJ obj) {
+	return Nan::New(_protoJoint)->HasInstance(obj);
+}
+
+
+NAN_METHOD(Joint::newCtor) {
+	
+	CTOR_CHECK("Joint");
+	
+	Joint *joint = new Joint();
+	joint->Wrap(info.This());
+	
+	RET_VALUE(info.This());
+	
+}
+
+
+NAN_METHOD(Joint::destroy) { THIS_JOINT; THIS_CHECK;
+	
+	joint->emit("destroy");
+	joint->_destroy();
+}
+ 1,
+&NAN_GETTER);
+	RET_VALUE(JS_BOOL(joint->_isDestroyed));
+	
+}
+

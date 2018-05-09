@@ -2,9 +2,9 @@
 #define _JOINT_HPP_
 
 
-#include <nan.h>
-
 #include <LinearMath/btVector3.h>
+
+#include <event-emitter.hpp>
 
 #include "common.hpp"
 
@@ -14,27 +14,72 @@ class btGeneric6DofSpringConstraint;
 class Body;
 
 
-class Joint : public Nan::ObjectWrap {
+class Joint : public EventEmitter {
 	
 public:
 	
-	static void init(v8::Handle<v8::Object> target);
+	static void init(V8_VAR_OBJ target);
+	static bool isJoint(V8_VAR_OBJ obj);
 	
-	// called within engine
+	~Joint();
+	
+	void _destroy();
+	
 	void _rebuild(); // called internally and by Body
 	void _dropBody(Body *body); // called by Body
-	inline void _emit(int argc, v8::Local<v8::Value> argv[]);
+	
 	void __update(bool asleep = false);
 	
 	
 protected:
 	
-	explicit Joint();
-	virtual ~Joint();
+	Joint();
+	
+	static V8_STORE_FT _protoBody; // for inheritance
+	static V8_STORE_FUNC _ctorBody;
+	
+	bool _isDestroyed;
+	
+	void _removeConstraint(btDynamicsWorld *world);
+	
+	btGeneric6DofSpringConstraint *_constraint;
+	
+	// Throttle every first __update, pass every second call
+	bool _throttle;
+	// Remember asleep every first __update, compare every second call, both asleep -> nop
+	bool _asleep;
+	
+	Body *_cacheA;
+	Body *_cacheB;
+	bool _cacheBroken;
+	float _cacheMaximp;
+	btVector3 _cachePosa;
+	btVector3 _cachePosb;
+	btVector3 _cacheRota;
+	btVector3 _cacheRotb;
+	btVector3 _cacheMinl;
+	btVector3 _cacheMaxl;
+	btVector3 _cacheMina;
+	btVector3 _cacheMaxa;
+	btVector3 _cacheDampl;
+	btVector3 _cacheDampa;
+	btVector3 _cacheStifl;
+	btVector3 _cacheStifa;
+	btVector3 _cacheSpringl;
+	btVector3 _cacheSpringa;
+	btVector3 _cacheMotorl;
+	btVector3 _cacheMotora;
+	btVector3 _cacheMotorlf;
+	btVector3 _cacheMotoraf;
+	btVector3 _cacheMotorlv;
+	btVector3 _cacheMotorav;
+	
+	
+private:
 	
 	static NAN_METHOD(newCtor);
-	
 	static NAN_METHOD(destroy);
+	static NAN_GETTER(isDestroyedGetter);
 	
 	static NAN_GETTER(aGetter);
 	static NAN_SETTER(aSetter);
@@ -107,55 +152,6 @@ protected:
 	
 	static NAN_GETTER(motoravGetter);
 	static NAN_SETTER(motoravSetter);
-	
-	
-private:
-	
-	static Nan::Persistent<v8::Function> _constructor;
-	
-	Nan::Persistent<v8::Object> _emitter;
-	
-	bool _isDestroyed;
-	
-	btGeneric6DofSpringConstraint *_constraint;
-	
-	// Throttle every first __update, pass every second call
-	bool _throttle;
-	// Remember asleep every first __update, compare every second call, both asleep -> nop
-	bool _asleep;
-	
-	
-private: // prop cache
-	Body *_cacheA;
-	Body *_cacheB;
-	bool _cacheBroken;
-	float _cacheMaximp;
-	btVector3 _cachePosa;
-	btVector3 _cachePosb;
-	btVector3 _cacheRota;
-	btVector3 _cacheRotb;
-	btVector3 _cacheMinl;
-	btVector3 _cacheMaxl;
-	btVector3 _cacheMina;
-	btVector3 _cacheMaxa;
-	btVector3 _cacheDampl;
-	btVector3 _cacheDampa;
-	btVector3 _cacheStifl;
-	btVector3 _cacheStifa;
-	btVector3 _cacheSpringl;
-	btVector3 _cacheSpringa;
-	btVector3 _cacheMotorl;
-	btVector3 _cacheMotora;
-	btVector3 _cacheMotorlf;
-	btVector3 _cacheMotoraf;
-	btVector3 _cacheMotorlv;
-	btVector3 _cacheMotorav;
-	
-	
-private:
-	
-	void _removeConstraint(btDynamicsWorld *world);
-	void _destroy();
 	
 };
 

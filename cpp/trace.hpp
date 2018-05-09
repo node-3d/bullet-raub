@@ -2,8 +2,6 @@
 #define _TRACE_HPP_
 
 
-#include <nan.h>
-
 #include <LinearMath/btVector3.h>
 
 #include "common.hpp"
@@ -19,33 +17,29 @@ class Trace : public Nan::ObjectWrap {
 	
 public:
 	
-	static void init(v8::Handle<v8::Object> target);
+	~Trace();
 	
-	static v8::Local<v8::Object> instance(bool hit, Body *body, const btVector3 &pos, const btVector3 &norm);
-	static v8::Local<v8::Object> instance(Scene *scene, const btVector3 &from, const btVector3 &to);
+	static void init(V8_VAR_OBJ target);
+	static bool isTrace(V8_VAR_OBJ obj);
 	
-	Trace(bool hit, Body *body, const btVector3 &pos, const btVector3 &norm);
-	Trace(Scene *scene, const btVector3 &from, const btVector3 &to);
+	static V8_VAR_OBJ instance(bool hit, Body *body, const btVector3 &pos, const btVector3 &norm);
+	static V8_VAR_OBJ instance(Scene *scene, const btVector3 &from, const btVector3 &to);
+	
+	void _destroy();
 	
 	
 protected:
 	
-	virtual ~Trace();
+	Trace(bool hit, Body *body, const btVector3 &pos, const btVector3 &norm);
+	Trace(Scene *scene, const btVector3 &from, const btVector3 &to);
 	
-	static NAN_METHOD(newCtor);
+	static V8_STORE_FT _protoTrace; // for inheritance
+	static V8_STORE_FUNC _ctorTrace;
 	
-	static NAN_GETTER(hitGetter);
-	static NAN_GETTER(bodyGetter);
-	static NAN_GETTER(posGetter);
-	static NAN_GETTER(normGetter);
+	bool _isDestroyed;
 	
+	void _rebuild();
 	
-private:
-	
-	static Nan::Persistent<v8::Function> _constructor;
-	
-	
-private: // prop cache
 	bool _cacheHit;
 	Body *_cacheBody;
 	btVector3 _cachePos;
@@ -53,7 +47,15 @@ private: // prop cache
 	
 	
 private:
-	void _rebuild();
+	
+	static NAN_METHOD(newCtor);
+	static NAN_METHOD(destroy);
+	static NAN_GETTER(isDestroyedGetter);
+	
+	static NAN_GETTER(hitGetter);
+	static NAN_GETTER(bodyGetter);
+	static NAN_GETTER(posGetter);
+	static NAN_GETTER(normGetter);
 	
 };
 

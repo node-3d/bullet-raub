@@ -1,5 +1,4 @@
 #include <cstdlib>
-#include <iostream>
 
 #include <btDynamicsWorld.h>
 #include <btRigidBody.h>
@@ -22,6 +21,9 @@ using namespace v8;
 using namespace node;
 using namespace std;
 
+
+// ------ Aux macros
+
 #define THIS_BODY                                                             \
 	Body *body = ObjectWrap::Unwrap<Body>(info.This());
 
@@ -41,84 +43,7 @@ using namespace std;
 	body->CACHE = V;
 
 
-
-
-Nan::Persistent<v8::Function> Body::_constructor;
-
-
-void Body::init(Handle<Object> target) {
-	
-	Local<FunctionTemplate> ctor = Nan::New<FunctionTemplate>(newCtor);
-	
-	ctor->InstanceTemplate()->SetInternalFieldCount(1);
-	ctor->SetClassName(JS_STR("Body"));
-	
-	// prototype
-	Nan::SetPrototypeMethod(ctor, "destroy", destroy);
-	
-	Local<ObjectTemplate> proto = ctor->PrototypeTemplate();
-	ACCESSOR_RW(proto, type);
-	ACCESSOR_RW(proto, pos);
-	ACCESSOR_RW(proto, rot);
-	ACCESSOR_RW(proto, vell);
-	ACCESSOR_RW(proto, vela);
-	ACCESSOR_RW(proto, size);
-	ACCESSOR_RW(proto, map);
-	ACCESSOR_RW(proto, mesh);
-	ACCESSOR_RW(proto, mass);
-	ACCESSOR_RW(proto, rest);
-	ACCESSOR_RW(proto, dampl);
-	ACCESSOR_RW(proto, dampa);
-	ACCESSOR_RW(proto, factl);
-	ACCESSOR_RW(proto, facta);
-	ACCESSOR_RW(proto, frict);
-	ACCESSOR_RW(proto, sleepy);
-	
-	_constructor.Reset(Nan::GetFunction(ctor).ToLocalChecked());
-	Nan::Set(target, JS_STR("Body"), Nan::GetFunction(ctor).ToLocalChecked());
-	
-}
-
-
-Nan::Persistent<Object> &Body::getJsWrapper() {
-	
-	return _emitter;
-	
-}
-
-
-void Body::_emit(int argc, Local<Value> argv[]) {
-	
-	if ( ! Nan::New(_emitter)->Has(JS_STR("emit")) ) {
-		return;
-	}
-	
-	Nan::Callback callback(Nan::New(_emitter)->Get(JS_STR("emit")).As<Function>());
-	
-	if ( ! callback.IsEmpty() ) {
-		callback.Call(argc, argv);
-	}
-	
-}
-
-
-NAN_METHOD(Body::newCtor) {
-	
-	CTOR_CHECK("Body");
-	
-	REQ_OBJ_ARG(0, emitter);
-	REQ_OBJ_ARG(1, owner);
-	
-	Scene *scene = ObjectWrap::Unwrap<Scene>(owner);
-	Body *body = new Body(scene);
-	body->_emitter.Reset(emitter);
-	
-	body->Wrap(info.This());
-	
-	RET_VALUE(info.This());
-	
-}
-
+// ------ Constructor and Destructor
 
 Body::Body(Scene *scene) {
 	
@@ -187,16 +112,15 @@ void Body::_destroy() { DES_CHECK;
 	
 	_isDestroyed = true;
 	
-	// Emit "destroy"
-	Local<Value> argv = JS_STR("destroy");
-	_emit(1, &argv);
-	
 }
 
+
+// ------ Methods and props
 
 void Body::refJoint(Joint *joint) { DES_CHECK;
 	_joints.push_back(joint);
 }
+
 
 void Body::unrefJoint(Joint* joint) { DES_CHECK;
 	
@@ -258,14 +182,6 @@ void Body::__update() { DES_CHECK;
 		(*it)->__update();
 		it++;
 	}
-	
-}
-
-
-
-NAN_METHOD(Body::destroy) { THIS_BODY; THIS_CHECK;
-	
-	body->_destroy();
 	
 }
 
@@ -671,3 +587,113 @@ btVector3 Body::_calcScale() const {
 	return sz;
 	
 }
+
+
+
+// ------ System methods and props for ObjectWrap
+
+V8_STORE_FT Body::_protoBody;
+V8_STORE_FUNC Body::_ctorBody;
+
+
+void Body::init(V8_VAR_OBJ target) {
+	
+	V8_VAR_FT proto = Nan::New<FunctionTemplate>(newCtor);
+	
+	// class Body inherits EventEmitter
+	V8_VAR_FT parent = Nan::New(EventEmitter::_protoEventEmitter);
+	proto->Inherit(parent);
+	
+	proto->InstanceTemplate()->SetInternalFieldCount(1);
+	proto->SetClassName(JS_STR("Body"));
+	
+	
+	// Accessors
+	
+	V8_VAR_OT obj = proto->PrototypeTemplate();
+	
+	ACCESSOR_R(obj, isDestroyed);
+	
+	ACCESSOR_RW(obj, type);
+	ACCESSOR_RW(obj, pos);
+	ACCESSOR_RW(obj, rot);
+	ACCESSOR_RW(obj, vell);
+	ACCESSOR_RW(obj, vela);
+	ACCESSOR_RW(obj, size);
+	ACCESSOR_RW(obj, map);
+	ACCESSOR_RW(obj, mesh);
+	ACCESSOR_RW(obj, mass);
+	ACCESSOR_RW(obj, rest);
+	ACCESSOR_RW(obj, dampl);
+	ACCESSOR_RW(obj, dampa);
+	ACCESSOR_RW(obj, factl);
+	ACCESSOR_RW(obj, facta);
+	ACCESSOR_RW(obj, frict);
+	ACCESSOR_RW(obj, sleepy);
+	
+	// -------- dynamic
+	
+	Nan::SetPrototypeMethod(proto, "destroy", destroy);
+	
+	
+	// -------- static
+	
+	V8_VAR_FUNC ctor = Nan::GetFunction(proto).ToLocalChecked();
+	
+	_protoBody.Reset(proto);
+	_ctorBody.Reset(ctor);
+	
+	Nan::Set(target, JS_STR("Body"), ctor);
+	
+}
+
+
+bool Body::isBody(V8_VAR_OBJ obj) {
+	return Nan::New(_protoBody)->HasInstance(obj);
+}
+
+
+NAN_METHOD(Body::newCtor) {
+	
+	CTOR_CHECK("Body");
+	
+	REQ_OBJ_ARG(0, opts);
+	
+	if ( ! opts->Has(JS_STR("scene")) ) {
+		return Nan::ThrowTypeError("Missing 'opts.scene' argument.");
+	}
+	
+	V8_VAR_VAL ownerVal = opts->Get(JS_STR("scene"))
+	
+	if ( ! ownerVal->IsObject() ) {
+		return Nan::ThrowTypeError("Type of 'opts.scene' must be 'object'.");
+	}
+	
+	V8_VAR_OBJ owner = V8_VAR_OBJ::Cast(ownerVal);
+	Scene *scene = ObjectWrap::Unwrap<Scene>(owner);
+	
+	Body *body = new Body(scene);
+	
+	// TODO: opts
+	
+	body->Wrap(info.This());
+	RET_VALUE(info.This());
+	
+}
+
+
+NAN_METHOD(Body::destroy) { THIS_BODY; THIS_CHECK;
+	
+	body->emit("destroy");
+	
+	body->_destroy();
+	
+}
+
+
+NAN_GETTER(Body::isDestroyedGetter) { THIS_BODY;
+	
+	RET_VALUE(JS_BOOL(body->_isDestroyed));
+	
+}
+

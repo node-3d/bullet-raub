@@ -1,19 +1,19 @@
 #include <cstdlib>
 
+#include <event-emitter.hpp>
+
 #include "scene.hpp"
 #include "body.hpp"
 #include "joint.hpp"
 #include "trace.hpp"
 
-using namespace v8;
-using namespace node;
-using namespace std;
-
 
 extern "C" {
 
 
-void init(Handle<Object> target) {
+void init(V8_VAR_OBJ target) {
+	
+	EventEmitter::init(target);
 	
 	Scene::init(target);
 	Body::init(target);
@@ -23,7 +23,7 @@ void init(Handle<Object> target) {
 }
 
 
-NODE_MODULE(NODE_GYP_MODULE_NAME, init);
+NODE_MODULE(bullet, init);
 
 
 } // extern "C"

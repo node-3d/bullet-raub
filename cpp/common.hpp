@@ -2,16 +2,7 @@
 #define _COMMON_HPP_
 
 
-#include <node.h>
-
-#ifdef _WIN32
-	#pragma warning(push)
-	#pragma warning(disable:4244)
-#endif
-#include <nan.h>
-#ifdef _WIN32
-	#pragma warning(pop)
-#endif
+#include <addon-tools.hpp>
 
 
 // Bullet stuff
@@ -83,19 +74,10 @@
 	OBJ_TO_QUAT(_obj_v, v);
 
 
-#define DES_CHECK                                                             \
-	if (_isDestroyed) return;
-
-
 // Fix bad defines
 
 #undef True
 #undef False
-
-
-// Cool macros
-
-#include <addon-tools.hpp>
 
 
 #endif /* _COMMON_HPP_ */
