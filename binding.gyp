@@ -8,19 +8,19 @@
 	},
 	'targets': [
 		{
-			'target_name': 'bullet',
-			'sources': [
+			'target_name' : 'bullet',
+			'sources' : [
 				'cpp/bindings.cpp',
 				'cpp/body.cpp',
 				'cpp/joint.cpp',
 				'cpp/scene.cpp',
 				'cpp/trace.cpp',
 			],
-			'include_dirs': [
+			'include_dirs' : [
 				'<!@(node -e "require(\'addon-tools-raub\').include()")',
 				'<(bullet_include)',
 			],
-			'library_dirs': [ '<(bullet_bin)' ],
+			'library_dirs' : [ '<(bullet_bin)' ],
 			'libraries'    : [ '-lbullet' ],
 			'conditions'   : [
 				[

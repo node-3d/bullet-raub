@@ -7,7 +7,6 @@
 #include <BulletDynamics/Dynamics/btRigidBody.h>
 #include <BulletDynamics/ConstraintSolver/btTypedConstraint.h>
 #include <BulletDynamics/Dynamics/btDynamicsWorld.h>
-#include <BulletDynamics/Dynamics/btRigidBody.h>
 #include <BulletDynamics/ConstraintSolver/btGeneric6DofSpringConstraint.h>
 #include <BulletDynamics/ConstraintSolver/btGeneric6DofConstraint.h>
 
@@ -113,10 +112,6 @@ void Joint::_destroy() { DES_CHECK;
 	
 	_isDestroyed = true;
 	
-	// Emit "destroy"
-	Local<Value> argv = JS_STR("destroy");
-	emit(1, &argv);
-	
 }
 
 
@@ -146,13 +141,13 @@ void Joint::__update(bool asleep) { DES_CHECK;
 	VEC3_TO_OBJ(a, posa);
 	VEC3_TO_OBJ(b, posb);
 	
-	Local<Object> obj = Nan::New<Object>();
+	V8_VAR_OBJ obj = Nan::New<Object>();
 	SET_PROP(obj, "posa", posa);
 	SET_PROP(obj, "posb", posb);
 	SET_PROP(obj, "broken", JS_BOOL(_cacheBroken));
 	
-	Local<Value> argv[2] = { JS_STR("update"), obj };
-	emit(2, argv);
+	V8_VAR_VAL objVal = obj;
+	// emit("update", 1, &objVal);
 	
 }
 
@@ -202,10 +197,10 @@ NAN_SETTER(Joint::aSetter) { THIS_JOINT; THIS_CHECK; SETTER_OBJ_ARG;
 	
 	// Emit "a"
 	if (joint->_cacheA) {
-		Local<Value> argv[2] = {
-			JS_STR("a"), Nan::New(joint->_cacheA->getEmitter())
-		};
-	} else {	}e 1,l&se); &Nan);
+		joint->emit("a", 1, &value);
+	} else {
+		V8_VAR_VAL nullVal = Nan::Null();
+		joint->emit("a", 1, &nullVal);
 	}
 	
 }
@@ -214,7 +209,7 @@ NAN_SETTER(Joint::aSetter) { THIS_JOINT; THIS_CHECK; SETTER_OBJ_ARG;
 NAN_GETTER(Joint::aGetter) { THIS_JOINT; THIS_CHECK;
 	
 	if (joint->_cacheA) {
-		RET_VALUE(Nan::New(joint->_cacheA->getEmitter()));
+		RET_VALUE(joint->_cacheA->handle());
 	} else {
 		RET_VALUE(Nan::Null());
 	}
@@ -245,10 +240,10 @@ NAN_SETTER(Joint::bSetter) { THIS_JOINT; THIS_CHECK; SETTER_OBJ_ARG;
 	
 	// Emit "b"
 	if (joint->_cacheB) {
-		Local<Value> argv[2] = {
-			JS_STR("b"), Nan::New(joint->_cacheB->getEmitter())
-		};
-	} else {	}e 1,l&se); &Nan);
+		joint->emit("b", 1, &value);
+	} else {
+		V8_VAR_VAL nullVal = Nan::Null();
+		joint->emit("b", 1, &nullVal);
 	}
 	
 }
@@ -256,7 +251,7 @@ NAN_SETTER(Joint::bSetter) { THIS_JOINT; THIS_CHECK; SETTER_OBJ_ARG;
 NAN_GETTER(Joint::bGetter) { THIS_JOINT; THIS_CHECK;
 	
 	if (joint->_cacheB) {
-		RET_VALUE(Nan::New(joint->_cacheB->getEmitter()));
+		RET_VALUE(joint->_cacheB->handle());
 	} else {
 		RET_VALUE(Nan::Null());
 	}
@@ -800,13 +795,18 @@ NAN_METHOD(Joint::newCtor) {
 }
 
 
+
 NAN_METHOD(Joint::destroy) { THIS_JOINT; THIS_CHECK;
 	
 	joint->emit("destroy");
+	
 	joint->_destroy();
+	
 }
- 1,
-&NAN_GETTER);
+
+
+NAN_GETTER(Joint::isDestroyedGetter) { THIS_JOINT;
+	
 	RET_VALUE(JS_BOOL(joint->_isDestroyed));
 	
 }

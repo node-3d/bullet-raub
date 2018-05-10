@@ -18,6 +18,9 @@ using namespace std;
 #define THIS_TRACE                                                            \
 	Trace *trace = ObjectWrap::Unwrap<Trace>(info.This());
 
+#define THIS_CHECK                                                            \
+	if (trace->_isDestroyed) return;
+
 #define V3_GETTER(NAME, CACHE)                                                \
 	NAN_GETTER(Trace::NAME ## Getter) { THIS_TRACE;                           \
 		VEC3_TO_OBJ(trace->CACHE, NAME);                                      \
@@ -33,12 +36,12 @@ using namespace std;
 
 // ------ Constructor and Destructor
 
-Trace::Trace(bool hit, Body *body, const btVector3 &pos, const btVector3 &norm) {
+Trace::Trace() {
 	
-	_cacheHit = hit;
-	_cacheBody = body;
-	_cachePos = pos;
-	_cacheNorm = norm;
+	_cacheHit = false;
+	_cacheBody = nullptr;
+	_cachePos = btVector3();
+	_cacheNorm = btVector3();
 	
 }
 
@@ -55,7 +58,7 @@ Trace::Trace(Scene *scene, const btVector3 &from, const btVector3 &to) {
 		_cacheNorm = closestResults.m_hitNormalWorld;
 	} else {
 		_cacheHit = false;
-		_cacheBody = NULL;
+		_cacheBody = nullptr;
 		_cachePos = btVector3(0, 0, 0);
 		_cacheNorm = btVector3(0, 1, 0);
 	}
@@ -78,29 +81,38 @@ void Trace::_destroy() { DES_CHECK;
 // ------ Methods and props
 
 
-V8_VAR_OBJ Trace::instance(bool hit, Body *body, const btVector3 &pos, const btVector3 &norm) {
+V8_VAR_OBJ Trace::getNew(bool hit, Body *body, const btVector3 &pos, const btVector3 &norm) {
 	
-	Local<Function> cons = Nan::New(_constructor);
+	V8_VAR_FUNC ctor = Nan::New(_ctorTrace);
 	
-	VEC3_TO_OBJ(pos, p);
-	VEC3_TO_OBJ(norm, n);
+	V8_VAR_OBJ traceObj = Nan::NewInstance(ctor).ToLocalChecked();
 	
-	const int argc = 4;
-	Local<Value> argv[argc] = { JS_BOOL(hit), Nan::New<External>(body), p, n };
+	Trace *trace = ObjectWrap::Unwrap<Trace>(traceObj);
+	trace->_cacheHit = hit;
+	trace->_cacheBody = body;
+	trace->_cachePos = pos;
+	trace->_cacheNorm = norm;
 	
-	V8_VAR_OBJ inst = cons->NewInstance(argc, argv);
-	// Nan::NewInstance(cons, argc, argv).ToLocalChecked();
-	
-	return inst;
+	return traceObj;
 	
 }
 
 
-V8_VAR_OBJ Trace::instance(Scene *scene, const btVector3 &from, const btVector3 &to) {
+V8_VAR_OBJ Trace::getNew(Scene *scene, const btVector3 &from, const btVector3 &to) {
 	
-	Trace helper(scene, from, to);
+	V8_VAR_FUNC ctor = Nan::New(_ctorTrace);
 	
-	return instance(helper._cacheHit, helper._cacheBody, helper._cachePos, helper._cacheNorm);
+	VEC3_TO_OBJ(from, fromObj);
+	VEC3_TO_OBJ(to, toObj);
+	
+	V8_VAR_OBJ args = Nan::New<Object>();
+	SET_PROP(args, "scene", scene->handle());
+	SET_PROP(args, "from", fromObj);
+	SET_PROP(args, "to", toObj);
+	
+	V8_VAR_VAL argsVal = args;
+	
+	return Nan::NewInstance(ctor, 1, &argsVal).ToLocalChecked();
 	
 }
 
@@ -111,7 +123,7 @@ V3_GETTER(norm, _cacheNorm);
 NAN_GETTER(Trace::bodyGetter) { THIS_TRACE;
 	
 	if (trace->_cacheBody) {
-		RET_VALUE(Nan::New(trace->_cacheBody->getJsWrapper()));
+		RET_VALUE(trace->_cacheBody->handle());
 	} else {
 		RET_VALUE(Nan::Null());
 	}
@@ -120,7 +132,7 @@ NAN_GETTER(Trace::bodyGetter) { THIS_TRACE;
 
 NAN_GETTER(Trace::hitGetter) { THIS_TRACE;
 	
-	RET_VALUE(JS_BOOL(Trace->_cacheHit));
+	RET_VALUE(JS_BOOL(trace->_cacheHit));
 	
 }
 
@@ -134,6 +146,10 @@ V8_STORE_FUNC Trace::_ctorTrace;
 void Trace::init(V8_VAR_OBJ target) {
 	
 	V8_VAR_FT proto = Nan::New<FunctionTemplate>(newCtor);
+	
+	// class Trace inherits EventEmitter
+	V8_VAR_FT parent = Nan::New(EventEmitter::_protoEventEmitter);
+	proto->Inherit(parent);
 	
 	proto->InstanceTemplate()->SetInternalFieldCount(1);
 	proto->SetClassName(JS_STR("Trace"));
@@ -177,27 +193,47 @@ NAN_METHOD(Trace::newCtor) {
 	
 	CTOR_CHECK("Trace");
 	
-	Trace *traceResult = NULL;
+	Trace *traceResult = nullptr;
 	
-	if (info[0]->IsObject()) {
+	if (info.Length() > 0) {
 		
-		REQ_OBJ_ARG(0, owner);
+		REQ_OBJ_ARG(0, opts);
+		
+		if ( ! opts->Has(JS_STR("scene")) ) {
+			return Nan::ThrowTypeError("Missing 'opts.scene' argument.");
+		}
+		
+		V8_VAR_VAL ownerVal = opts->Get(JS_STR("scene"));
+		
+		if ( ! ownerVal->IsObject() ) {
+			return Nan::ThrowTypeError("Type of 'opts.scene' must be 'object'.");
+		}
+		
+		V8_VAR_OBJ owner = V8_VAR_OBJ::Cast(ownerVal);
 		Scene *scene = ObjectWrap::Unwrap<Scene>(owner);
-		REQ_VEC3_ARG(1, f);
-		REQ_VEC3_ARG(2, t);
 		
-		traceResult = new Trace(scene, f, t);
+		if ( ! (opts->Has(JS_STR("from")) && opts->Has(JS_STR("to")))) {
+			return Nan::ThrowTypeError("Missing 'opts.from' or 'opts.to' argument.");
+		}
+		
+		V8_VAR_VAL fromVal = opts->Get(JS_STR("from"));
+		V8_VAR_VAL toVal = opts->Get(JS_STR("to"));
+		
+		if ( ! (fromVal->IsObject() && toVal->IsObject()) ) {
+			return Nan::ThrowTypeError("Type of 'opts.from' and 'opts.to' must be 'object'.");
+		}
+		
+		V8_VAR_OBJ fromObj = V8_VAR_OBJ::Cast(fromVal);
+		V8_VAR_OBJ toObj = V8_VAR_OBJ::Cast(toVal);
+		
+		OBJ_TO_VEC3(fromObj, from);
+		OBJ_TO_VEC3(toObj, to);
+		
+		traceResult = new Trace(scene, from, to);
 		
 	} else {
 		
-		REQ_BOOL_ARG(0, hit);
-		LET_EXT_ARG(1, body);
-		REQ_VEC3_ARG(2, pos);
-		REQ_VEC3_ARG(3, norm);
-		
-		Body *external = reinterpret_cast<Body*>(body->Value());
-		
-		traceResult = new Trace(hit, external, pos, norm);
+		traceResult = new Trace();
 		
 	}
 	

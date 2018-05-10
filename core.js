@@ -1,5 +1,7 @@
 'use strict';
 
+const util = require('util');
+
 // Add deps dll dirs
 require('deps-bullet-raub');
 

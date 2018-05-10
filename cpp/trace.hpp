@@ -4,6 +4,8 @@
 
 #include <LinearMath/btVector3.h>
 
+#include <event-emitter.hpp>
+
 #include "common.hpp"
 
 
@@ -13,7 +15,7 @@ class Body;
 class Scene;
 
 
-class Trace : public Nan::ObjectWrap {
+class Trace : public EventEmitter {
 	
 public:
 	
@@ -22,15 +24,16 @@ public:
 	static void init(V8_VAR_OBJ target);
 	static bool isTrace(V8_VAR_OBJ obj);
 	
-	static V8_VAR_OBJ instance(bool hit, Body *body, const btVector3 &pos, const btVector3 &norm);
-	static V8_VAR_OBJ instance(Scene *scene, const btVector3 &from, const btVector3 &to);
+	// Make a new instance from C++ land
+	static V8_VAR_OBJ getNew(bool hit, Body *body, const btVector3 &pos, const btVector3 &norm);
+	static V8_VAR_OBJ getNew(Scene *scene, const btVector3 &from, const btVector3 &to);
 	
 	void _destroy();
 	
 	
 protected:
 	
-	Trace(bool hit, Body *body, const btVector3 &pos, const btVector3 &norm);
+	Trace();
 	Trace(Scene *scene, const btVector3 &from, const btVector3 &to);
 	
 	static V8_STORE_FT _protoTrace; // for inheritance

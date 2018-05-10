@@ -3,6 +3,7 @@
 
 
 #include <vector>
+// #include <cstdlib>
 
 #include <LinearMath/btVector3.h>
 #include <LinearMath/btQuaternion.h>
@@ -21,14 +22,17 @@ class Scene;
 class Trimesh;
 
 
-class Body : public EventEmitter {
+/*__declspec(align(16))*/ class Body : public EventEmitter {
 	
 public:
 	
-	~Body();
+	// void *operator new(size_t size) { return std::aligned_alloc(16, size); }
+	// void operator delete(void *p) { std::free(p); }
 	
 	static void init(V8_VAR_OBJ target);
 	static bool isBody(V8_VAR_OBJ obj);
+	
+	~Body();
 	
 	void _destroy();
 	

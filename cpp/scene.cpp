@@ -20,6 +20,9 @@ using namespace v8;
 using namespace node;
 using namespace std;
 
+
+// ------ Aux macros
+
 #define THIS_SCENE                                                            \
 	Scene *scene = ObjectWrap::Unwrap<Scene>(info.This());
 
@@ -39,60 +42,9 @@ using namespace std;
 	scene->CACHE = V;
 
 
+// ------ Constructor and Destructor
+
 vector<Scene*> Scene::_scenes;
-Nan::Persistent<v8::Function> Scene::_constructor;
-
-
-void Scene::init(Handle<Object> target) {
-	
-	Local<FunctionTemplate> ctor = Nan::New<FunctionTemplate>(newCtor);
-	
-	ctor->InstanceTemplate()->SetInternalFieldCount(1);
-	ctor->SetClassName(JS_STR("Scene"));
-	
-	// prototype
-	Nan::SetPrototypeMethod(ctor, "update", update);
-	Nan::SetPrototypeMethod(ctor, "trace", trace);
-	Nan::SetPrototypeMethod(ctor, "hit", hit);
-	Nan::SetPrototypeMethod(ctor, "destroy", destroy);
-	
-	Local<ObjectTemplate> proto = ctor->PrototypeTemplate();
-	ACCESSOR_RW(proto, gravity);
-	
-	_constructor.Reset(Nan::GetFunction(ctor).ToLocalChecked());
-	Nan::Set(target, JS_STR("Scene"), Nan::GetFunction(ctor).ToLocalChecked());
-	
-}
-
-
-void Scene::_emit(int argc, Local<Value> argv[]) {
-	
-	if ( ! Nan::New(_emitter)->Has(JS_STR("emit")) ) {
-		return;
-	}
-	
-	Nan::Callback callback(Nan::New(_emitter)->Get(JS_STR("emit")).As<Function>());
-	
-	if ( ! callback.IsEmpty() ) {
-		callback.Call(argc, argv);
-	}
-	
-}
-
-
-NAN_METHOD(Scene::newCtor) {
-	
-	CTOR_CHECK("Scene");
-	
-	REQ_OBJ_ARG(0, emitter);
-	
-	Scene *scene = new Scene();
-	scene->_emitter.Reset(emitter);
-	scene->Wrap(info.This());
-	
-	RET_VALUE(info.This());
-	
-}
 
 
 Scene::Scene() {
@@ -147,16 +99,15 @@ void Scene::_destroy() { DES_CHECK;
 	
 	_isDestroyed = true;
 	
-	// Emit "destroy"
-	Local<Value> argv = JS_STR("destroy");
-	_emit(1, &argv);
-	
 }
 
+
+// ------ Methods and props
 
 void Scene::refBody(Body *body) { DES_CHECK;
 	_bodies.push_back(body);
 }
+
 
 void Scene::unrefBody(Body* body) { DES_CHECK;
 	
@@ -183,9 +134,9 @@ void Scene::doUpdate(float dt) { DES_CHECK;
 	vector<Body*>::iterator it = _bodies.begin();
 	while (it != _bodies.end()) {
 		(*it)->__update();
+		consoleLog("i++");
 		it++;
 	}
-	
 	
 }
 
@@ -200,18 +151,18 @@ void Scene::doUpdate() { DES_CHECK;
 }
 
 
-vector< Local<Value> > Scene::doTrace(const btVector3 &from, const btVector3 &to) {
+vector< V8_VAR_OBJ > Scene::doTrace(const btVector3 &from, const btVector3 &to) {
 	
 	btCollisionWorld::AllHitsRayResultCallback allResults(from, to);
 	_physWorld->rayTest(from, to, allResults);
 	
-	vector< Local<Value> > list;
+	vector< V8_VAR_OBJ > list;
 	
 	for (int i = 0; i < allResults.m_collisionObjects.size(); i++) {
 		
 		Body *b = reinterpret_cast<Body *>(allResults.m_collisionObjects[i]->getUserPointer());
 		
-		list.push_back(Trace::instance(
+		list.push_back(Trace::getNew(
 			true, b,
 			allResults.m_hitPointWorld[i],
 			allResults.m_hitNormalWorld[i]
@@ -233,14 +184,15 @@ NAN_SETTER(Scene::gravitySetter) { THIS_SCENE; THIS_CHECK; SETTER_VEC3_ARG;
 	scene->_physWorld->setGravity(scene->_cacheGrav);
 	
 	// Emit "gravity"
-	Local<Value> argv[2] = { JS_STR("gravity"), value };
-	scene->_emit(2, argv);
+	scene->emit("gravity", 1, &value);
 	
 }
 
 
 NAN_METHOD(Scene::update) { THIS_SCENE; THIS_CHECK;
+	consoleLog("++ U0");
 	
+	try {
 	LET_FLOAT_ARG(0, dt);
 	
 	if (dt > 0.f) {
@@ -248,7 +200,10 @@ NAN_METHOD(Scene::update) { THIS_SCENE; THIS_CHECK;
 	} else {
 		scene->doUpdate();
 	}
-	
+} catch (...) {
+	consoleLog(">>>>> BLEAT");
+}
+	consoleLog("-- U1");
 }
 
 
@@ -257,7 +212,7 @@ NAN_METHOD(Scene::hit) { THIS_SCENE; THIS_CHECK;
 	REQ_VEC3_ARG(0, f);
 	REQ_VEC3_ARG(1, t);
 	
-	Local<Value> trace = Trace::instance(scene, f, t);
+	V8_VAR_OBJ trace = Trace::getNew(scene, f, t);
 	
 	RET_VALUE(trace);
 }
@@ -268,10 +223,10 @@ NAN_METHOD(Scene::trace) { THIS_SCENE; THIS_CHECK;
 	REQ_VEC3_ARG(0, f);
 	REQ_VEC3_ARG(1, t);
 	
-	const vector< Local<Value> > &traceList = scene->doTrace(f, t);
+	const vector< V8_VAR_OBJ > &traceList = scene->doTrace(f, t);
 	int size = traceList.size();
 	
-	Local<Array> result = Nan::New<Array>(size);
+	V8_VAR_ARR result = Nan::New<Array>(size);
 	
 	for (int i = 0; i < size; i++) {
 		SET_I(result, i, traceList[i]);
@@ -282,8 +237,85 @@ NAN_METHOD(Scene::trace) { THIS_SCENE; THIS_CHECK;
 }
 
 
+
+// ------ System methods and props for ObjectWrap
+
+V8_STORE_FT Scene::_protoScene;
+V8_STORE_FUNC Scene::_ctorScene;
+
+
+void Scene::init(V8_VAR_OBJ target) {
+	
+	V8_VAR_FT proto = Nan::New<FunctionTemplate>(newCtor);
+	
+	// class Scene inherits EventEmitter
+	V8_VAR_FT parent = Nan::New(EventEmitter::_protoEventEmitter);
+	proto->Inherit(parent);
+	
+	proto->InstanceTemplate()->SetInternalFieldCount(1);
+	proto->SetClassName(JS_STR("Scene"));
+	
+	
+	// Accessors
+	
+	V8_VAR_OT obj = proto->PrototypeTemplate();
+	
+	ACCESSOR_R(obj, isDestroyed);
+	
+	ACCESSOR_RW(obj, gravity);
+	
+	
+	// -------- dynamic
+	
+	Nan::SetPrototypeMethod(proto, "destroy", destroy);
+	
+	Nan::SetPrototypeMethod(proto, "update", update);
+	Nan::SetPrototypeMethod(proto, "trace", trace);
+	Nan::SetPrototypeMethod(proto, "hit", hit);
+	Nan::SetPrototypeMethod(proto, "destroy", destroy);
+	
+	
+	// -------- static
+	
+	V8_VAR_FUNC ctor = Nan::GetFunction(proto).ToLocalChecked();
+	
+	_protoScene.Reset(proto);
+	_ctorScene.Reset(ctor);
+	
+	Nan::Set(target, JS_STR("Scene"), ctor);
+	
+}
+
+
+bool Scene::isScene(V8_VAR_OBJ obj) {
+	return Nan::New(_protoScene)->HasInstance(obj);
+}
+
+
+NAN_METHOD(Scene::newCtor) {
+	
+	CTOR_CHECK("Scene");
+	
+	Scene *scene = new Scene();
+	scene->Wrap(info.This());
+	
+	RET_VALUE(info.This());
+	
+}
+
+
 NAN_METHOD(Scene::destroy) { THIS_SCENE; THIS_CHECK;
+	
+	scene->emit("destroy");
 	
 	scene->_destroy();
 	
 }
+
+
+NAN_GETTER(Scene::isDestroyedGetter) { THIS_SCENE;
+	
+	RET_VALUE(JS_BOOL(scene->_isDestroyed));
+	
+}
+

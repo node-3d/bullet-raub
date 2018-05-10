@@ -2,6 +2,8 @@
 #define _JOINT_HPP_
 
 
+// #include <cstdlib>
+
 #include <LinearMath/btVector3.h>
 
 #include <event-emitter.hpp>
@@ -14,9 +16,12 @@ class btGeneric6DofSpringConstraint;
 class Body;
 
 
-class Joint : public EventEmitter {
+/*__declspec(align(16))*/ class Joint : public EventEmitter {
 	
 public:
+	
+	// void *operator new(size_t size) { return std::aligned_alloc(16, size); }
+	// void operator delete(void *p) { std::free(p); }
 	
 	static void init(V8_VAR_OBJ target);
 	static bool isJoint(V8_VAR_OBJ obj);
@@ -35,8 +40,8 @@ protected:
 	
 	Joint();
 	
-	static V8_STORE_FT _protoBody; // for inheritance
-	static V8_STORE_FUNC _ctorBody;
+	static V8_STORE_FT _protoJoint; // for inheritance
+	static V8_STORE_FUNC _ctorJoint;
 	
 	bool _isDestroyed;
 	

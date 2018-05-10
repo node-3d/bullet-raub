@@ -4,9 +4,9 @@
 
 #include <vector>
 
-#include <nan.h>
-
 #include <LinearMath/btVector3.h>
+
+#include <event-emitter.hpp>
 
 #include "common.hpp"
 
@@ -24,11 +24,16 @@ class Body;
 class Trace;
 
 
-class Scene : public Nan::ObjectWrap {
+class Scene : public EventEmitter {
 	
 public:
 	
-	static void init(v8::Handle<v8::Object> target);
+	static void init(V8_VAR_OBJ target);
+	static bool isScene(V8_VAR_OBJ obj);
+	
+	~Scene();
+	
+	void _destroy();
 	
 	void refBody(Body *body);
 	void unrefBody(Body *body);
@@ -38,38 +43,20 @@ public:
 	void doUpdate(float dt);
 	void doUpdate();
 	
-	v8::Local<v8::Value> doHit(const btVector3 &from, const btVector3 &to);
-	std::vector< v8::Local<v8::Value> > doTrace(const btVector3 &from, const btVector3 &to);
+	V8_VAR_OBJ doHit(const btVector3 &from, const btVector3 &to);
+	std::vector< V8_VAR_OBJ > doTrace(const btVector3 &from, const btVector3 &to);
 	
 	
 protected:
 	
-	explicit Scene();
-	virtual ~Scene();
+	Scene();
 	
-	static NAN_METHOD(newCtor);
-	
-	static NAN_METHOD(destroy);
-	
-	static NAN_GETTER(gravityGetter);
-	static NAN_SETTER(gravitySetter);
-	
-	static NAN_METHOD(update);
-	static NAN_METHOD(hit);
-	static NAN_METHOD(trace);
-	
-	
-private:
-	
-	static std::vector<Scene*> _scenes;
-	static Nan::Persistent<v8::Function> _constructor;
-	
-	Nan::Persistent<v8::Object> _emitter;
-	inline void _emit(int argc, v8::Local<v8::Value> argv[]);
-	
-	void _destroy();
+	static V8_STORE_FT _protoScene; // for inheritance
+	static V8_STORE_FUNC _ctorScene;
 	
 	bool _isDestroyed;
+	
+	static std::vector<Scene*> _scenes;
 	
 	btClock *_clock;
 	std::vector<Body*> _bodies;
@@ -81,6 +68,20 @@ private:
 	btDynamicsWorld *_physWorld;
 	
 	btVector3 _cacheGrav;
+	
+	
+private:
+	
+	static NAN_METHOD(newCtor);
+	static NAN_METHOD(destroy);
+	static NAN_GETTER(isDestroyedGetter);
+	
+	static NAN_GETTER(gravityGetter);
+	static NAN_SETTER(gravitySetter);
+	
+	static NAN_METHOD(update);
+	static NAN_METHOD(hit);
+	static NAN_METHOD(trace);
 	
 };
 
