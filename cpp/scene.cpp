@@ -137,6 +137,8 @@ void Scene::doUpdate(float dt) { DES_CHECK;
 		consoleLog("i++");
 		it++;
 		consoleLog("i++2");
+		// it != _bodies.end();
+		consoleLog("i++3");
 	}
 	consoleLog("UEnd");
 }
