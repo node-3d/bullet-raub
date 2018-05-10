@@ -15,7 +15,7 @@ class Body;
 class Scene;
 
 
-class Trace : public EventEmitter {
+class Trace : public Nan::ObjectWrap {
 	
 public:
 	

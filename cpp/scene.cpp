@@ -128,7 +128,7 @@ void Scene::unrefBody(Body* body) { DES_CHECK;
 
 
 void Scene::doUpdate(float dt) { DES_CHECK;
-	
+	consoleLog("UStart");
 	_physWorld->stepSimulation(dt, 10, 1.f / 120.f);
 	
 	vector<Body*>::iterator it = _bodies.begin();
@@ -136,18 +136,19 @@ void Scene::doUpdate(float dt) { DES_CHECK;
 		(*it)->__update();
 		consoleLog("i++");
 		it++;
+		consoleLog("i++2");
 	}
-	
+	consoleLog("UEnd");
 }
 
 
 void Scene::doUpdate() { DES_CHECK;
-	
+	consoleLog("UStart0");
 	btScalar dt = static_cast<btScalar>(_clock->getTimeMicroseconds())* 0.000001f;
 	_clock->reset();
 	
 	doUpdate(dt);
-	
+	consoleLog("UEnd0");
 }
 
 
@@ -200,6 +201,7 @@ NAN_METHOD(Scene::update) { THIS_SCENE; THIS_CHECK;
 	} else {
 		scene->doUpdate();
 	}
+	
 } catch (...) {
 	consoleLog(">>>>> BLEAT");
 }
