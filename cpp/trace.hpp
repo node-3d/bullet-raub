@@ -2,7 +2,7 @@
 #define _TRACE_HPP_
 
 
-#include <LinearMath/btVector3.h>
+#include <btVector3.h>
 
 #include <event-emitter.hpp>
 
@@ -15,14 +15,14 @@ class Body;
 class Scene;
 
 
-class Trace : public Nan::ObjectWrap {
+ATTRIBUTE_ALIGNED16(class) Trace : public Nan::ObjectWrap {
 	
 public:
 	
-	~Trace();
-	
 	static void init(V8_VAR_OBJ target);
 	static bool isTrace(V8_VAR_OBJ obj);
+	
+	~Trace();
 	
 	// Make a new instance from C++ land
 	static V8_VAR_OBJ getNew(bool hit, Body *body, const btVector3 &pos, const btVector3 &norm);

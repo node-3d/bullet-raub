@@ -51,8 +51,8 @@ Body::Body(Scene *scene) {
 	
 	_scene = scene;
 	
-	_cshape = NULL;
-	_body = NULL;
+	_cshape = nullptr;
+	_body = nullptr;
 	
 	_cacheType = "box";
 	_cachePos = btVector3(0, 0, 0);
@@ -68,11 +68,11 @@ Body::Body(Scene *scene) {
 	_cacheFacta = btVector3(1, 1, 1);
 	_cacheFrict = 0.5f;
 	_cacheSleepy = true;
-	_cacheMap = NULL;
-	_cacheMesh = NULL;
-	
+	_cacheMap = nullptr;
+	_cacheMesh = nullptr;
+	consoleLog("B1");
 	_rebuild();
-	
+	consoleLog("B2");
 	_scene->refBody(this);
 	
 }
@@ -87,10 +87,8 @@ Body::~Body() {
 
 void Body::_destroy() { DES_CHECK;
 	
-	vector<Joint*>::iterator it = _joints.begin();
-	while (it != _joints.end()) {
-		(*it)->_dropBody(this);
-		it++;
+	for (int i = _joints.size() - 1; i >= 0; i--) {
+		_joints[i]->_dropBody(this);
 	}
 	_joints.clear();
 	
@@ -98,17 +96,20 @@ void Body::_destroy() { DES_CHECK;
 	
 	btMotionState *motion = _body->getMotionState();
 	if (motion) {
-		delete motion;
+		motion->~btMotionState();
+		btAlignedFree(motion);
 	}
 	_scene->getWorld()->removeCollisionObject(_body);
 	
-	delete _body;
-	_body = NULL;
+	_body->~btRigidBody();
+	btAlignedFree(_body);
+	_body = nullptr;
 	
-	delete _cshape;
-	_cshape = NULL;
+	_cshape->~btCollisionShape();
+	btAlignedFree(_cshape);
+	_cshape = nullptr;
 	
-	_scene = NULL;
+	_scene = nullptr;
 	
 	_isDestroyed = true;
 	
@@ -118,24 +119,15 @@ void Body::_destroy() { DES_CHECK;
 // ------ Methods and props
 
 void Body::refJoint(Joint *joint) { DES_CHECK;
+	
 	_joints.push_back(joint);
+	
 }
 
 
 void Body::unrefJoint(Joint* joint) { DES_CHECK;
 	
-	vector<Joint*>::iterator it = _joints.begin();
-	
-	while (it != _joints.end()) {
-		
-		if (*it == joint) {
-			_joints.erase(it);
-			break;
-		}
-		
-		it++;
-		
-	}
+	_joints.remove(joint);
 	
 }
 
@@ -148,12 +140,13 @@ btDynamicsWorld *Body::getWorld() {
 void Body::__update() { DES_CHECK;
 	
 	if (_body->isStaticObject() || ! _body->isActive()) {
-		vector<Joint*>::iterator it = _joints.begin();
-		while (it != _joints.end()) {
-			(*it)->__update(true);
-			it++;
+		
+		for (int i = _joints.size() - 1; i >= 0; i--) {
+			_joints[i]->__update(true);
 		}
+		
 		return;
+		
 	}
 	
 	btTransform transform = _body->getCenterOfMassTransform();
@@ -484,13 +477,21 @@ void Body::_rebuild() { DES_CHECK;
 	btCollisionShape *oldShape = _cshape;
 	
 	if (_cacheType == "ball") {
-		_cshape = new btSphereShape(0.5f);
+		_cshape = new (
+			btAlignedAlloc(sizeof(btSphereShape), 16)
+		) btSphereShape(0.5f);
 	} else if (_cacheType == "roll") {
-		_cshape = new btCylinderShape(btVector3(0.5f, 0.5f, 0.5f));
+		_cshape = new (
+			btAlignedAlloc(sizeof(btCylinderShape), 16)
+		) btCylinderShape(btVector3(0.5f, 0.5f, 0.5f));
 	} else if (_cacheType == "caps") {
-		_cshape = new btCapsuleShape(0.5f, 1);
+		_cshape = new (
+			btAlignedAlloc(sizeof(btCapsuleShape), 16)
+		) btCapsuleShape(0.5f, 1);
 	} else if (_cacheType == "plane") {
-		_cshape = new btStaticPlaneShape(btVector3(0.0f, 1.0f, 0.0f), 0);
+		_cshape = new (
+			btAlignedAlloc(sizeof(btStaticPlaneShape), 16)
+		) btStaticPlaneShape(btVector3(0.0f, 1.0f, 0.0f), 0);
 	/*} else if (_cacheType == "map" && _cacheMap) {
 		_cshape = new btHeightfieldTerrainShape(
 			_cacheMap->w(), _cacheMap->h(),
@@ -500,7 +501,11 @@ void Body::_rebuild() { DES_CHECK;
 		);
 	} */
 	} else /*if (type == "box")*/ {
-		_cshape = new btBoxShape(btVector3(0.5f, 0.5f, 0.5f));
+		consoleLog("shape1");
+		_cshape = new (
+			btAlignedAlloc(sizeof(btBoxShape), 16)
+		) btBoxShape(btVector3(0.5f, 0.5f, 0.5f));
+		consoleLog("shape2");
 	}
 	
 	_cshape->setLocalScaling(_calcScale());
@@ -514,7 +519,9 @@ void Body::_rebuild() { DES_CHECK;
 		_cshape->calculateLocalInertia(_cacheMass, localInertia);
 	}
 	
-	btDefaultMotionState* myMotionState = new btDefaultMotionState();
+	btDefaultMotionState* myMotionState = new (
+		btAlignedAlloc(sizeof(btDefaultMotionState), 16)
+	) btDefaultMotionState();
 	
 	btTransform transform;
 	myMotionState->getWorldTransform(transform);
@@ -525,9 +532,9 @@ void Body::_rebuild() { DES_CHECK;
 	btRigidBody::btRigidBodyConstructionInfo rbInfo(
 		_cacheType != "plane" ? _cacheMass : 0.f, myMotionState, _cshape, localInertia
 	);
-	
-	_body = new btRigidBody(rbInfo);
-	
+	consoleLog("_body1");
+	_body = new (btAlignedAlloc(sizeof(btRigidBody), 16)) btRigidBody(rbInfo);
+	consoleLog("_body2");
 	// reapply cached setup
 	_body->setRestitution(_cacheRest);
 	_body->setDamping(_cacheDampl, _cacheDampa);
@@ -541,18 +548,28 @@ void Body::_rebuild() { DES_CHECK;
 	_body->setUserPointer(this);
 	
 	_scene->getWorld()->addRigidBody(_body);
-	
-	vector<Joint*>::iterator it = _joints.begin();
-	while (it != _joints.end()) {
-		(*it)->_rebuild();
+	consoleLog("reb1");
+	for (int i = _joints.size() - 1; i >= 0; i--) {
+		_joints[i]->_rebuild();
 	}
-	
+	consoleLog("reb2");
 	if (oldb) {
+		consoleLog("rr1");
 		_scene->getWorld()->removeRigidBody(oldb);
+		consoleLog("rr2");
+		
+		consoleLog("rem11");
+		oldb->~btRigidBody();
+		btAlignedFree(oldb);
+		consoleLog("rem12");
 	}
 	
-	delete oldb;
-	delete oldShape;
+	if (oldShape) {
+		consoleLog("rem21");
+		oldShape->~btCollisionShape();
+		btAlignedFree(oldShape);
+		consoleLog("rem22");
+	}
 	
 }
 
@@ -658,7 +675,7 @@ NAN_METHOD(Body::newCtor) {
 	V8_VAR_OBJ owner = V8_VAR_OBJ::Cast(ownerVal);
 	Scene *scene = ObjectWrap::Unwrap<Scene>(owner);
 	
-	Body *body = new Body(scene);
+	Body *body = new (btAlignedAlloc(sizeof(Body), 16)) Body(scene);
 	
 	// TODO: opts
 	

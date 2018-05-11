@@ -4,7 +4,8 @@
 
 #include <vector>
 
-#include <LinearMath/btVector3.h>
+#include <btVector3.h>
+#include <btAlignedObjectArray.h>
 
 #include <event-emitter.hpp>
 
@@ -24,7 +25,7 @@ class Body;
 class Trace;
 
 
-class Scene : public EventEmitter {
+ATTRIBUTE_ALIGNED16(class) Scene : public EventEmitter {
 	
 public:
 	
@@ -56,10 +57,10 @@ protected:
 	
 	bool _isDestroyed;
 	
-	static std::vector<Scene*> _scenes;
+	static btAlignedObjectArray<Scene*> _scenes;
 	
 	btClock *_clock;
-	std::vector<Body*> _bodies;
+	btAlignedObjectArray<Body*> _bodies;
 	
 	btDefaultCollisionConfiguration *_physConfig;
 	btCollisionDispatcher *_physDispatcher;

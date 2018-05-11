@@ -4,11 +4,11 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-#include <BulletDynamics/Dynamics/btRigidBody.h>
-#include <BulletDynamics/ConstraintSolver/btTypedConstraint.h>
-#include <BulletDynamics/Dynamics/btDynamicsWorld.h>
-#include <BulletDynamics/ConstraintSolver/btGeneric6DofSpringConstraint.h>
-#include <BulletDynamics/ConstraintSolver/btGeneric6DofConstraint.h>
+#include <btRigidBody.h>
+#include <btTypedConstraint.h>
+#include <btDynamicsWorld.h>
+#include <btGeneric6DofSpringConstraint.h>
+#include <btGeneric6DofConstraint.h>
 
 #include "scene.hpp"
 #include "body.hpp"
@@ -51,10 +51,10 @@ Joint::Joint() {
 	
 	_isDestroyed = false;
 	
-	_constraint = NULL;
+	_constraint = nullptr;
 	
-	_cacheA = NULL;
-	_cacheB = NULL;
+	_cacheA = nullptr;
+	_cacheB = nullptr;
 	_cacheBroken = false;
 	_cacheMaximp = 9001.f*9001.f;
 	_cachePosa = btVector3(0.f, 0.f, 0.f);
@@ -100,15 +100,14 @@ void Joint::_destroy() { DES_CHECK;
 		_cacheB->unrefJoint(this);
 	}
 	
-	if (_constraint) {
-		_cacheA->getWorld()->removeConstraint(_constraint);
+	if (_cacheA) {
+		_removeConstraint(_cacheA->getWorld());
+	} else if (_cacheB) {
+		_removeConstraint(_cacheB->getWorld());
 	}
 	
-	_cacheA = NULL;
-	_cacheB = NULL;
-	
-	delete _constraint;
-	_constraint = NULL;
+	_cacheA = nullptr;
+	_cacheB = nullptr;
 	
 	_isDestroyed = true;
 	
@@ -604,10 +603,10 @@ void Joint::_dropBody(Body *body) { DES_CHECK;
 	
 	if (body == _cacheA) {
 		_removeConstraint(_cacheA->getWorld());
-		_cacheA = NULL;
+		_cacheA = nullptr;
 	} else if (body == _cacheB) {
 		_removeConstraint(_cacheB->getWorld());
-		_cacheB = NULL;
+		_cacheB = nullptr;
 	} else {
 		return;
 	}
@@ -647,7 +646,7 @@ void Joint::_rebuild() { DES_CHECK;
 	q.setEuler(r.getY(), r.getX(), r.getZ());
 	transformB.setRotation(q);
 	
-	_constraint = new btGeneric6DofSpringConstraint(*rb1, *rb2, transformA, transformB, true);
+	_constraint = new (btAlignedAlloc(sizeof(btGeneric6DofSpringConstraint), 16)) btGeneric6DofSpringConstraint(*rb1, *rb2, transformA, transformB, true);
 	_cacheA->getWorld()->addConstraint(_constraint, true);
 	_constraint->setEnabled( ! _cacheBroken );
 	
@@ -704,9 +703,13 @@ void Joint::_rebuild() { DES_CHECK;
 void Joint::_removeConstraint(btDynamicsWorld *world) { DES_CHECK;
 	
 	if (_constraint) {
+		
 		world->removeConstraint(_constraint);
-		delete _constraint;
-		_constraint = NULL;
+		
+		_constraint->~btGeneric6DofSpringConstraint();
+		btAlignedFree(_constraint);
+		_constraint = nullptr;
+		
 	}
 	
 }
@@ -787,7 +790,7 @@ NAN_METHOD(Joint::newCtor) {
 	
 	CTOR_CHECK("Joint");
 	
-	Joint *joint = new Joint();
+	Joint *joint = new (btAlignedAlloc(sizeof(Joint), 16)) Joint();
 	joint->Wrap(info.This());
 	
 	RET_VALUE(info.This());

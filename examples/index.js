@@ -1,7 +1,7 @@
 'use strict';
 
 process.on('uncaughtException', function (err) {
-  console.log('Caught exception: ' + err);
+	console.log('Caught exception: ' + err);
 });
 
 const { Scene, Body, Joint, Trace } = require('..');
@@ -12,8 +12,9 @@ console.log('SCENE', scene);
 scene.on('gravity', g => console.log('gravity event', g));
 scene.gravity = [0, -9.8, 0];
 
-
+console.log('index.js', 'NB');
 const plane = new Body({ scene });
+console.log('index.js', 'NB2');
 plane.type = 'plane';
 console.log('PLANE', plane);
 

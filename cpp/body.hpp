@@ -5,8 +5,9 @@
 #include <vector>
 // #include <cstdlib>
 
-#include <LinearMath/btVector3.h>
-#include <LinearMath/btQuaternion.h>
+#include <btVector3.h>
+#include <btQuaternion.h>
+#include <btAlignedObjectArray.h>
 
 #include <event-emitter.hpp>
 
@@ -22,12 +23,9 @@ class Scene;
 class Trimesh;
 
 
-/*__declspec(align(16))*/ class Body : public EventEmitter {
+ATTRIBUTE_ALIGNED16(class) Body : public EventEmitter {
 	
 public:
-	
-	// void *operator new(size_t size) { return std::aligned_alloc(16, size); }
-	// void operator delete(void *p) { std::free(p); }
 	
 	static void init(V8_VAR_OBJ target);
 	static bool isBody(V8_VAR_OBJ obj);
@@ -61,7 +59,7 @@ protected:
 	btVector3 _calcScale() const;
 	
 	Scene *_scene;
-	std::vector<Joint*> _joints;
+	btAlignedObjectArray<Joint*> _joints;
 	
 	btCollisionShape *_cshape;
 	btRigidBody *_body;

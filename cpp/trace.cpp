@@ -1,8 +1,8 @@
 #include <cstdlib>
 
-#include <BulletDynamics/Dynamics/btDynamicsWorld.h>
-#include <LinearMath/btAabbUtil2.h>
-#include <BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
+#include <btDynamicsWorld.h>
+#include <btAabbUtil2.h>
+#include <btRaycastCallback.h>
 
 #include "scene.hpp"
 #include "body.hpp"
@@ -229,11 +229,11 @@ NAN_METHOD(Trace::newCtor) {
 		OBJ_TO_VEC3(fromObj, from);
 		OBJ_TO_VEC3(toObj, to);
 		
-		traceResult = new Trace(scene, from, to);
+		traceResult = new (btAlignedAlloc(sizeof(Trace), 16)) Trace(scene, from, to);
 		
 	} else {
 		
-		traceResult = new Trace();
+		traceResult = new (btAlignedAlloc(sizeof(Trace), 16)) Trace();
 		
 	}
 	

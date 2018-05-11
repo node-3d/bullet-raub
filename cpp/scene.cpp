@@ -44,21 +44,39 @@ using namespace std;
 
 // ------ Constructor and Destructor
 
-vector<Scene*> Scene::_scenes;
+btAlignedObjectArray<Scene*> Scene::_scenes;
 
 
 Scene::Scene() {
 	
 	_isDestroyed = false;
 	
-	_clock = new btClock();
+	_clock = new (
+		btAlignedAlloc(sizeof(btClock), 16)
+	) btClock();
+	
 	_clock->reset();
 	
-	_physConfig = new btDefaultCollisionConfiguration();
-	_physDispatcher = new btCollisionDispatcher(_physConfig);
-	_physBroadphase = new btDbvtBroadphase();
-	_physSolver = new btSequentialImpulseConstraintSolver();
-	_physWorld = new btDiscreteDynamicsWorld(_physDispatcher, _physBroadphase, _physSolver, _physConfig);
+	_physConfig = new (
+		btAlignedAlloc(sizeof(btDefaultCollisionConfiguration), 16)
+	) btDefaultCollisionConfiguration();
+	
+	_physDispatcher = new (
+		btAlignedAlloc(sizeof(btCollisionDispatcher), 16)
+	) btCollisionDispatcher(_physConfig);
+	
+	_physBroadphase = new (
+		btAlignedAlloc(sizeof(btDbvtBroadphase), 16)
+	) btDbvtBroadphase();
+	
+	_physSolver = new (
+		btAlignedAlloc(sizeof(btSequentialImpulseConstraintSolver), 16)
+	) btSequentialImpulseConstraintSolver();
+	
+	_physWorld = new (
+		btAlignedAlloc(sizeof(btDiscreteDynamicsWorld), 16)
+	) btDiscreteDynamicsWorld(_physDispatcher, _physBroadphase, _physSolver, _physConfig);
+	
 	
 	_cacheGrav.setValue(0, -10, 0);
 	_physWorld->setGravity(_cacheGrav);
@@ -75,27 +93,33 @@ Scene::~Scene() {
 
 void Scene::_destroy() { DES_CHECK;
 	
-	vector<Body*>::iterator it = _bodies.begin();
-	while (it != _bodies.end()) {
-		delete (*it);
-		it++;
+	for (int i = _bodies.size() - 1; i >= 0; i--) {
+		Body *b = _bodies[i];
+		b->~Body();
+		btAlignedFree(b);
 	}
 	_bodies.clear();
 	
-	delete _physWorld;
-	_physWorld = NULL;
 	
-	delete _physSolver;
-	_physSolver = NULL;
+	static_cast<btDiscreteDynamicsWorld*>(_physWorld)->~btDiscreteDynamicsWorld();
+	btAlignedFree(_physWorld);
+	_physWorld = nullptr;
 	
-	delete _physBroadphase;
-	_physBroadphase = NULL;
+	static_cast<btSequentialImpulseConstraintSolver*>(_physSolver)->~btSequentialImpulseConstraintSolver();
+	btAlignedFree(_physSolver);
+	_physSolver = nullptr;
 	
-	delete _physDispatcher;
-	_physDispatcher = NULL;
+	static_cast<btDbvtBroadphase*>(_physBroadphase)->~btDbvtBroadphase();
+	btAlignedFree(_physBroadphase);
+	_physBroadphase = nullptr;
 	
-	delete _physConfig;
-	_physConfig = NULL;
+	_physDispatcher->~btCollisionDispatcher();
+	btAlignedFree(_physDispatcher);
+	_physDispatcher = nullptr;
+	
+	_physConfig->~btDefaultCollisionConfiguration();
+	btAlignedFree(_physConfig);
+	_physConfig = nullptr;
 	
 	_isDestroyed = true;
 	
@@ -105,24 +129,15 @@ void Scene::_destroy() { DES_CHECK;
 // ------ Methods and props
 
 void Scene::refBody(Body *body) { DES_CHECK;
+	
 	_bodies.push_back(body);
+	
 }
 
 
 void Scene::unrefBody(Body* body) { DES_CHECK;
 	
-	vector<Body*>::iterator it = _bodies.begin();
-	
-	while (it != _bodies.end()) {
-		
-		if (*it == body) {
-			_bodies.erase(it);
-			break;
-		}
-		
-		it++;
-		
-	}
+	_bodies.remove(body);
 	
 }
 
@@ -131,15 +146,12 @@ void Scene::doUpdate(float dt) { DES_CHECK;
 	consoleLog("UStart");
 	_physWorld->stepSimulation(dt, 10, 1.f / 120.f);
 	
-	vector<Body*>::iterator it = _bodies.begin();
-	while (it != _bodies.end()) {
-		(*it)->__update();
-		consoleLog("i++");
-		it++;
-		consoleLog("i++2");
-		// it != _bodies.end();
-		consoleLog("i++3");
+	for (int i = _bodies.size() - 1; i >= 0; i--) {
+		consoleLog("i++ 1");
+		_bodies[i]->__update();
+		consoleLog("i++ 2");
 	}
+	
 	consoleLog("UEnd");
 }
 
@@ -300,7 +312,7 @@ NAN_METHOD(Scene::newCtor) {
 	
 	CTOR_CHECK("Scene");
 	
-	Scene *scene = new Scene();
+	Scene *scene = new (btAlignedAlloc(sizeof(Scene), 16)) Scene();
 	scene->Wrap(info.This());
 	
 	RET_VALUE(info.This());
