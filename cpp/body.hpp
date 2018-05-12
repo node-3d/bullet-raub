@@ -2,15 +2,6 @@
 #define _BODY_HPP_
 
 
-#include <vector>
-// #include <cstdlib>
-
-#include <btVector3.h>
-#include <btQuaternion.h>
-#include <btAlignedObjectArray.h>
-
-#include <event-emitter.hpp>
-
 #include "common.hpp"
 
 

@@ -2,10 +2,6 @@
 #define _TRACE_HPP_
 
 
-#include <btVector3.h>
-
-#include <event-emitter.hpp>
-
 #include "common.hpp"
 
 
@@ -15,7 +11,7 @@ class Body;
 class Scene;
 
 
-ATTRIBUTE_ALIGNED16(class) Trace : public Nan::ObjectWrap {
+ATTRIBUTE_ALIGNED16(class) Trace : public EventEmitter {
 	
 public:
 	

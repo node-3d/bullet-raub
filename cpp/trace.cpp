@@ -75,6 +75,8 @@ Trace::~Trace() {
 
 void Trace::_destroy() { DES_CHECK;
 	
+	_isDestroyed = true;
+	
 }
 
 
@@ -147,9 +149,9 @@ void Trace::init(V8_VAR_OBJ target) {
 	
 	V8_VAR_FT proto = Nan::New<FunctionTemplate>(newCtor);
 	
-	// // class Trace inherits EventEmitter
-	// V8_VAR_FT parent = Nan::New(EventEmitter::_protoEventEmitter);
-	// proto->Inherit(parent);
+	// class Trace inherits EventEmitter
+	V8_VAR_FT parent = Nan::New(EventEmitter::_protoEventEmitter);
+	proto->Inherit(parent);
 	
 	proto->InstanceTemplate()->SetInternalFieldCount(1);
 	proto->SetClassName(JS_STR("Trace"));
@@ -229,11 +231,11 @@ NAN_METHOD(Trace::newCtor) {
 		OBJ_TO_VEC3(fromObj, from);
 		OBJ_TO_VEC3(toObj, to);
 		
-		traceResult = new (btAlignedAlloc(sizeof(Trace), 16)) Trace(scene, from, to);
+		traceResult = ALIGNED_NEW(Trace, scene, from, to);
 		
 	} else {
 		
-		traceResult = new (btAlignedAlloc(sizeof(Trace), 16)) Trace();
+		traceResult = ALIGNED_NEW(Trace);
 		
 	}
 	
@@ -246,7 +248,7 @@ NAN_METHOD(Trace::newCtor) {
 
 NAN_METHOD(Trace::destroy) { THIS_TRACE; THIS_CHECK;
 	
-	// trace->emit("destroy");
+	trace->emit("destroy");
 	
 	trace->_destroy();
 	

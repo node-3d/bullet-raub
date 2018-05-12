@@ -11,24 +11,23 @@ const scene = new Scene();
 console.log('SCENE', scene);
 scene.on('gravity', g => console.log('gravity event', g));
 scene.gravity = [0, -9.8, 0];
-const scene2 = new Scene();
-// console.log('index.js', 'NB');
-// const plane = new Body({ scene });
-// console.log('index.js', 'NB2');
-// plane.type = 'plane';
-// console.log('PLANE', plane);
+
+const plane = new Body({ scene });
+plane.type = 'plane';
+console.log('PLANE', plane);
 
 
-// const bodyA = new Body({ scene });
-// bodyA.pos = [0, 100, 0];
-// bodyA.mass = 1;
+const bodyA = new Body({ scene });
+bodyA.pos = [0, 100, 0];
+bodyA.mass = 1;
 // bodyA.on('update', u => console.log('update A', u.pos.x, u.pos.y, u.pos.z));
-// const bodyB = new Body({ scene });
-// bodyB.pos = [0, 101, 0];
-// bodyB.mass = 1;
+bodyA.on('update', u => console.log('update A', u));
+const bodyB = new Body({ scene });
+bodyB.pos = [0, 101, 0];
+bodyB.mass = 1;
 
-// console.log('A', bodyA);
-// console.log('B', bodyB);
+console.log('A', bodyA);
+console.log('B', bodyB);
 
 
 // const joint = new Joint();
@@ -60,11 +59,13 @@ const scene2 = new Scene();
 
 
 function frame() {
-	console.log('index.js', 'JS u1');
+	
 	scene.update();
-	console.log('index.js', 'JS u2');
+	
 	setTimeout(frame, 15);
 	
 }
 
 frame();
+
+setInterval(()=>console.log('index.js', 'HR'), 1000)

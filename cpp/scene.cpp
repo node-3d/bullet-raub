@@ -51,31 +51,26 @@ Scene::Scene() {
 	
 	_isDestroyed = false;
 	
-	_clock = new (
-		btAlignedAlloc(sizeof(btClock), 16)
-	) btClock();
+	_clock = ALIGNED_NEW(btClock);
 	
 	_clock->reset();
 	
-	_physConfig = new (
-		btAlignedAlloc(sizeof(btDefaultCollisionConfiguration), 16)
-	) btDefaultCollisionConfiguration();
 	
-	_physDispatcher = new (
-		btAlignedAlloc(sizeof(btCollisionDispatcher), 16)
-	) btCollisionDispatcher(_physConfig);
+	_physConfig = ALIGNED_NEW(btDefaultCollisionConfiguration);
 	
-	_physBroadphase = new (
-		btAlignedAlloc(sizeof(btDbvtBroadphase), 16)
-	) btDbvtBroadphase();
+	_physDispatcher = ALIGNED_NEW(btCollisionDispatcher, _physConfig);
 	
-	_physSolver = new (
-		btAlignedAlloc(sizeof(btSequentialImpulseConstraintSolver), 16)
-	) btSequentialImpulseConstraintSolver();
+	_physBroadphase = ALIGNED_NEW(btDbvtBroadphase);
 	
-	_physWorld = new (
-		btAlignedAlloc(sizeof(btDiscreteDynamicsWorld), 16)
-	) btDiscreteDynamicsWorld(_physDispatcher, _physBroadphase, _physSolver, _physConfig);
+	_physSolver = ALIGNED_NEW(btSequentialImpulseConstraintSolver);
+	
+	_physWorld = ALIGNED_NEW(
+		btDiscreteDynamicsWorld,
+		_physDispatcher,
+		_physBroadphase,
+		_physSolver,
+		_physConfig
+	);
 	
 	
 	_cacheGrav.setValue(0, -10, 0);
@@ -93,33 +88,24 @@ Scene::~Scene() {
 
 void Scene::_destroy() { DES_CHECK;
 	
-	for (int i = _bodies.size() - 1; i >= 0; i--) {
+	EACH(_bodies) {
 		Body *b = _bodies[i];
-		b->~Body();
-		btAlignedFree(b);
+		ALIGNED_DELETE(Body, b);
 	}
+	
 	_bodies.clear();
 	
 	
-	static_cast<btDiscreteDynamicsWorld*>(_physWorld)->~btDiscreteDynamicsWorld();
-	btAlignedFree(_physWorld);
-	_physWorld = nullptr;
+	ALIGNED_DELETE(btDiscreteDynamicsWorld, _physWorld);
 	
-	static_cast<btSequentialImpulseConstraintSolver*>(_physSolver)->~btSequentialImpulseConstraintSolver();
-	btAlignedFree(_physSolver);
-	_physSolver = nullptr;
+	ALIGNED_DELETE(btSequentialImpulseConstraintSolver, _physSolver);
 	
-	static_cast<btDbvtBroadphase*>(_physBroadphase)->~btDbvtBroadphase();
-	btAlignedFree(_physBroadphase);
-	_physBroadphase = nullptr;
+	ALIGNED_DELETE(btDbvtBroadphase, _physBroadphase);
 	
-	_physDispatcher->~btCollisionDispatcher();
-	btAlignedFree(_physDispatcher);
-	_physDispatcher = nullptr;
+	ALIGNED_DELETE(btCollisionDispatcher, _physDispatcher);
 	
-	_physConfig->~btDefaultCollisionConfiguration();
-	btAlignedFree(_physConfig);
-	_physConfig = nullptr;
+	ALIGNED_DELETE(btDefaultCollisionConfiguration, _physConfig);
+	
 	
 	_isDestroyed = true;
 	
@@ -130,39 +116,36 @@ void Scene::_destroy() { DES_CHECK;
 
 void Scene::refBody(Body *body) { DES_CHECK;
 	
-	// _bodies.push_back(body);
+	_bodies.push_back(body);
 	
 }
 
 
 void Scene::unrefBody(Body* body) { DES_CHECK;
 	
-	// _bodies.remove(body);
+	_bodies.remove(body);
 	
 }
 
 
 void Scene::doUpdate(float dt) { DES_CHECK;
-	consoleLog("UStart");
-	_physWorld->stepSimulation(dt, 10, 1.f / 120.f);
-	consoleLog("UStart +");
-	// for (int i = _bodies.size() - 1; i >= 0; i--) {
-	// 	consoleLog("i++ 1");
-	// 	// _bodies[i]->__update();
-	// 	consoleLog("i++ 2");
-	// }
 	
-	consoleLog("UEnd");
+	_physWorld->stepSimulation(dt, 10, 1.f / 120.f);
+	
+	EACH(_bodies) {
+		_bodies[i]->__update();
+	}
+	
 }
 
 
 void Scene::doUpdate() { DES_CHECK;
-	consoleLog("UStart0");
+	
 	btScalar dt = static_cast<btScalar>(_clock->getTimeMicroseconds())* 0.000001f;
 	_clock->reset();
 	
 	doUpdate(dt);
-	consoleLog("UEnd0");
+	
 }
 
 
@@ -171,17 +154,19 @@ vector< V8_VAR_OBJ > Scene::doTrace(const btVector3 &from, const btVector3 &to) 
 	btCollisionWorld::AllHitsRayResultCallback allResults(from, to);
 	_physWorld->rayTest(from, to, allResults);
 	
-	vector< V8_VAR_OBJ > list;
+	vector< V8_VAR_OBJ > list = vector< V8_VAR_OBJ >(allResults.m_collisionObjects.size());
 	
-	for (int i = 0; i < allResults.m_collisionObjects.size(); i++) {
+	EACH(allResults.m_collisionObjects) {
 		
-		Body *b = reinterpret_cast<Body *>(allResults.m_collisionObjects[i]->getUserPointer());
+		Body *b = reinterpret_cast<Body *>(
+			allResults.m_collisionObjects[i]->getUserPointer()
+		);
 		
-		list.push_back(Trace::getNew(
+		list[i] = Trace::getNew(
 			true, b,
 			allResults.m_hitPointWorld[i],
 			allResults.m_hitNormalWorld[i]
-		));
+		);
 		
 	}
 	
@@ -198,28 +183,20 @@ NAN_SETTER(Scene::gravitySetter) { THIS_SCENE; THIS_CHECK; SETTER_VEC3_ARG;
 	
 	scene->_physWorld->setGravity(scene->_cacheGrav);
 	
-	// Emit "gravity"
 	scene->emit("gravity", 1, &value);
 	
 }
 
 
 NAN_METHOD(Scene::update) { THIS_SCENE; THIS_CHECK;
-	consoleLog("++ U0");
 	
-// 	try {
-// 	LET_FLOAT_ARG(0, dt);
-// 	consoleLog("++ U01");
-// 	if (dt > 0.f) {
-// 		scene->doUpdate(dt);
-// 	} else {
-// 		scene->doUpdate();
-// 	}
+	LET_FLOAT_ARG(0, dt);
+	if (dt > 0.f) {
+		scene->doUpdate(dt);
+	} else {
+		scene->doUpdate();
+	}
 	
-// } catch (...) {
-// 	consoleLog(">>>>> BLEAT");
-// }
-	consoleLog("-- U1");
 }
 
 
@@ -231,6 +208,7 @@ NAN_METHOD(Scene::hit) { THIS_SCENE; THIS_CHECK;
 	V8_VAR_OBJ trace = Trace::getNew(scene, f, t);
 	
 	RET_VALUE(trace);
+	
 }
 
 
@@ -312,10 +290,7 @@ NAN_METHOD(Scene::newCtor) {
 	
 	CTOR_CHECK("Scene");
 	
-	void *mem = btAlignedAlloc(sizeof(Scene), 16);
-	V8_VAR_VAL args[] = { JS_STR("MEM"), JS_NUM(sizeof(void*)), JS_NUM(sizeof(Scene)), JS_NUM((size_t)mem)};
-	consoleLog(4, args);
-	Scene *scene = new (mem) Scene();
+	Scene *scene = ALIGNED_NEW(Scene);
 	scene->Wrap(info.This());
 	
 	RET_VALUE(info.This());

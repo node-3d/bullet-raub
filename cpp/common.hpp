@@ -2,7 +2,13 @@
 #define _COMMON_HPP_
 
 
-#include <addon-tools.hpp>
+#include <vector>
+
+#include <btVector3.h>
+#include <btQuaternion.h>
+#include <btAlignedObjectArray.h>
+
+#include <event-emitter.hpp>
 
 
 // Bullet stuff
@@ -72,6 +78,20 @@
 	SETTER_CHECK(IsObject(), "object");                                       \
 	Local<Object> _obj_v = Local<Object>::Cast(value);                        \
 	OBJ_TO_QUAT(_obj_v, v);
+
+
+#define ALIGNED_NEW(C, ...) new (btAlignedAlloc(sizeof(C), 16)) C(__VA_ARGS__)
+
+
+#define ALIGNED_DELETE(C, V)                                                  \
+	if (V) {                                                                  \
+		static_cast<C*>(V)->~C();                                             \
+		btAlignedFree(V);                                                     \
+		V = nullptr;                                                          \
+	}
+
+
+#define EACH(V) for (int i = V.size() - 1; i >= 0; i--)
 
 
 // Fix bad defines

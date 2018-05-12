@@ -47,33 +47,32 @@ using namespace std;
 
 Body::Body(Scene *scene) {
 	
-	// _isDestroyed = false;
+	_isDestroyed = false;
 	
-	// _scene = scene;
+	_scene = scene;
 	
-	// _cshape = nullptr;
-	// _body = nullptr;
+	_cshape = nullptr;
+	_body = nullptr;
 	
-	// _cacheType = "box";
-	// _cachePos = btVector3(0, 0, 0);
-	// _cacheRot = btQuaternion(0, 0, 0, 1);
-	// _cacheSize = btVector3(1, 1, 1);
-	// _cacheVell = btVector3(0, 0, 0);
-	// _cacheVela = btVector3(0, 0, 0);
-	// _cacheMass = 0.0f;
-	// _cacheRest = 0.0f;
-	// _cacheDampl = 0.1f;
-	// _cacheDampa = 0.1f;
-	// _cacheFactl = btVector3(1, 1, 1);
-	// _cacheFacta = btVector3(1, 1, 1);
-	// _cacheFrict = 0.5f;
-	// _cacheSleepy = true;
-	// _cacheMap = nullptr;
-	// _cacheMesh = nullptr;
-	// consoleLog("B1");
-	// // _rebuild();
-	// consoleLog("B2");
-	// _scene->refBody(this);
+	_cacheType = "box";
+	_cachePos = btVector3(0, 0, 0);
+	_cacheRot = btQuaternion(0, 0, 0, 1);
+	_cacheSize = btVector3(1, 1, 1);
+	_cacheVell = btVector3(0, 0, 0);
+	_cacheVela = btVector3(0, 0, 0);
+	_cacheMass = 0.0f;
+	_cacheRest = 0.0f;
+	_cacheDampl = 0.1f;
+	_cacheDampa = 0.1f;
+	_cacheFactl = btVector3(1, 1, 1);
+	_cacheFacta = btVector3(1, 1, 1);
+	_cacheFrict = 0.5f;
+	_cacheSleepy = true;
+	_cacheMap = nullptr;
+	_cacheMesh = nullptr;
+	
+	_rebuild();
+	_scene->refBody(this);
 	
 }
 
@@ -87,27 +86,22 @@ Body::~Body() {
 
 void Body::_destroy() { DES_CHECK;
 	
-	for (int i = _joints.size() - 1; i >= 0; i--) {
+	EACH(_joints) {
 		_joints[i]->_dropBody(this);
 	}
-	_joints.clear();
 	
+	_joints.clear();
 	_scene->unrefBody(this);
 	
 	btMotionState *motion = _body->getMotionState();
-	if (motion) {
-		motion->~btMotionState();
-		btAlignedFree(motion);
+	ALIGNED_DELETE(btMotionState, motion);
+	
+	if (_body) {
+		_scene->getWorld()->removeCollisionObject(_body);
 	}
-	_scene->getWorld()->removeCollisionObject(_body);
 	
-	_body->~btRigidBody();
-	btAlignedFree(_body);
-	_body = nullptr;
-	
-	_cshape->~btCollisionShape();
-	btAlignedFree(_cshape);
-	_cshape = nullptr;
+	ALIGNED_DELETE(btRigidBody, _body);
+	ALIGNED_DELETE(btCollisionShape, _cshape);
 	
 	_scene = nullptr;
 	
@@ -138,43 +132,40 @@ btDynamicsWorld *Body::getWorld() {
 
 
 void Body::__update() { DES_CHECK;
-	consoleLog("bu1");
+	
 	if (_body->isStaticObject() || ! _body->isActive()) {
 		
-		for (int i = _joints.size() - 1; i >= 0; i--) {
-			_joints[i]->__update(true);
-		}
+		// EACH(_joints) {
+		// 	_joints[i]->__update(true);
+		// }
 		
 		return;
 		
 	}
-	consoleLog("bu2");
-	btTransform transform = _body->getCenterOfMassTransform();
-	_cachePos = transform.getOrigin();
-	_cacheRot = transform.getRotation();
-	_cacheVell = _body->getLinearVelocity();
-	_cacheVela = _body->getAngularVelocity();
-	consoleLog("bu3");
-	// Emit "update"
-	VEC3_TO_OBJ(_cachePos, pos);
-	QUAT_TO_OBJ(_cacheRot, quat);
-	VEC3_TO_OBJ(_cacheVell, vell);
-	VEC3_TO_OBJ(_cacheVela, vela);
-	consoleLog("bu4");
-	V8_VAR_OBJ obj = Nan::New<Object>();
-	SET_PROP(obj, "pos", pos);
-	SET_PROP(obj, "quat", quat);
-	SET_PROP(obj, "vell", vell);
-	SET_PROP(obj, "vela", vela);
-	consoleLog("bu5");
-	V8_VAR_VAL objVal = obj;
-	consoleLog(1, &objVal);
-	// emit("update", 1, &objVal);
 	
-	// vector<Joint*>::iterator it = _joints.begin();
-	// while (it != _joints.end()) {
-	// 	(*it)->__update();
-	// 	it++;
+	// btTransform transform = _body->getCenterOfMassTransform();
+	
+	// _cachePos = transform.getOrigin();
+	// _cacheRot = transform.getRotation();
+	
+	// _cacheVell = _body->getLinearVelocity();
+	// _cacheVela = _body->getAngularVelocity();
+	
+	// // Emit "update"
+	// VEC3_TO_OBJ(_cachePos, pos);
+	// QUAT_TO_OBJ(_cacheRot, quat);
+	// VEC3_TO_OBJ(_cacheVell, vell);
+	// VEC3_TO_OBJ(_cacheVela, vela);
+	V8_VAR_OBJ obj = Nan::New<Object>();
+	// SET_PROP(obj, "pos", pos);
+	// SET_PROP(obj, "quat", quat);
+	// SET_PROP(obj, "vell", vell);
+	// SET_PROP(obj, "vela", vela);
+	V8_VAR_VAL objVal = obj;
+	emit("update", 1, &objVal);
+	
+	// EACH(_joints) {
+	// 	_joints[i]->__update();
 	// }
 	
 }
@@ -193,7 +184,6 @@ NAN_SETTER(Body::typeSetter) { THIS_BODY; THIS_CHECK; SETTER_UTF8_ARG;
 	
 	body->_rebuild();
 	
-	// Emit "type"
 	body->emit("type", 1, &value);
 	
 }
@@ -213,7 +203,6 @@ NAN_SETTER(Body::posSetter) { THIS_BODY; THIS_CHECK; SETTER_VEC3_ARG;
 	
 	body->_rebuild(); // FIXME: ???
 	
-	// Emit "pos"
 	body->emit("pos", 1, &value);
 	
 }
@@ -254,7 +243,6 @@ NAN_SETTER(Body::rotSetter) { THIS_BODY; THIS_CHECK; SETTER_VEC3_ARG;
 	transform.setRotation(body->_cacheRot);
 	body->_body->setCenterOfMassTransform(transform);
 	
-	// Emit "rot"
 	body->emit("rot", 1, &value);
 	
 }
@@ -270,7 +258,6 @@ NAN_SETTER(Body::vellSetter) { THIS_BODY; THIS_CHECK; SETTER_VEC3_ARG;
 	
 	body->_body->setLinearVelocity(body->_cacheVell);
 	
-	// Emit "vell"
 	body->emit("vell", 1, &value);
 	
 }
@@ -286,7 +273,6 @@ NAN_SETTER(Body::velaSetter) { THIS_BODY; THIS_CHECK; SETTER_VEC3_ARG;
 	
 	body->_body->setAngularVelocity(body->_cacheVela);
 	
-	// Emit "vela"
 	body->emit("vela", 1, &value);
 	
 }
@@ -298,7 +284,6 @@ NAN_SETTER(Body::sizeSetter) { THIS_BODY; THIS_CHECK; SETTER_VEC3_ARG;
 	
 	body->_rebuild(); // ??
 	
-	// Emit "size"
 	body->emit("size", 1, &value);
 	
 }
@@ -310,7 +295,6 @@ NAN_SETTER(Body::factlSetter) { THIS_BODY; THIS_CHECK; SETTER_VEC3_ARG;
 	
 	body->_body->setLinearFactor(body->_cacheFactl);
 	
-	// Emit "factl"
 	body->emit("factl", 1, &value);
 	
 }
@@ -322,7 +306,6 @@ NAN_SETTER(Body::factaSetter) { THIS_BODY; THIS_CHECK; SETTER_VEC3_ARG;
 	
 	body->_body->setAngularFactor(body->_cacheFacta);
 	
-	// Emit "facta"
 	body->emit("facta", 1, &value);
 	
 }
@@ -332,7 +315,6 @@ NAN_SETTER(Body::mapSetter) { THIS_BODY; THIS_CHECK; SETTER_OBJ_ARG;
 	
 	// TODO
 	
-	// Emit "map"
 	body->emit("map", 1, &value);
 	
 }
@@ -350,7 +332,6 @@ NAN_SETTER(Body::meshSetter) { THIS_BODY; THIS_CHECK; SETTER_OBJ_ARG;
 	
 	// TODO
 	
-	// Emit "mest"
 	body->emit("mest", 1, &value);
 	
 }
@@ -370,7 +351,6 @@ NAN_SETTER(Body::massSetter) { THIS_BODY; THIS_CHECK; SETTER_FLOAT_ARG;
 	
 	body->_rebuild();
 	
-	// Emit "mass"
 	body->emit("mass", 1, &value);
 	
 }
@@ -388,7 +368,6 @@ NAN_SETTER(Body::restSetter) { THIS_BODY; THIS_CHECK; SETTER_FLOAT_ARG;
 	
 	body->_body->setRestitution(body->_cacheRest);
 	
-	// Emit "rest"
 	body->emit("rest", 1, &value);
 	
 }
@@ -406,7 +385,6 @@ NAN_SETTER(Body::damplSetter) { THIS_BODY; THIS_CHECK; SETTER_FLOAT_ARG;
 	
 	body->_body->setDamping(body->_cacheDampl, body->_cacheDampa);
 	
-	// Emit "dampl"
 	body->emit("dampl", 1, &value);
 	
 }
@@ -424,7 +402,6 @@ NAN_SETTER(Body::dampaSetter) { THIS_BODY; THIS_CHECK; SETTER_FLOAT_ARG;
 	
 	body->_body->setDamping(body->_cacheDampl, body->_cacheDampa);
 	
-	// Emit "dampa"
 	body->emit("dampa", 1, &value);
 	
 }
@@ -442,7 +419,6 @@ NAN_SETTER(Body::frictSetter) { THIS_BODY; THIS_CHECK; SETTER_FLOAT_ARG;
 	
 	body->_body->setFriction(body->_cacheFrict);
 	
-	// Emit "frict"
 	body->emit("frict", 1, &value);
 	
 }
@@ -460,7 +436,6 @@ NAN_SETTER(Body::sleepySetter) { THIS_BODY; THIS_CHECK; SETTER_BOOL_ARG;
 	
 	body->_body->setActivationState(body->_cacheSleepy ? ACTIVE_TAG : DISABLE_DEACTIVATION);
 	
-	// Emit "sleepy"
 	body->emit("sleepy", 1, &value);
 	
 }
@@ -477,23 +452,16 @@ void Body::_rebuild() { DES_CHECK;
 	btCollisionShape *oldShape = _cshape;
 	
 	if (_cacheType == "ball") {
-		_cshape = new (
-			btAlignedAlloc(sizeof(btSphereShape), 16)
-		) btSphereShape(0.5f);
+		_cshape = ALIGNED_NEW(btSphereShape, 0.5f);
 	} else if (_cacheType == "roll") {
-		_cshape = new (
-			btAlignedAlloc(sizeof(btCylinderShape), 16)
-		) btCylinderShape(btVector3(0.5f, 0.5f, 0.5f));
+		_cshape = ALIGNED_NEW(btCylinderShape, btVector3(0.5f, 0.5f, 0.5f));
 	} else if (_cacheType == "caps") {
-		_cshape = new (
-			btAlignedAlloc(sizeof(btCapsuleShape), 16)
-		) btCapsuleShape(0.5f, 1);
+		_cshape = ALIGNED_NEW(btCapsuleShape, 0.5f, 1);
 	} else if (_cacheType == "plane") {
-		_cshape = new (
-			btAlignedAlloc(sizeof(btStaticPlaneShape), 16)
-		) btStaticPlaneShape(btVector3(0.0f, 1.0f, 0.0f), 0);
+		_cshape = ALIGNED_NEW(btStaticPlaneShape, btVector3(0.0f, 1.0f, 0.0f), 0);
 	/*} else if (_cacheType == "map" && _cacheMap) {
-		_cshape = new btHeightfieldTerrainShape(
+		_cshape = ALIGNED_NEW(
+			btHeightfieldTerrainShape,
 			_cacheMap->w(), _cacheMap->h(),
 			_cacheMap->data(),
 			1, 1,
@@ -501,11 +469,7 @@ void Body::_rebuild() { DES_CHECK;
 		);
 	} */
 	} else /*if (type == "box")*/ {
-		consoleLog("shape1");
-		_cshape = new (
-			btAlignedAlloc(sizeof(btBoxShape), 16)
-		) btBoxShape(btVector3(0.5f, 0.5f, 0.5f));
-		consoleLog("shape2");
+		_cshape = ALIGNED_NEW(btBoxShape, btVector3(0.5f, 0.5f, 0.5f));
 	}
 	
 	_cshape->setLocalScaling(_calcScale());
@@ -519,9 +483,7 @@ void Body::_rebuild() { DES_CHECK;
 		_cshape->calculateLocalInertia(_cacheMass, localInertia);
 	}
 	
-	btDefaultMotionState* myMotionState = new (
-		btAlignedAlloc(sizeof(btDefaultMotionState), 16)
-	) btDefaultMotionState();
+	btDefaultMotionState* myMotionState = ALIGNED_NEW(btDefaultMotionState);
 	
 	btTransform transform;
 	myMotionState->getWorldTransform(transform);
@@ -532,9 +494,7 @@ void Body::_rebuild() { DES_CHECK;
 	btRigidBody::btRigidBodyConstructionInfo rbInfo(
 		_cacheType != "plane" ? _cacheMass : 0.f, myMotionState, _cshape, localInertia
 	);
-	consoleLog("_body1");
-	_body = new (btAlignedAlloc(sizeof(btRigidBody), 16)) btRigidBody(rbInfo);
-	consoleLog("_body2");
+	_body = ALIGNED_NEW(btRigidBody, rbInfo);
 	// reapply cached setup
 	_body->setRestitution(_cacheRest);
 	_body->setDamping(_cacheDampl, _cacheDampa);
@@ -548,27 +508,19 @@ void Body::_rebuild() { DES_CHECK;
 	_body->setUserPointer(this);
 	
 	_scene->getWorld()->addRigidBody(_body);
-	consoleLog("reb1");
-	for (int i = _joints.size() - 1; i >= 0; i--) {
+	EACH(_joints) {
 		_joints[i]->_rebuild();
 	}
-	consoleLog("reb2");
 	if (oldb) {
-		consoleLog("rr1");
 		_scene->getWorld()->removeRigidBody(oldb);
-		consoleLog("rr2");
 		
-		consoleLog("rem11");
 		oldb->~btRigidBody();
 		btAlignedFree(oldb);
-		consoleLog("rem12");
 	}
 	
 	if (oldShape) {
-		consoleLog("rem21");
 		oldShape->~btCollisionShape();
 		btAlignedFree(oldShape);
-		consoleLog("rem22");
 	}
 	
 }
@@ -675,7 +627,7 @@ NAN_METHOD(Body::newCtor) {
 	V8_VAR_OBJ owner = V8_VAR_OBJ::Cast(ownerVal);
 	Scene *scene = ObjectWrap::Unwrap<Scene>(owner);
 	
-	Body *body = new (btAlignedAlloc(sizeof(Body), 16)) Body(scene);
+	Body *body = ALIGNED_NEW(Body, scene);
 	
 	// TODO: opts
 	

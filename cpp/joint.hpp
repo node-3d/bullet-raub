@@ -2,12 +2,6 @@
 #define _JOINT_HPP_
 
 
-// #include <cstdlib>
-
-#include <btVector3.h>
-
-#include <event-emitter.hpp>
-
 #include "common.hpp"
 
 
@@ -48,7 +42,8 @@ protected:
 	
 	// Throttle every first __update, pass every second call
 	bool _throttle;
-	// Remember asleep every first __update, compare every second call, both asleep -> nop
+	// Remember asleep every first __update
+	// Compare every second call, both asleep -> nop
 	bool _asleep;
 	
 	Body *_cacheA;

@@ -2,13 +2,6 @@
 #define _SCENE_HPP_
 
 
-#include <vector>
-
-#include <btVector3.h>
-#include <btAlignedObjectArray.h>
-
-#include <event-emitter.hpp>
-
 #include "common.hpp"
 
 
