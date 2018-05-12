@@ -47,33 +47,33 @@ using namespace std;
 
 Body::Body(Scene *scene) {
 	
-	_isDestroyed = false;
+	// _isDestroyed = false;
 	
-	_scene = scene;
+	// _scene = scene;
 	
-	_cshape = nullptr;
-	_body = nullptr;
+	// _cshape = nullptr;
+	// _body = nullptr;
 	
-	_cacheType = "box";
-	_cachePos = btVector3(0, 0, 0);
-	_cacheRot = btQuaternion(0, 0, 0, 1);
-	_cacheSize = btVector3(1, 1, 1);
-	_cacheVell = btVector3(0, 0, 0);
-	_cacheVela = btVector3(0, 0, 0);
-	_cacheMass = 0.0f;
-	_cacheRest = 0.0f;
-	_cacheDampl = 0.1f;
-	_cacheDampa = 0.1f;
-	_cacheFactl = btVector3(1, 1, 1);
-	_cacheFacta = btVector3(1, 1, 1);
-	_cacheFrict = 0.5f;
-	_cacheSleepy = true;
-	_cacheMap = nullptr;
-	_cacheMesh = nullptr;
-	consoleLog("B1");
-	_rebuild();
-	consoleLog("B2");
-	_scene->refBody(this);
+	// _cacheType = "box";
+	// _cachePos = btVector3(0, 0, 0);
+	// _cacheRot = btQuaternion(0, 0, 0, 1);
+	// _cacheSize = btVector3(1, 1, 1);
+	// _cacheVell = btVector3(0, 0, 0);
+	// _cacheVela = btVector3(0, 0, 0);
+	// _cacheMass = 0.0f;
+	// _cacheRest = 0.0f;
+	// _cacheDampl = 0.1f;
+	// _cacheDampa = 0.1f;
+	// _cacheFactl = btVector3(1, 1, 1);
+	// _cacheFacta = btVector3(1, 1, 1);
+	// _cacheFrict = 0.5f;
+	// _cacheSleepy = true;
+	// _cacheMap = nullptr;
+	// _cacheMesh = nullptr;
+	// consoleLog("B1");
+	// // _rebuild();
+	// consoleLog("B2");
+	// _scene->refBody(this);
 	
 }
 
@@ -138,7 +138,7 @@ btDynamicsWorld *Body::getWorld() {
 
 
 void Body::__update() { DES_CHECK;
-	
+	consoleLog("bu1");
 	if (_body->isStaticObject() || ! _body->isActive()) {
 		
 		for (int i = _joints.size() - 1; i >= 0; i--) {
@@ -148,25 +148,25 @@ void Body::__update() { DES_CHECK;
 		return;
 		
 	}
-	
+	consoleLog("bu2");
 	btTransform transform = _body->getCenterOfMassTransform();
 	_cachePos = transform.getOrigin();
 	_cacheRot = transform.getRotation();
 	_cacheVell = _body->getLinearVelocity();
 	_cacheVela = _body->getAngularVelocity();
-	
+	consoleLog("bu3");
 	// Emit "update"
 	VEC3_TO_OBJ(_cachePos, pos);
 	QUAT_TO_OBJ(_cacheRot, quat);
 	VEC3_TO_OBJ(_cacheVell, vell);
 	VEC3_TO_OBJ(_cacheVela, vela);
-	
+	consoleLog("bu4");
 	V8_VAR_OBJ obj = Nan::New<Object>();
 	SET_PROP(obj, "pos", pos);
 	SET_PROP(obj, "quat", quat);
 	SET_PROP(obj, "vell", vell);
 	SET_PROP(obj, "vela", vela);
-	
+	consoleLog("bu5");
 	V8_VAR_VAL objVal = obj;
 	consoleLog(1, &objVal);
 	// emit("update", 1, &objVal);
@@ -680,7 +680,7 @@ NAN_METHOD(Body::newCtor) {
 	// TODO: opts
 	
 	body->Wrap(info.This());
-	RET_VALUE(info.This());
+	// RET_VALUE(info.This());
 	
 }
 

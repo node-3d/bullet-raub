@@ -130,14 +130,14 @@ void Scene::_destroy() { DES_CHECK;
 
 void Scene::refBody(Body *body) { DES_CHECK;
 	
-	_bodies.push_back(body);
+	// _bodies.push_back(body);
 	
 }
 
 
 void Scene::unrefBody(Body* body) { DES_CHECK;
 	
-	_bodies.remove(body);
+	// _bodies.remove(body);
 	
 }
 
@@ -145,12 +145,12 @@ void Scene::unrefBody(Body* body) { DES_CHECK;
 void Scene::doUpdate(float dt) { DES_CHECK;
 	consoleLog("UStart");
 	_physWorld->stepSimulation(dt, 10, 1.f / 120.f);
-	
-	for (int i = _bodies.size() - 1; i >= 0; i--) {
-		consoleLog("i++ 1");
-		_bodies[i]->__update();
-		consoleLog("i++ 2");
-	}
+	consoleLog("UStart +");
+	// for (int i = _bodies.size() - 1; i >= 0; i--) {
+	// 	consoleLog("i++ 1");
+	// 	// _bodies[i]->__update();
+	// 	consoleLog("i++ 2");
+	// }
 	
 	consoleLog("UEnd");
 }
@@ -207,18 +207,18 @@ NAN_SETTER(Scene::gravitySetter) { THIS_SCENE; THIS_CHECK; SETTER_VEC3_ARG;
 NAN_METHOD(Scene::update) { THIS_SCENE; THIS_CHECK;
 	consoleLog("++ U0");
 	
-	try {
-	LET_FLOAT_ARG(0, dt);
+// 	try {
+// 	LET_FLOAT_ARG(0, dt);
+// 	consoleLog("++ U01");
+// 	if (dt > 0.f) {
+// 		scene->doUpdate(dt);
+// 	} else {
+// 		scene->doUpdate();
+// 	}
 	
-	if (dt > 0.f) {
-		scene->doUpdate(dt);
-	} else {
-		scene->doUpdate();
-	}
-	
-} catch (...) {
-	consoleLog(">>>>> BLEAT");
-}
+// } catch (...) {
+// 	consoleLog(">>>>> BLEAT");
+// }
 	consoleLog("-- U1");
 }
 
@@ -312,7 +312,10 @@ NAN_METHOD(Scene::newCtor) {
 	
 	CTOR_CHECK("Scene");
 	
-	Scene *scene = new (btAlignedAlloc(sizeof(Scene), 16)) Scene();
+	void *mem = btAlignedAlloc(sizeof(Scene), 16);
+	V8_VAR_VAL args[] = { JS_STR("MEM"), JS_NUM(sizeof(void*)), JS_NUM(sizeof(Scene)), JS_NUM((size_t)mem)};
+	consoleLog(4, args);
+	Scene *scene = new (mem) Scene();
 	scene->Wrap(info.This());
 	
 	RET_VALUE(info.This());
