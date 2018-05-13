@@ -44,7 +44,7 @@ const classes = {
 			return new bullet.Trace();
 		},
 		props: ['hit', 'body', 'pos', 'norm'],
-		methods: [],
+		methods: ['destroy'],
 	},
 	
 };
@@ -70,7 +70,7 @@ describe('Bullet', () => {
 		const current = classes[c];
 		
 		it(`can be created`, () => {
-			expect(current.create()).to.be.an('object');
+			expect(current.create()).to.be.an.instanceof(bullet[c]);
 		});
 		
 		
