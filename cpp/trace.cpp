@@ -231,11 +231,11 @@ NAN_METHOD(Trace::newCtor) {
 		OBJ_TO_VEC3(fromObj, from);
 		OBJ_TO_VEC3(toObj, to);
 		
-		traceResult = ALIGNED_NEW(Trace, scene, from, to);
+		traceResult = new Trace(scene, from, to);
 		
 	} else {
 		
-		traceResult = ALIGNED_NEW(Trace);
+		traceResult = new Trace();
 		
 	}
 	

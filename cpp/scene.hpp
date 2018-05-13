@@ -22,6 +22,11 @@ ATTRIBUTE_ALIGNED16(class) Scene : public EventEmitter {
 	
 public:
 	
+	typedef std::vector<V8_VAR_OBJ> ObjVec;
+	
+	void *operator new (size_t size) { return btAlignedAlloc(size, 16); }
+	void operator delete (void *ptr) { btAlignedFree(ptr); }
+	
 	static void init(V8_VAR_OBJ target);
 	static bool isScene(V8_VAR_OBJ obj);
 	
@@ -29,8 +34,8 @@ public:
 	
 	void _destroy();
 	
-	void refBody(Body *body);
-	void unrefBody(Body *body);
+	void refBody(Body* body);
+	void unrefBody(Body* body);
 	
 	btDynamicsWorld *getWorld() { return _physWorld; }
 	
@@ -38,19 +43,17 @@ public:
 	void doUpdate();
 	
 	V8_VAR_OBJ doHit(const btVector3 &from, const btVector3 &to);
-	std::vector< V8_VAR_OBJ > doTrace(const btVector3 &from, const btVector3 &to);
+	ObjVec doTrace(const btVector3 &from, const btVector3 &to);
 	
 	
 protected:
 	
 	Scene();
 	
-	static V8_STORE_FT _protoScene; // for inheritance
+	static V8_STORE_FT _protoScene;
 	static V8_STORE_FUNC _ctorScene;
 	
 	bool _isDestroyed;
-	
-	static btAlignedObjectArray<Scene*> _scenes;
 	
 	btClock *_clock;
 	btAlignedObjectArray<Body*> _bodies;

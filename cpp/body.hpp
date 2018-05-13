@@ -18,6 +18,9 @@ ATTRIBUTE_ALIGNED16(class) Body : public EventEmitter {
 	
 public:
 	
+	void *operator new (size_t size) { return btAlignedAlloc(size, 16); }
+	void operator delete (void *ptr) { btAlignedFree(ptr); }
+	
 	static void init(V8_VAR_OBJ target);
 	static bool isBody(V8_VAR_OBJ obj);
 	

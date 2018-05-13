@@ -43,7 +43,9 @@
 						'msvs_settings' : {
 							'VCCLCompilerTool' : {
 								'AdditionalOptions' : [
-									'/O2','/Oy','/GL','/GF','/Gm-', '/Fm-',
+									'/O2','/Oy',
+									# '/Z7',
+									'/GL','/GF','/Gm-', '/Fm-',
 									'/EHsc','/MT','/GS','/Gy','/GR-','/Gd',
 								]
 							},

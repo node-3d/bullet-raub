@@ -44,9 +44,6 @@ using namespace std;
 
 // ------ Constructor and Destructor
 
-btAlignedObjectArray<Scene*> Scene::_scenes;
-
-
 Scene::Scene() {
 	
 	_isDestroyed = false;
@@ -86,15 +83,14 @@ Scene::~Scene() {
 }
 
 
-void Scene::_destroy() { DES_CHECK;
+void Scene::_destroy() { DES_CHECK; NAN_HS;
 	
 	EACH(_bodies) {
 		Body *b = _bodies[i];
-		ALIGNED_DELETE(Body, b);
+		b->_destroy();
 	}
 	
 	_bodies.clear();
-	
 	
 	ALIGNED_DELETE(btDiscreteDynamicsWorld, _physWorld);
 	
@@ -105,7 +101,6 @@ void Scene::_destroy() { DES_CHECK;
 	ALIGNED_DELETE(btCollisionDispatcher, _physDispatcher);
 	
 	ALIGNED_DELETE(btDefaultCollisionConfiguration, _physConfig);
-	
 	
 	_isDestroyed = true;
 	
@@ -149,12 +144,12 @@ void Scene::doUpdate() { DES_CHECK;
 }
 
 
-vector< V8_VAR_OBJ > Scene::doTrace(const btVector3 &from, const btVector3 &to) {
+Scene::ObjVec Scene::doTrace(const btVector3 &from, const btVector3 &to) {
 	
 	btCollisionWorld::AllHitsRayResultCallback allResults(from, to);
 	_physWorld->rayTest(from, to, allResults);
 	
-	vector< V8_VAR_OBJ > list = vector< V8_VAR_OBJ >(allResults.m_collisionObjects.size());
+	ObjVec list = ObjVec(allResults.m_collisionObjects.size());
 	
 	EACH(allResults.m_collisionObjects) {
 		
@@ -191,6 +186,7 @@ NAN_SETTER(Scene::gravitySetter) { THIS_SCENE; THIS_CHECK; SETTER_VEC3_ARG;
 NAN_METHOD(Scene::update) { THIS_SCENE; THIS_CHECK;
 	
 	LET_FLOAT_ARG(0, dt);
+	
 	if (dt > 0.f) {
 		scene->doUpdate(dt);
 	} else {
@@ -217,7 +213,7 @@ NAN_METHOD(Scene::trace) { THIS_SCENE; THIS_CHECK;
 	REQ_VEC3_ARG(0, f);
 	REQ_VEC3_ARG(1, t);
 	
-	const vector< V8_VAR_OBJ > &traceList = scene->doTrace(f, t);
+	const ObjVec &traceList = scene->doTrace(f, t);
 	int size = traceList.size();
 	
 	V8_VAR_ARR result = Nan::New<Array>(size);
@@ -290,7 +286,7 @@ NAN_METHOD(Scene::newCtor) {
 	
 	CTOR_CHECK("Scene");
 	
-	Scene *scene = ALIGNED_NEW(Scene);
+	Scene *scene = new Scene();
 	scene->Wrap(info.This());
 	
 	RET_VALUE(info.This());

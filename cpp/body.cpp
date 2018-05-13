@@ -36,6 +36,11 @@ using namespace std;
 		RET_VALUE(NAME);                                                      \
 	}
 
+#define NUM_GETTER(NAME, CACHE)                                               \
+	NAN_GETTER(Body::NAME ## Getter) { THIS_BODY; THIS_CHECK;                 \
+		RET_VALUE(JS_NUM(body->CACHE));                                       \
+	}
+
 #define CACHE_CAS(CACHE, V)                                                   \
 	if (body->CACHE == V) {                                                   \
 		return;                                                               \
@@ -135,38 +140,38 @@ void Body::__update() { DES_CHECK;
 	
 	if (_body->isStaticObject() || ! _body->isActive()) {
 		
-		// EACH(_joints) {
-		// 	_joints[i]->__update(true);
-		// }
+		EACH(_joints) {
+			_joints[i]->__update(true);
+		}
 		
 		return;
 		
 	}
 	
-	// btTransform transform = _body->getCenterOfMassTransform();
+	btTransform transform = _body->getCenterOfMassTransform();
 	
-	// _cachePos = transform.getOrigin();
-	// _cacheRot = transform.getRotation();
+	_cachePos = transform.getOrigin();
+	_cacheRot = transform.getRotation();
 	
-	// _cacheVell = _body->getLinearVelocity();
-	// _cacheVela = _body->getAngularVelocity();
+	_cacheVell = _body->getLinearVelocity();
+	_cacheVela = _body->getAngularVelocity();
 	
-	// // Emit "update"
-	// VEC3_TO_OBJ(_cachePos, pos);
-	// QUAT_TO_OBJ(_cacheRot, quat);
-	// VEC3_TO_OBJ(_cacheVell, vell);
-	// VEC3_TO_OBJ(_cacheVela, vela);
+	// Emit "update"
+	VEC3_TO_OBJ(_cachePos, pos);
+	QUAT_TO_OBJ(_cacheRot, quat);
+	VEC3_TO_OBJ(_cacheVell, vell);
+	VEC3_TO_OBJ(_cacheVela, vela);
 	V8_VAR_OBJ obj = Nan::New<Object>();
-	// SET_PROP(obj, "pos", pos);
-	// SET_PROP(obj, "quat", quat);
-	// SET_PROP(obj, "vell", vell);
-	// SET_PROP(obj, "vela", vela);
+	SET_PROP(obj, "pos", pos);
+	SET_PROP(obj, "quat", quat);
+	SET_PROP(obj, "vell", vell);
+	SET_PROP(obj, "vela", vela);
 	V8_VAR_VAL objVal = obj;
 	emit("update", 1, &objVal);
 	
-	// EACH(_joints) {
-	// 	_joints[i]->__update();
-	// }
+	EACH(_joints) {
+		_joints[i]->__update();
+	}
 	
 }
 
@@ -195,6 +200,12 @@ V3_GETTER(vela, _cacheVela);
 V3_GETTER(size, _cacheSize);
 V3_GETTER(factl, _cacheFactl);
 V3_GETTER(facta, _cacheFacta);
+NUM_GETTER(mass, _cacheMass);
+NUM_GETTER(rest, _cacheRest);
+NUM_GETTER(dampl, _cacheDampl);
+NUM_GETTER(dampa, _cacheDampa);
+NUM_GETTER(frict, _cacheFrict);
+
 
 
 NAN_SETTER(Body::posSetter) { THIS_BODY; THIS_CHECK; SETTER_VEC3_ARG;
@@ -355,12 +366,6 @@ NAN_SETTER(Body::massSetter) { THIS_BODY; THIS_CHECK; SETTER_FLOAT_ARG;
 	
 }
 
-NAN_GETTER(Body::massGetter) { THIS_BODY; THIS_CHECK;
-	
-	RET_VALUE(JS_NUM(body->_cacheMass));
-	
-}
-
 
 NAN_SETTER(Body::restSetter) { THIS_BODY; THIS_CHECK; SETTER_FLOAT_ARG;
 	
@@ -369,12 +374,6 @@ NAN_SETTER(Body::restSetter) { THIS_BODY; THIS_CHECK; SETTER_FLOAT_ARG;
 	body->_body->setRestitution(body->_cacheRest);
 	
 	body->emit("rest", 1, &value);
-	
-}
-
-NAN_GETTER(Body::restGetter) { THIS_BODY; THIS_CHECK;
-	
-	RET_VALUE(JS_NUM(body->_cacheRest));
 	
 }
 
@@ -389,12 +388,6 @@ NAN_SETTER(Body::damplSetter) { THIS_BODY; THIS_CHECK; SETTER_FLOAT_ARG;
 	
 }
 
-NAN_GETTER(Body::damplGetter) { THIS_BODY; THIS_CHECK;
-	
-	RET_VALUE(JS_NUM(body->_cacheDampl));
-	
-}
-
 
 NAN_SETTER(Body::dampaSetter) { THIS_BODY; THIS_CHECK; SETTER_FLOAT_ARG;
 	
@@ -406,12 +399,6 @@ NAN_SETTER(Body::dampaSetter) { THIS_BODY; THIS_CHECK; SETTER_FLOAT_ARG;
 	
 }
 
-NAN_GETTER(Body::dampaGetter) { THIS_BODY; THIS_CHECK;
-	
-	RET_VALUE(JS_NUM(body->_cacheDampa));
-	
-}
-
 
 NAN_SETTER(Body::frictSetter) { THIS_BODY; THIS_CHECK; SETTER_FLOAT_ARG;
 	
@@ -420,12 +407,6 @@ NAN_SETTER(Body::frictSetter) { THIS_BODY; THIS_CHECK; SETTER_FLOAT_ARG;
 	body->_body->setFriction(body->_cacheFrict);
 	
 	body->emit("frict", 1, &value);
-	
-}
-
-NAN_GETTER(Body::frictGetter) { THIS_BODY;
-	
-	RET_VALUE(JS_NUM(body->_cacheFrict));
 	
 }
 
@@ -508,20 +489,17 @@ void Body::_rebuild() { DES_CHECK;
 	_body->setUserPointer(this);
 	
 	_scene->getWorld()->addRigidBody(_body);
+	
 	EACH(_joints) {
 		_joints[i]->_rebuild();
 	}
+	
 	if (oldb) {
 		_scene->getWorld()->removeRigidBody(oldb);
-		
-		oldb->~btRigidBody();
-		btAlignedFree(oldb);
 	}
 	
-	if (oldShape) {
-		oldShape->~btCollisionShape();
-		btAlignedFree(oldShape);
-	}
+	ALIGNED_DELETE(btRigidBody, oldb);
+	ALIGNED_DELETE(btCollisionShape, oldShape);
 	
 }
 
@@ -627,12 +605,12 @@ NAN_METHOD(Body::newCtor) {
 	V8_VAR_OBJ owner = V8_VAR_OBJ::Cast(ownerVal);
 	Scene *scene = ObjectWrap::Unwrap<Scene>(owner);
 	
-	Body *body = ALIGNED_NEW(Body, scene);
+	Body *body = new Body(scene);
 	
 	// TODO: opts
 	
 	body->Wrap(info.This());
-	// RET_VALUE(info.This());
+	RET_VALUE(info.This());
 	
 }
 

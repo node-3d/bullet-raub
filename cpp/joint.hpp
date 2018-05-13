@@ -14,6 +14,9 @@ ATTRIBUTE_ALIGNED16(class) Joint : public EventEmitter {
 	
 public:
 	
+	void *operator new (size_t size) { return btAlignedAlloc(size, 16); }
+	void operator delete (void *ptr) { btAlignedFree(ptr); }
+	
 	static void init(V8_VAR_OBJ target);
 	static bool isJoint(V8_VAR_OBJ obj);
 	
@@ -31,7 +34,7 @@ protected:
 	
 	Joint();
 	
-	static V8_STORE_FT _protoJoint; // for inheritance
+	static V8_STORE_FT _protoJoint;
 	static V8_STORE_FUNC _ctorJoint;
 	
 	bool _isDestroyed;

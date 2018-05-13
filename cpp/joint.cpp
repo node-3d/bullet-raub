@@ -678,14 +678,10 @@ void Joint::_rebuild() { DES_CHECK;
 void Joint::_removeConstraint(btDynamicsWorld *world) { DES_CHECK;
 	
 	if (_constraint) {
-		
 		world->removeConstraint(_constraint);
-		
-		_constraint->~btGeneric6DofSpringConstraint();
-		btAlignedFree(_constraint);
-		_constraint = nullptr;
-		
 	}
+	
+	ALIGNED_DELETE(btGeneric6DofSpringConstraint, _constraint);
 	
 }
 
@@ -765,7 +761,7 @@ NAN_METHOD(Joint::newCtor) {
 	
 	CTOR_CHECK("Joint");
 	
-	Joint *joint = new (btAlignedAlloc(sizeof(Joint), 16)) Joint();
+	Joint *joint = new Joint();
 	joint->Wrap(info.This());
 	
 	RET_VALUE(info.This());
