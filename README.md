@@ -1,6 +1,15 @@
 # Physics engine for Node.js
 
+This is a part of [Node3D](https://github.com/node-3d) project.
+
+
+## Synopsis
+
 Bullet-driven physics API. Offers high-order classes for building 3d simulations.
+This library is not a direct mapping of
+[Bullet Physics API](https://github.com/bulletphysics/bullet3),
+rather it is more of a simplified interpretation for generic purposes.
+Only rigid bodies and DOF-6 constraint are supported.
 
 
 ## Install
@@ -9,34 +18,35 @@ Bullet-driven physics API. Offers high-order classes for building 3d simulations
 npm i -s bullet-raub
 ```
 
-Note: as this is a compiled addon, compilation tools must be in place on your system.
-Such as MSVS13 for Windows, where **ADMIN PRIVELEGED** `npm i -g windows-build-tools` most probably helps.
+> Note: compilation tools must be in place on your system.
+For Windows, use **ADMIN PRIVELEGED** command line:
+\`npm i -g windows-build-tools\`.
+Also **Windows** needs **vcredist 2013** to be installed.
 
 
 ## Usage
 
-This library is not a direct mapping of Bullet API, rather it is more of a simplified
-interpretation for generic purposes.
-
-There are 4 classes right now, and probably that's it. But many things can be achieved.
-
-NOTE: In multiple occasions vector parameters are used. Telling that `pos` (position)
+In multiple occasions vector parameters are used. Telling that `pos` (position)
 is a `vec3` this doc implies you can use either `[x, y, z]` or `{ x, y, z }` values.
 Those are considered equal. The same way you can retrieve values as `pos[0]` or `pos.x`.
 There is also `quat` type, which is 4D vector, having additional `w` component.
 
-NOTE: Any **set** property has an event with the same name. The event is emitted whenever
+Any **set** property has an event with the same name. The event is emitted whenever
 this property is changed by the setter. In some cases such properties are changed
 not by the setters, but by the engine itself. Then there is `'update'` event, containing
 a limited set of info on what was updated by the engine. If getters are called within
 update-handler, they get the newest values as well.
+
+Each class has a `destroy` method, which can be used to free its native resources.
+If called, it causes the `'destroy'` event to be fired. However in case of GC
+the resources will be freed in the same way, but with no such event.
 
 
 ---
 
 ### class Scene
 
-Wraps around `btPhysicsWorld` (as if this was relevant). Scene works as a container
+Wraps around `btPhysicsWorld`. Scene works as a container
 for Bodies. Bodies only interact within the same scene. There can be multiple scenes
 running simultaneously.
 
@@ -66,7 +76,7 @@ whole list of hits occuring on its way.
 
 
 Events:
-* `'destroy'` - emitted when the scene is destroyed.
+* Basic events, as it is stated above.
 
 
 ---
@@ -124,19 +134,20 @@ Methods:
 
 
 Events:
-* `'destroy'` - emitted when the body is destroyed.
+* Basic events, as it is stated above.
 * `'update' { vec3 pos, quat quat, vec3 vell, vec3 vela }` - emitted for every non-sleeping
-Body per every `scene.update()` call. Instead of `rot` value it caries a raw quaternion.
-However you can get the newest `body.rot` yourself. It is done to minimize calculation,
-because rotation is internally quaternion and requires conversion to Euler-angles. Also
-visualization frameworks tend to treat quaternions way better then angles, and the main
-use case of this event is to update visualization.
-```
-body.on('update', ({ pos, quat }) => {
-	mesh.position.set(pos.x, pos.y, pos.z);
-	mesh.quaternion.set(quat.x, quat.y, quat.z, quat.w);
-});
-```
+	Body per every `scene.update()` call. Instead of `rot` value it caries a raw quaternion.
+	However you can get the newest `body.rot` yourself. It is done to minimize calculation,
+	because rotation is internally quaternion and requires conversion to Euler-angles. Also
+	visualization frameworks tend to treat quaternions way better then angles, and the main
+	use case of this event is to update visualization.
+	```
+	body.on('update', ({ pos, quat }) => {
+		mesh.position.set(pos.x, pos.y, pos.z);
+		mesh.quaternion.set(quat.x, quat.y, quat.z, quat.w);
+	});
+	```
+
 
 ---
 
@@ -199,19 +210,20 @@ Methods:
 
 
 Events:
-* `'destroy'` - emitted when the joint is destroyed.
+* Basic events, as it is stated above.
 * `'update' { vec3 posa, vec3 posb, boolean broken }` - emitted for every joint, connecting
-two bodies, at least one of which is non-sleeping, per every `scene.update()` call.
-Instead of `getter posa/posb`, values passed represent current positions of connected bodies.
-Same can be retrieved by `joint.a.pos` and `joint.b.pos`.The main use case of this event
-is to update visualization.
-```
-joint.on('update', ({ posa, posb, broken }) => {
-	line.start.set(posa.x, posa.y, posa.z)
-	line.end.set(posb.x, posb.y, posb.z)
-	line.color = broken ? 0xFF0000 : 0x00FF00;
-});
-```
+	two bodies, at least one of which is non-sleeping, per every `scene.update()` call.
+	Instead of `getter posa/posb`, values passed represent current positions of connected bodies.
+	Same can be retrieved by `joint.a.pos` and `joint.b.pos`.The main use case of this event
+	is to update visualization.
+	```
+	joint.on('update', ({ posa, posb, broken }) => {
+		line.start.set(posa.x, posa.y, posa.z)
+		line.end.set(posb.x, posb.y, posb.z)
+		line.color = broken ? 0xFF0000 : 0x00FF00;
+	});
+	```
+
 
 ---
 
@@ -245,3 +257,7 @@ Properties:
 * `get Body body` - the body or null
 * `get vec3 pos` - where did it hit
 * `get vec3 norm` - body surface normal
+
+
+Events:
+* Basic events, as it is stated above.
