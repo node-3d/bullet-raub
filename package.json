@@ -30,6 +30,5 @@
 	"dependencies": {
 		"addon-tools-raub": "^1.0.0",
 		"deps-bullet-raub": "0.0.8",
-		"segfault-handler": "^1.0.0"
 	}
 }

@@ -1,13 +1,5 @@
 'use strict';
 
-process.on('uncaughtException', function (err) {
-	console.log('Caught exception: ' + err);
-});
-
-const SegfaultHandler = require('segfault-handler');
-
-SegfaultHandler.registerHandler("crash.log"); // With no argument, SegfaultHandler will generate a generic log file name
-
 const { Scene, Body, Joint, Trace } = require('..');
 
 
