@@ -5,7 +5,9 @@ const util = require('util');
 // Add deps dll dirs
 require('deps-bullet-raub');
 
-const core = require('./binary/bullet');
+const { binPath } = require('addon-tools-raub');
+
+const core = require(`./${binPath}/bullet`);
 
 
 const { Body, Joint, Scene, Trace } = core;
