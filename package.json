@@ -13,8 +13,8 @@
 		"physics"
 	],
 	"engines": {
-		"node": ">=8.11.4",
-		"npm": ">=6.3.0"
+		"node": ">=10.13.0",
+		"npm": ">=6.4.1"
 	},
 	"maintainers": [
 		{
@@ -28,7 +28,7 @@
 		"url": "https://github.com/node-3d/bullet-raub.git"
 	},
 	"dependencies": {
-		"addon-tools-raub": "4.0.0",
-		"deps-bullet-raub": "0.0.9"
+		"addon-tools-raub": "4.1.0",
+		"deps-bullet-raub": "https://github.com/node-3d/deps-bullet-raub.git"
 	}
 }

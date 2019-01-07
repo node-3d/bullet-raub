@@ -1,27 +1,21 @@
-dist: trusty
-sudo: false
-
 language: node_js
-compiler: clang
 
 node_js:
-  - "8.11.4"
+  - "10.13.0"
 
 
-before_install:
-  - npm conf set strict-ssl false
-  - npm install -g npm@6.4.0
-  - export DISPLAY=:99
-  - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1280x1024x24"
+matrix:
+  include:
+  - name: "Windows"
+    os: windows
+  - name: "Linux"
+    os: linux
+    dist: xenial
+    sudo: false
+  - name: "MacOS"
+    os: osx
 
 
 install:
   - cd test
   - npm i
-  - cd ..
-
-
-script:
-  - cd test
-  - npm test
-  - cd ..
