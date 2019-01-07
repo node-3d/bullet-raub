@@ -88,14 +88,16 @@
 				'action_name' : 'Build intermediates removed.',
 				'inputs'      : [],
 				'outputs'     : ['cpp'],
-				'conditions'  : [
-					[ 'OS=="linux"', { 'action' : [
-						'rm',
-						'<(module_root_dir)/build/Release/obj.target/bullet/cpp/bullet.o',
-						'<(module_root_dir)/build/Release/obj.target/bullet.node',
-						'<(module_root_dir)/build/Release/bullet.node'
-					] } ],
-					[ 'OS=="mac"', { 'action' : [
+				'conditions'  : [[
+					# IF WINDOWS
+					'OS=="win"',
+					{ 'action' : [
+						'<(rm)',
+						'<(module_root_dir)/build/Release/bullet.*',
+						'<(module_root_dir)/build/Release/obj/bullet/*.*'
+					] },
+					# ELSE
+					{ 'action' : [
 						'rm',
 						'<(module_root_dir)/build/Release/obj.target/bullet/cpp/bindings.o',
 						'<(module_root_dir)/build/Release/obj.target/bullet/cpp/body.o',
@@ -103,13 +105,8 @@
 						'<(module_root_dir)/build/Release/obj.target/bullet/cpp/scene.o',
 						'<(module_root_dir)/build/Release/obj.target/bullet/cpp/trace.o',
 						'<(module_root_dir)/build/Release/bullet.node'
-					] } ],
-					[ 'OS=="win"', { 'action' : [
-						'<(rm)',
-						'<(module_root_dir)/build/Release/bullet.*',
-						'<(module_root_dir)/build/Release/obj/bullet/*.*'
-					] } ],
-				],
+					] }
+				]],
 			}],
 		},
 	]
