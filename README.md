@@ -2,6 +2,12 @@
 
 This is a part of [Node3D](https://github.com/node-3d) project.
 
+![NPM](https://nodei.co/npm/bullet-raub.png?compact=true)
+
+![Build Status](https://api.travis-ci.com/node-3d/bullet-raub.svg?branch=master)
+
+> npm i -s bullet-raub
+
 
 ## Synopsis
 
@@ -10,13 +16,6 @@ This library is not a direct mapping of
 [Bullet Physics API](https://github.com/bulletphysics/bullet3),
 rather it is more of a simplified interpretation for generic purposes.
 Only rigid bodies and DOF-6 constraint are supported.
-
-
-## Install
-
-```
-npm i -s bullet-raub
-```
 
 > Note: compilation tools must be in place on your system.
 For Windows, use **ADMIN PRIVELEGED** command line:
