@@ -621,7 +621,12 @@ void Joint::_rebuild() { DES_CHECK;
 	q.setEuler(r.getY(), r.getX(), r.getZ());
 	transformB.setRotation(q);
 	
-	_constraint = new (btAlignedAlloc(sizeof(btGeneric6DofSpringConstraint), 16)) btGeneric6DofSpringConstraint(*rb1, *rb2, transformA, transformB, true);
+	_constraint = new (
+		btAlignedAlloc(sizeof(btGeneric6DofSpringConstraint), 16)
+	) btGeneric6DofSpringConstraint(
+		*rb1, *rb2, transformA, transformB, true
+	);
+	
 	_cacheA->getWorld()->addConstraint(_constraint, true);
 	_constraint->setEnabled( ! _cacheBroken );
 	
