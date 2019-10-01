@@ -1,19 +1,21 @@
 'use strict';
 
-const util = require('util');
+require('segfault-raub');
+
+const { inspect } = require('util');
 
 // Add deps dll dirs
 require('deps-bullet-raub');
 
-const { binPath } = require('addon-tools-raub');
+const { bin } = require('addon-tools-raub');
 
-const core = require(`./${binPath}/bullet`);
+const core = require(`./${bin}/bullet`);
 
 
 const { Body, Joint, Scene, Trace } = core;
 
 
-Body.prototype[util.inspect.custom] = function () {
+Body.prototype[inspect.custom] = function () {
 	return this.toString();
 };
 Body.prototype.toString = function () {
@@ -21,7 +23,7 @@ Body.prototype.toString = function () {
 };
 
 
-Joint.prototype[util.inspect.custom] = function () {
+Joint.prototype[inspect.custom] = function () {
 	return this.toString();
 };
 Joint.prototype.toString = function () {
@@ -29,7 +31,7 @@ Joint.prototype.toString = function () {
 };
 
 
-Scene.prototype[util.inspect.custom] = function () {
+Scene.prototype[inspect.custom] = function () {
 	return this.toString();
 };
 Scene.prototype.toString = function () {
@@ -37,7 +39,7 @@ Scene.prototype.toString = function () {
 };
 
 
-Trace.prototype[util.inspect.custom] = function () {
+Trace.prototype[inspect.custom] = function () {
 	return this.toString();
 };
 Trace.prototype.toString = function () {

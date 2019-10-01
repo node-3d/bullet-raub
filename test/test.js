@@ -2,7 +2,7 @@
 
 const { expect } = require('chai');
 
-const bullet = require('bullet-raub');
+const bullet = require('..');
 
 
 const classes = {
@@ -52,7 +52,7 @@ const classes = {
 
 describe('Bullet', () => {
 	
-	it(`exports an object`, () => {
+	it('exports an object', () => {
 		expect(bullet).to.be.an('object');
 	});
 	
@@ -69,7 +69,7 @@ describe('Bullet', () => {
 		
 		const current = classes[c];
 		
-		it(`can be created`, () => {
+		it('can be created', () => {
 			expect(current.create()).to.be.an.instanceof(bullet[c]);
 		});
 		

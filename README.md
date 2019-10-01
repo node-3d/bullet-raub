@@ -7,21 +7,21 @@ This is a part of [Node3D](https://github.com/node-3d) project.
 [![Build Status](https://api.travis-ci.com/node-3d/bullet-raub.svg?branch=master)](https://travis-ci.com/node-3d/bullet-raub)
 [![CodeFactor](https://www.codefactor.io/repository/github/node-3d/bullet-raub/badge)](https://www.codefactor.io/repository/github/node-3d/bullet-raub)
 
-> npm i -s bullet-raub
+> npm i bullet-raub
 
 
 ## Synopsis
 
-Bullet-driven physics API. Offers high-order classes for building 3d simulations.
+**Node.js** addon providing a Bullet-driven physics API.
+
 This library is not a direct mapping of
 [Bullet Physics API](https://github.com/bulletphysics/bullet3),
 rather it is more of a simplified interpretation for generic purposes.
 Only rigid bodies and DOF-6 constraint are supported.
 
-> Note: compilation tools must be in place on your system.
-For Windows, use **ADMIN PRIVELEGED** command line:
-\`npm i -g windows-build-tools\`.
-Also **Windows** needs **vcredist 2013** to be installed.
+> Note: this **addon uses N-API**, and therefore is ABI-compatible across different
+Node.js versions. Addon binaries are precompiled and **there is no compilation**
+step during the `npm i` command.
 
 
 ## Usage
@@ -65,14 +65,14 @@ Properties:
 
 
 Methods:
-* void update( float ?delta ) - advance the scene, optional parameter `delta` is how much time have
+* `void update(float ?delta)` - advance the scene, optional parameter `delta` is how much time have
 supposedly passed since last update **in seconds**. If not set, a precise internal
 timer is used instead. Therefore it is prefered to call `scene.update()` without arguments.
-* Trace hit( vec3 from, vec3 to ) - conducts a ray trace within the scene and returns a new Trace
+* `Trace hit(vec3 from, vec3 to)` - conducts a ray trace within the scene and returns a new Trace
 containing the result of the first hit against body, if any.
-* [Trace] trace( vec3 from, vec3 to ) - conducts a ray trace within the scene and returns a
+* `[Trace] trace( vec3 from, vec3 to )` - conducts a ray trace within the scene and returns a
 whole list of hits occuring on its way.
-* void destroy() - destroys the scene and all the contained bodies, `'destroy'` event is emitted.
+* `void destroy()` - destroys the scene and all the contained bodies, `'destroy'` event is emitted.
 
 
 Events:
@@ -130,7 +130,7 @@ set it to `false` for specific body if its sleepiness causes issues.
 
 
 Methods:
-* void destroy() - destroys the body, `'destroy'` event is emitted.
+* `void destroy()` - destroys the body, `'destroy'` event is emitted.
 
 
 Events:
@@ -206,7 +206,7 @@ NOTE: this is not the rotation of the body in scene.
 
 
 Methods:
-* void destroy() - destroys the joint, `'destroy'` event is emitted.
+* `void destroy()` - destroys the joint, `'destroy'` event is emitted.
 
 
 Events:
@@ -229,7 +229,7 @@ Events:
 
 ### class Trace
 
-A read-only trace result. Holds the information about ray trace.
+A read-only trace result. Holds the information about a ray trace.
 
 ```
 const { Scene, Body } = require('bullet-raub');

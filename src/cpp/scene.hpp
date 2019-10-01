@@ -1,7 +1,6 @@
 #ifndef _SCENE_HPP_
 #define _SCENE_HPP_
 
-
 #include "common.hpp"
 
 
@@ -18,19 +17,19 @@ class Body;
 class Trace;
 
 
-ATTRIBUTE_ALIGNED16(class) Scene : public EventEmitter {
+ATTRIBUTE_ALIGNED16(class) Scene {
+DECLARE_ES5_CLASS(Scene, Scene);
 	
 public:
+	static void init(Napi::Env env, Napi::Object exports);
 	
-	typedef std::vector<V8_VAR_OBJ> ObjVec;
+	~Scene();
+	explicit Scene(const Napi::CallbackInfo &info);
+	
+	void _destroy();
 	
 	void *operator new (size_t size) { return btAlignedAlloc(size, 16); }
 	void operator delete (void *ptr) { btAlignedFree(ptr); }
-	
-	static void init(V8_VAR_OBJ target);
-	static bool isScene(V8_VAR_OBJ obj);
-	
-	~Scene();
 	
 	void _destroy();
 	
@@ -42,17 +41,11 @@ public:
 	void doUpdate(float dt);
 	void doUpdate();
 	
-	V8_VAR_OBJ doHit(const btVector3 &from, const btVector3 &to);
+	Napi::Object doHit(const btVector3 &from, const btVector3 &to);
 	ObjVec doTrace(const btVector3 &from, const btVector3 &to);
 	
 	
-protected:
-	
-	Scene();
-	
-	static V8_STORE_FT _protoScene;
-	static V8_STORE_FUNC _ctorScene;
-	
+private:
 	bool _isDestroyed;
 	
 	btClock *_clock;
@@ -66,19 +59,16 @@ protected:
 	
 	btVector3 _cacheGrav;
 	
+	JS_DECLARE_METHOD(newCtor);
+	JS_DECLARE_METHOD(destroy);
+	JS_DECLARE_GETTER(isDestroyedGetter);
 	
-private:
+	JS_DECLARE_GETTER(gravityGetter);
+	JS_DECLARE_SETTER(gravitySetter);
 	
-	static NAN_METHOD(newCtor);
-	static NAN_METHOD(destroy);
-	static NAN_GETTER(isDestroyedGetter);
-	
-	static NAN_GETTER(gravityGetter);
-	static NAN_SETTER(gravitySetter);
-	
-	static NAN_METHOD(update);
-	static NAN_METHOD(hit);
-	static NAN_METHOD(trace);
+	JS_DECLARE_METHOD(update);
+	JS_DECLARE_METHOD(hit);
+	JS_DECLARE_METHOD(trace);
 	
 };
 
