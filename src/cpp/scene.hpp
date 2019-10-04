@@ -61,10 +61,10 @@ private:
 	
 	JS_DECLARE_METHOD(newCtor);
 	JS_DECLARE_METHOD(destroy);
-	JS_DECLARE_GETTER(isDestroyedGetter);
+	JS_DECLARE_GETTER(isDestroyed);
 	
-	JS_DECLARE_GETTER(gravityGetter);
-	JS_DECLARE_SETTER(gravitySetter);
+	JS_DECLARE_GETTER(gravity);
+	JS_DECLARE_SETTER(gravity);
 	
 	JS_DECLARE_METHOD(update);
 	JS_DECLARE_METHOD(hit);

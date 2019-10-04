@@ -17,9 +17,98 @@
 #include "joint.hpp"
 #include "body.hpp"
 
-using namespace v8;
-using namespace node;
-using namespace std;
+
+IMPLEMENT_ES5_CLASS(Body);
+
+
+void Body::init(Napi::Env env, Napi::Object exports) {
+	
+	Napi::Function ctor = wrap(env);
+	
+	JS_ASSIGN_METHOD(Body, destroy);
+	
+	JS_ASSIGN_GETTER(Body, isDestroyed);
+	JS_ASSIGN_GETTER(Body, type);
+	JS_ASSIGN_GETTER(Body, pos);
+	JS_ASSIGN_GETTER(Body, rot);
+	JS_ASSIGN_GETTER(Body, vell);
+	JS_ASSIGN_GETTER(Body, vela);
+	JS_ASSIGN_GETTER(Body, size);
+	JS_ASSIGN_GETTER(Body, map);
+	JS_ASSIGN_GETTER(Body, mesh);
+	JS_ASSIGN_GETTER(Body, mass);
+	JS_ASSIGN_GETTER(Body, rest);
+	JS_ASSIGN_GETTER(Body, dampl);
+	JS_ASSIGN_GETTER(Body, dampa);
+	JS_ASSIGN_GETTER(Body, factl);
+	JS_ASSIGN_GETTER(Body, facta);
+	JS_ASSIGN_GETTER(Body, frict);
+	JS_ASSIGN_GETTER(Body, sleepy);
+	
+	JS_ASSIGN_SETTER(Body, type);
+	JS_ASSIGN_SETTER(Body, pos);
+	JS_ASSIGN_SETTER(Body, rot);
+	JS_ASSIGN_SETTER(Body, vell);
+	JS_ASSIGN_SETTER(Body, vela);
+	JS_ASSIGN_SETTER(Body, size);
+	JS_ASSIGN_SETTER(Body, map);
+	JS_ASSIGN_SETTER(Body, mesh);
+	JS_ASSIGN_SETTER(Body, mass);
+	JS_ASSIGN_SETTER(Body, rest);
+	JS_ASSIGN_SETTER(Body, dampl);
+	JS_ASSIGN_SETTER(Body, dampa);
+	JS_ASSIGN_SETTER(Body, factl);
+	JS_ASSIGN_SETTER(Body, facta);
+	JS_ASSIGN_SETTER(Body, frict);
+	JS_ASSIGN_SETTER(Body, sleepy);
+	
+	exports.Set("Body", ctor);
+	
+}
+
+
+Body::Body(const Napi::CallbackInfo &info) { NAPI_ENV;
+	
+	REQ_OBJ_ARG(0, scene);
+	
+	_isDestroyed = false;
+	
+	_scene = scene;
+	
+	_cshape = nullptr;
+	_body = nullptr;
+	
+	_cacheType = "box";
+	_cachePos = btVector3(0, 0, 0);
+	_cacheRot = btQuaternion(0, 0, 0, 1);
+	_cacheSize = btVector3(1, 1, 1);
+	_cacheVell = btVector3(0, 0, 0);
+	_cacheVela = btVector3(0, 0, 0);
+	_cacheMass = 0.0f;
+	_cacheRest = 0.0f;
+	_cacheDampl = 0.1f;
+	_cacheDampa = 0.1f;
+	_cacheFactl = btVector3(1, 1, 1);
+	_cacheFacta = btVector3(1, 1, 1);
+	_cacheFrict = 0.5f;
+	_cacheSleepy = true;
+	_cacheMap = nullptr;
+	_cacheMesh = nullptr;
+	
+	_rebuild();
+	_scene->refBody(this);
+	
+}
+
+
+Body::~Body() {
+	_destroy();
+}
+
+
+void Body::_destroy() { DES_CHECK;
+	CommonNode::_destroy();
+}
 
 
 // ------ Aux macros
@@ -629,4 +718,3 @@ NAN_GETTER(Body::isDestroyedGetter) { THIS_BODY;
 	RET_VALUE(JS_BOOL(body->_isDestroyed));
 	
 }
-

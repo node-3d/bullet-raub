@@ -40,12 +40,12 @@ private:
 	
 	JS_DECLARE_METHOD(newCtor);
 	JS_DECLARE_METHOD(destroy);
-	JS_DECLARE_GETTER(isDestroyedGetter);
+	JS_DECLARE_GETTER(isDestroyed);
 	
-	JS_DECLARE_GETTER(hitGetter);
-	JS_DECLARE_GETTER(bodyGetter);
-	JS_DECLARE_GETTER(posGetter);
-	JS_DECLARE_GETTER(normGetter);
+	JS_DECLARE_GETTER(hit);
+	JS_DECLARE_GETTER(body);
+	JS_DECLARE_GETTER(pos);
+	JS_DECLARE_GETTER(norm);
 	
 };
 

@@ -14,10 +14,8 @@
 #include "body.hpp"
 #include "joint.hpp"
 
-using namespace v8;
-using namespace node;
-using namespace std;
 
+IMPLEMENT_ES5_CLASS(Joint);
 
 // ------ Aux macros
 
@@ -789,4 +787,3 @@ NAN_GETTER(Joint::isDestroyedGetter) { THIS_JOINT;
 	RET_VALUE(JS_BOOL(joint->_isDestroyed));
 	
 }
-

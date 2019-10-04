@@ -71,79 +71,79 @@ private:
 	
 	JS_DECLARE_METHOD(newCtor);
 	JS_DECLARE_METHOD(destroy);
-	JS_DECLARE_GETTER(isDestroyedGetter);
+	JS_DECLARE_GETTER(isDestroyed);
 	
-	JS_DECLARE_GETTER(aGetter);
-	JS_DECLARE_SETTER(aSetter);
+	JS_DECLARE_GETTER(a);
+	JS_DECLARE_SETTER(a);
 	
-	JS_DECLARE_GETTER(bGetter);
-	JS_DECLARE_SETTER(bSetter);
+	JS_DECLARE_GETTER(b);
+	JS_DECLARE_SETTER(b);
 	
-	JS_DECLARE_GETTER(brokenGetter);
-	JS_DECLARE_SETTER(brokenSetter);
+	JS_DECLARE_GETTER(broken);
+	JS_DECLARE_SETTER(broken);
 	
-	JS_DECLARE_GETTER(posaGetter);
-	JS_DECLARE_SETTER(posaSetter);
+	JS_DECLARE_GETTER(posa);
+	JS_DECLARE_SETTER(posa);
 	
-	JS_DECLARE_GETTER(posbGetter);
-	JS_DECLARE_SETTER(posbSetter);
+	JS_DECLARE_GETTER(posb);
+	JS_DECLARE_SETTER(posb);
 	
-	JS_DECLARE_GETTER(rotaGetter);
-	JS_DECLARE_SETTER(rotaSetter);
+	JS_DECLARE_GETTER(rota);
+	JS_DECLARE_SETTER(rota);
 	
-	JS_DECLARE_GETTER(rotbGetter);
-	JS_DECLARE_SETTER(rotbSetter);
+	JS_DECLARE_GETTER(rotb);
+	JS_DECLARE_SETTER(rotb);
 	
-	JS_DECLARE_GETTER(minlGetter);
-	JS_DECLARE_SETTER(minlSetter);
+	JS_DECLARE_GETTER(minl);
+	JS_DECLARE_SETTER(minl);
 	
-	JS_DECLARE_GETTER(maxlGetter);
-	JS_DECLARE_SETTER(maxlSetter);
+	JS_DECLARE_GETTER(maxl);
+	JS_DECLARE_SETTER(maxl);
 	
-	JS_DECLARE_GETTER(minaGetter);
-	JS_DECLARE_SETTER(minaSetter);
+	JS_DECLARE_GETTER(mina);
+	JS_DECLARE_SETTER(mina);
 	
-	JS_DECLARE_GETTER(maxaGetter);
-	JS_DECLARE_SETTER(maxaSetter);
+	JS_DECLARE_GETTER(maxa);
+	JS_DECLARE_SETTER(maxa);
 	
-	JS_DECLARE_GETTER(maximpGetter);
-	JS_DECLARE_SETTER(maximpSetter);
+	JS_DECLARE_GETTER(maximp);
+	JS_DECLARE_SETTER(maximp);
 	
-	JS_DECLARE_GETTER(damplGetter);
-	JS_DECLARE_SETTER(damplSetter);
+	JS_DECLARE_GETTER(dampl);
+	JS_DECLARE_SETTER(dampl);
 	
-	JS_DECLARE_GETTER(dampaGetter);
-	JS_DECLARE_SETTER(dampaSetter);
+	JS_DECLARE_GETTER(dampa);
+	JS_DECLARE_SETTER(dampa);
 	
-	JS_DECLARE_GETTER(stiflGetter);
-	JS_DECLARE_SETTER(stiflSetter);
+	JS_DECLARE_GETTER(stifl);
+	JS_DECLARE_SETTER(stifl);
 	
-	JS_DECLARE_GETTER(stifaGetter);
-	JS_DECLARE_SETTER(stifaSetter);
+	JS_DECLARE_GETTER(stifa);
+	JS_DECLARE_SETTER(stifa);
 	
-	JS_DECLARE_GETTER(springlGetter);
-	JS_DECLARE_SETTER(springlSetter);
+	JS_DECLARE_GETTER(springl);
+	JS_DECLARE_SETTER(springl);
 	
-	JS_DECLARE_GETTER(springaGetter);
-	JS_DECLARE_SETTER(springaSetter);
+	JS_DECLARE_GETTER(springa);
+	JS_DECLARE_SETTER(springa);
 	
-	JS_DECLARE_GETTER(motorlGetter);
-	JS_DECLARE_SETTER(motorlSetter);
+	JS_DECLARE_GETTER(motorl);
+	JS_DECLARE_SETTER(motorl);
 	
-	JS_DECLARE_GETTER(motoraGetter);
-	JS_DECLARE_SETTER(motoraSetter);
+	JS_DECLARE_GETTER(motora);
+	JS_DECLARE_SETTER(motora);
 	
-	JS_DECLARE_GETTER(motorlfGetter);
-	JS_DECLARE_SETTER(motorlfSetter);
+	JS_DECLARE_GETTER(motorlf);
+	JS_DECLARE_SETTER(motorlf);
 	
-	JS_DECLARE_GETTER(motorafGetter);
-	JS_DECLARE_SETTER(motorafSetter);
+	JS_DECLARE_GETTER(motoraf);
+	JS_DECLARE_SETTER(motoraf);
 	
-	JS_DECLARE_GETTER(motorlvGetter);
-	JS_DECLARE_SETTER(motorlvSetter);
+	JS_DECLARE_GETTER(motorlv);
+	JS_DECLARE_SETTER(motorlv);
 	
-	JS_DECLARE_GETTER(motoravGetter);
-	JS_DECLARE_SETTER(motoravSetter);
+	JS_DECLARE_GETTER(motorav);
+	JS_DECLARE_SETTER(motorav);
 	
 };
 

@@ -16,10 +16,8 @@
 #include "trace.hpp"
 #include "scene.hpp"
 
-using namespace v8;
-using namespace node;
-using namespace std;
 
+IMPLEMENT_ES5_CLASS(Scene);
 
 // ------ Aux macros
 
@@ -308,4 +306,3 @@ NAN_GETTER(Scene::isDestroyedGetter) { THIS_SCENE;
 	RET_VALUE(JS_BOOL(scene->_isDestroyed));
 	
 }
-

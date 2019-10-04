@@ -8,10 +8,8 @@
 #include "body.hpp"
 #include "trace.hpp"
 
-using namespace v8;
-using namespace node;
-using namespace std;
 
+IMPLEMENT_ES5_CLASS(Trace);
 
 // ------ Aux macros
 
@@ -260,4 +258,3 @@ NAN_GETTER(Trace::isDestroyedGetter) { THIS_TRACE;
 	RET_VALUE(JS_BOOL(trace->_isDestroyed));
 	
 }
-
