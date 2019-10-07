@@ -1,6 +1,7 @@
 .idea
 .cproject
 .project
+.vscode/
 .lock-wscript
 build*/
 bin-*/

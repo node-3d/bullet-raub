@@ -17,44 +17,82 @@
 
 IMPLEMENT_ES5_CLASS(Joint);
 
-// ------ Aux macros
 
-#define THIS_JOINT                                                            \
-	Joint *joint = ObjectWrap::Unwrap<Joint>(info.This());
-
-#define THIS_CHECK                                                            \
-	if (joint->_isDestroyed) return;
+void Joint::init(Napi::Env env, Napi::Object exports) {
 	
-#define V3_GETTER(NAME, CACHE)                                                \
-	NAN_GETTER(Joint::NAME ## Getter) { THIS_JOINT; THIS_CHECK;               \
-		VEC3_TO_OBJ(joint->CACHE, NAME);                                      \
-		RET_VALUE(NAME);                                                      \
-	}
-
-#define CACHE_CAS(CACHE, V)                                                   \
-	if (joint->CACHE == V) {                                                  \
-		return;                                                               \
-	}                                                                         \
-	joint->CACHE = V;
-
-#define CHECK_CONSTRAINT                                                      \
-	if ( ! joint->_constraint ) {                                             \
-		return;                                                               \
-	}
-
-
-// ------ Constructor and Destructor
-
-Joint::Joint() {
+	Napi::Function ctor = wrap(env);
 	
-	_isDestroyed = false;
+	JS_ASSIGN_GETTER(Joint, isDestroyed);
+	
+	JS_ASSIGN_GETTER(Joint, a);
+	JS_ASSIGN_GETTER(Joint, b);
+	JS_ASSIGN_GETTER(Joint, broken);
+	JS_ASSIGN_GETTER(Joint, posa);
+	JS_ASSIGN_GETTER(Joint, posb);
+	JS_ASSIGN_GETTER(Joint, rota);
+	JS_ASSIGN_GETTER(Joint, rotb);
+	JS_ASSIGN_GETTER(Joint, minl);
+	JS_ASSIGN_GETTER(Joint, maxl);
+	JS_ASSIGN_GETTER(Joint, mina);
+	JS_ASSIGN_GETTER(Joint, maxa);
+	JS_ASSIGN_GETTER(Joint, maximp);
+	JS_ASSIGN_GETTER(Joint, dampl);
+	JS_ASSIGN_GETTER(Joint, dampa);
+	JS_ASSIGN_GETTER(Joint, stifl);
+	JS_ASSIGN_GETTER(Joint, stifa);
+	JS_ASSIGN_GETTER(Joint, springl);
+	JS_ASSIGN_GETTER(Joint, springa);
+	JS_ASSIGN_GETTER(Joint, motorl);
+	JS_ASSIGN_GETTER(Joint, motora);
+	JS_ASSIGN_GETTER(Joint, motorlf);
+	JS_ASSIGN_GETTER(Joint, motoraf);
+	JS_ASSIGN_GETTER(Joint, motorlv);
+	JS_ASSIGN_GETTER(Joint, motorav);
+	
+	JS_ASSIGN_SETTER(Joint, a);
+	JS_ASSIGN_SETTER(Joint, b);
+	JS_ASSIGN_SETTER(Joint, broken);
+	JS_ASSIGN_SETTER(Joint, posa);
+	JS_ASSIGN_SETTER(Joint, posb);
+	JS_ASSIGN_SETTER(Joint, rota);
+	JS_ASSIGN_SETTER(Joint, rotb);
+	JS_ASSIGN_SETTER(Joint, minl);
+	JS_ASSIGN_SETTER(Joint, maxl);
+	JS_ASSIGN_SETTER(Joint, mina);
+	JS_ASSIGN_SETTER(Joint, maxa);
+	JS_ASSIGN_SETTER(Joint, maximp);
+	JS_ASSIGN_SETTER(Joint, dampl);
+	JS_ASSIGN_SETTER(Joint, dampa);
+	JS_ASSIGN_SETTER(Joint, stifl);
+	JS_ASSIGN_SETTER(Joint, stifa);
+	JS_ASSIGN_SETTER(Joint, springl);
+	JS_ASSIGN_SETTER(Joint, springa);
+	JS_ASSIGN_SETTER(Joint, motorl);
+	JS_ASSIGN_SETTER(Joint, motora);
+	JS_ASSIGN_SETTER(Joint, motorlf);
+	JS_ASSIGN_SETTER(Joint, motoraf);
+	JS_ASSIGN_SETTER(Joint, motorlv);
+	JS_ASSIGN_SETTER(Joint, motorav);
+	
+	exports.Set("Joint", ctor);
+	
+}
+
+
+Joint::Joint(const Napi::CallbackInfo &info):
+Common(info.This(), "Joint") { NAPI_ENV;
+	
+	super(info);
+	
+	REQ_OBJ_ARG(0, sceneObj);
+	_sceneObj.Reset(sceneObj);
 	
 	_constraint = nullptr;
 	
 	_cacheA = nullptr;
 	_cacheB = nullptr;
 	_cacheBroken = false;
-	_cacheMaximp = 9001.f*9001.f;
+	_cacheMaximp = 9001.f * 9001.f;
 	_cachePosa = btVector3(0.f, 0.f, 0.f);
 	_cachePosb = btVector3(0.f, 0.f, 0.f);
 	_cacheRota = btVector3(0.f, 0.f, 0.f);
@@ -83,12 +121,12 @@ Joint::Joint() {
 
 
 Joint::~Joint() {
-	
 	_destroy();
-	
 }
 
 void Joint::_destroy() { DES_CHECK;
+	
+	emit("destroy");
 	
 	if (_cacheA) {
 		_cacheA->unrefJoint(this);
@@ -107,12 +145,10 @@ void Joint::_destroy() { DES_CHECK;
 	_cacheA = nullptr;
 	_cacheB = nullptr;
 	
-	_isDestroyed = true;
+	Common::_destroy();
 	
 }
 
-
-// ------ Methods and props
 
 void Joint::__update(bool asleep) { DES_CHECK;
 	
@@ -170,41 +206,41 @@ V3_GETTER(motorlv, _cacheMotorlv);
 V3_GETTER(motorav, _cacheMotorav);
 
 
-NAN_SETTER(Joint::aSetter) { THIS_JOINT; THIS_CHECK; SETTER_OBJ_ARG;
+JS_IMPLEMENT_SETTER(Joint, aSetter) { THIS_CHECK; SETTER_OBJ_ARG;
 	
 	Body *body = ObjectWrap::Unwrap<Body>(v);
 	
-	if (joint->_cacheA == body) {
+	if (_cacheA == body) {
 		return;
 	}
 	
-	if (joint->_cacheA) {
-		joint->_cacheA->unrefJoint(joint);
-		joint->_removeConstraint(joint->_cacheA->getWorld());
+	if (_cacheA) {
+		_cacheA->unrefJoint(joint);
+		_removeConstraint(_cacheA->getWorld());
 	}
 	
-	joint->_cacheA = body;
+	_cacheA = body;
 	
-	if (joint->_cacheA) {
-		joint->_cacheA->refJoint(joint);
+	if (_cacheA) {
+		_cacheA->refJoint(joint);
 	}
 	
-	joint->_rebuild();
+	_rebuild();
 	
-	if (joint->_cacheA) {
-		joint->emit("a", 1, &value);
+	if (_cacheA) {
+		emit("a", 1, &value);
 	} else {
 		V8_VAR_VAL nullVal = Nan::Null();
-		joint->emit("a", 1, &nullVal);
+		emit("a", 1, &nullVal);
 	}
 	
 }
 
 
-NAN_GETTER(Joint::aGetter) { THIS_JOINT; THIS_CHECK;
+JS_IMPLEMENT_GETTER(Joint, aGetter) { THIS_CHECK;
 	
-	if (joint->_cacheA) {
-		RET_VALUE(joint->_cacheA->handle());
+	if (_cacheA) {
+		RET_VALUE(_cacheA->handle());
 	} else {
 		RET_VALUE(Nan::Null());
 	}
@@ -212,40 +248,40 @@ NAN_GETTER(Joint::aGetter) { THIS_JOINT; THIS_CHECK;
 }
 
 
-NAN_SETTER(Joint::bSetter) { THIS_JOINT; THIS_CHECK; SETTER_OBJ_ARG;
+JS_IMPLEMENT_SETTER(Joint, bSetter) { THIS_CHECK; SETTER_OBJ_ARG;
 	
 	Body *body = ObjectWrap::Unwrap<Body>(v);
 	
-	if (joint->_cacheB == body) {
+	if (_cacheB == body) {
 		return;
 	}
 	
-	if (joint->_cacheB) {
-		joint->_cacheB->unrefJoint(joint);
-		joint->_removeConstraint(joint->_cacheB->getWorld());
+	if (_cacheB) {
+		_cacheB->unrefJoint(joint);
+		_removeConstraint(_cacheB->getWorld());
 	}
 	
-	joint->_cacheB = body;
+	_cacheB = body;
 	
-	if (joint->_cacheB) {
-		joint->_cacheB->refJoint(joint);
+	if (_cacheB) {
+		_cacheB->refJoint(joint);
 	}
 	
-	joint->_rebuild();
+	_rebuild();
 	
-	if (joint->_cacheB) {
-		joint->emit("b", 1, &value);
+	if (_cacheB) {
+		emit("b", 1, &value);
 	} else {
 		V8_VAR_VAL nullVal = Nan::Null();
-		joint->emit("b", 1, &nullVal);
+		emit("b", 1, &nullVal);
 	}
 	
 }
 
-NAN_GETTER(Joint::bGetter) { THIS_JOINT; THIS_CHECK;
+JS_IMPLEMENT_GETTER(Joint, bGetter) { THIS_CHECK;
 	
-	if (joint->_cacheB) {
-		RET_VALUE(joint->_cacheB->handle());
+	if (_cacheB) {
+		RET_VALUE(_cacheB->handle());
 	} else {
 		RET_VALUE(Nan::Null());
 	}
@@ -253,73 +289,73 @@ NAN_GETTER(Joint::bGetter) { THIS_JOINT; THIS_CHECK;
 }
 
 
-NAN_SETTER(Joint::brokenSetter) { THIS_JOINT; THIS_CHECK; SETTER_BOOL_ARG;
+JS_IMPLEMENT_SETTER(Joint, brokenSetter) { THIS_CHECK; SETTER_BOOL_ARG;
 	
 	CACHE_CAS(_cacheBroken, v);
 	CHECK_CONSTRAINT;
 	
-	joint->_constraint->setEnabled( ! joint->_cacheBroken );
+	_constraint->setEnabled( ! _cacheBroken );
 	
-	joint->emit("broken", 1, &value);
-	
-}
-
-
-NAN_GETTER(Joint::brokenGetter) { THIS_JOINT; THIS_CHECK;
-	
-	RET_VALUE(JS_BOOL(joint->_cacheBroken));
+	emit("broken", 1, &value);
 	
 }
 
 
-NAN_SETTER(Joint::maximpSetter) { THIS_JOINT; THIS_CHECK; SETTER_FLOAT_ARG;
+JS_IMPLEMENT_GETTER(Joint, brokenGetter) { THIS_CHECK;
+	
+	RET_VALUE(JS_BOOL(_cacheBroken));
+	
+}
+
+
+JS_IMPLEMENT_SETTER(Joint, maximpSetter) { THIS_CHECK; SETTER_FLOAT_ARG;
 	
 	CACHE_CAS(_cacheMaximp, v);
 	CHECK_CONSTRAINT;
 	
-	joint->_constraint->setBreakingImpulseThreshold(joint->_cacheMaximp);
+	_constraint->setBreakingImpulseThreshold(_cacheMaximp);
 	
-	joint->emit("maximp", 1, &value);
-	
-}
-
-
-NAN_GETTER(Joint::maximpGetter) { THIS_JOINT; THIS_CHECK;
-	
-	RET_VALUE(JS_NUM(joint->_cacheMaximp));
+	emit("maximp", 1, &value);
 	
 }
 
 
-NAN_SETTER(Joint::posaSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_GETTER(Joint, maximpGetter) { THIS_CHECK;
+	
+	RET_VALUE(JS_NUM(_cacheMaximp));
+	
+}
+
+
+JS_IMPLEMENT_SETTER(Joint, posaSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cachePosa, v);
 	CHECK_CONSTRAINT;
 	
-	btTransform transformA = joint->_constraint->getFrameOffsetA();
-	transformA.setOrigin(joint->_cachePosa);
-	joint->_constraint->setFrames(transformA, joint->_constraint->getFrameOffsetB());
+	btTransform transformA = _constraint->getFrameOffsetA();
+	transformA.setOrigin(_cachePosa);
+	_constraint->setFrames(transformA, _constraint->getFrameOffsetB());
 	
-	joint->emit("posa", 1, &value);
+	emit("posa", 1, &value);
 	
 }
 
 
-NAN_SETTER(Joint::posbSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, posbSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cachePosb, v);
 	CHECK_CONSTRAINT;
 	
-	btTransform transformB = joint->_constraint->getFrameOffsetB();
-	transformB.setOrigin(joint->_cachePosb);
-	joint->_constraint->setFrames(joint->_constraint->getFrameOffsetA(), transformB);
+	btTransform transformB = _constraint->getFrameOffsetB();
+	transformB.setOrigin(_cachePosb);
+	_constraint->setFrames(_constraint->getFrameOffsetA(), transformB);
 	
-	joint->emit("posb", 1, &value);
+	emit("posb", 1, &value);
 	
 }
 
 
-NAN_SETTER(Joint::rotaSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, rotaSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheRota, v);
 	CHECK_CONSTRAINT;
@@ -328,16 +364,16 @@ NAN_SETTER(Joint::rotaSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
 	btQuaternion q;
 	q.setEuler(v.y(), v.x(), v.z());
 	
-	btTransform transformA = joint->_constraint->getFrameOffsetA();
+	btTransform transformA = _constraint->getFrameOffsetA();
 	transformA.setRotation(q);
-	joint->_constraint->setFrames(transformA, joint->_constraint->getFrameOffsetB());
+	_constraint->setFrames(transformA, _constraint->getFrameOffsetB());
 	
-	joint->emit("rota", 1, &value);
+	emit("rota", 1, &value);
 	
 }
 
 
-NAN_SETTER(Joint::rotbSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, rotbSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheRotb, v);
 	CHECK_CONSTRAINT;
@@ -346,223 +382,223 @@ NAN_SETTER(Joint::rotbSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
 	btQuaternion q;
 	q.setEuler(v.y(), v.x(), v.z());
 	
-	btTransform transformB = joint->_constraint->getFrameOffsetB();
+	btTransform transformB = _constraint->getFrameOffsetB();
 	transformB.setRotation(q);
-	joint->_constraint->setFrames(joint->_constraint->getFrameOffsetA(), transformB);
+	_constraint->setFrames(_constraint->getFrameOffsetA(), transformB);
 	
-	joint->emit("rotb", 1, &value);
+	emit("rotb", 1, &value);
 	
 }
 
 
-NAN_SETTER(Joint::minlSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, minlSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMinl, v);
 	CHECK_CONSTRAINT;
 	
-	joint->_constraint->setLinearLowerLimit(v);
+	_constraint->setLinearLowerLimit(v);
 	
-	joint->emit("minl", 1, &value);
+	emit("minl", 1, &value);
 	
 }
 
 
-NAN_SETTER(Joint::maxlSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, maxlSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMaxl, v);
 	CHECK_CONSTRAINT;
 	
-	joint->_constraint->setLinearUpperLimit(v);
+	_constraint->setLinearUpperLimit(v);
 	
-	joint->emit("maxl", 1, &value);
+	emit("maxl", 1, &value);
 	
 }
 
 
-NAN_SETTER(Joint::minaSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, minaSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMina, v);
 	CHECK_CONSTRAINT;
 	
-	joint->_constraint->setAngularLowerLimit(static_cast<float>(M_PI) * v);
+	_constraint->setAngularLowerLimit(static_cast<float>(M_PI) * v);
 	
-	joint->emit("mina", 1, &value);
+	emit("mina", 1, &value);
 	
 }
 
 
-NAN_SETTER(Joint::maxaSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, maxaSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMaxa, v);
 	CHECK_CONSTRAINT;
 	
-	joint->_constraint->setAngularUpperLimit(static_cast<float>(M_PI) * v);
+	_constraint->setAngularUpperLimit(static_cast<float>(M_PI) * v);
 	
-	joint->emit("maxa", 1, &value);
+	emit("maxa", 1, &value);
 	
 }
 
 
-NAN_SETTER(Joint::damplSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, damplSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheDampl, v);
 	CHECK_CONSTRAINT;
 	
-	joint->_constraint->setDamping(0, v.x());
-	joint->_constraint->setDamping(1, v.y());
-	joint->_constraint->setDamping(2, v.z());
+	_constraint->setDamping(0, v.x());
+	_constraint->setDamping(1, v.y());
+	_constraint->setDamping(2, v.z());
 	
-	joint->emit("dampl", 1, &value);
+	emit("dampl", 1, &value);
 	
 }
 
 
-NAN_SETTER(Joint::dampaSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, dampaSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheDampa, v);
 	CHECK_CONSTRAINT;
 	
-	joint->_constraint->setDamping(3, v.x());
-	joint->_constraint->setDamping(4, v.y());
-	joint->_constraint->setDamping(5, v.z());
+	_constraint->setDamping(3, v.x());
+	_constraint->setDamping(4, v.y());
+	_constraint->setDamping(5, v.z());
 	
-	joint->emit("dampa", 1, &value);
+	emit("dampa", 1, &value);
 	
 }
 
 
-NAN_SETTER(Joint::stiflSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, stiflSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheStifl, v);
 	CHECK_CONSTRAINT;
 	
-	joint->_constraint->setStiffness(0, v.x());
-	joint->_constraint->setStiffness(1, v.y());
-	joint->_constraint->setStiffness(2, v.z());
+	_constraint->setStiffness(0, v.x());
+	_constraint->setStiffness(1, v.y());
+	_constraint->setStiffness(2, v.z());
 	
-	joint->emit("stifl", 1, &value);
+	emit("stifl", 1, &value);
 	
 }
 
 
-NAN_SETTER(Joint::stifaSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, stifaSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheStifa, v);
 	CHECK_CONSTRAINT;
 	
-	joint->_constraint->setStiffness(3, v.x());
-	joint->_constraint->setStiffness(4, v.y());
-	joint->_constraint->setStiffness(5, v.z());
+	_constraint->setStiffness(3, v.x());
+	_constraint->setStiffness(4, v.y());
+	_constraint->setStiffness(5, v.z());
 	
-	joint->emit("stifa", 1, &value);
+	emit("stifa", 1, &value);
 	
 }
 
 
-NAN_SETTER(Joint::springlSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, springlSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheSpringl, v);
 	CHECK_CONSTRAINT;
 	
-	joint->_constraint->enableSpring(0, v.x());
-	joint->_constraint->enableSpring(1, v.y());
-	joint->_constraint->enableSpring(2, v.z());
+	_constraint->enableSpring(0, v.x());
+	_constraint->enableSpring(1, v.y());
+	_constraint->enableSpring(2, v.z());
 	
-	joint->emit("springl", 1, &value);
+	emit("springl", 1, &value);
 	
 }
 
 
-NAN_SETTER(Joint::springaSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, springaSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheSpringa, v);
 	CHECK_CONSTRAINT;
 	
-	joint->_constraint->enableSpring(3, v.x());
-	joint->_constraint->enableSpring(4, v.y());
-	joint->_constraint->enableSpring(5, v.z());
+	_constraint->enableSpring(3, v.x());
+	_constraint->enableSpring(4, v.y());
+	_constraint->enableSpring(5, v.z());
 	
-	joint->emit("springa", 1, &value);
+	emit("springa", 1, &value);
 	
 }
 
 
-NAN_SETTER(Joint::motorlSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, motorlSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotorl, v);
 	CHECK_CONSTRAINT;
 	
-	joint->_constraint->getTranslationalLimitMotor()->m_enableMotor[0] = v.x();
-	joint->_constraint->getTranslationalLimitMotor()->m_enableMotor[1] = v.y();
-	joint->_constraint->getTranslationalLimitMotor()->m_enableMotor[2] = v.z();
+	_constraint->getTranslationalLimitMotor()->m_enableMotor[0] = v.x();
+	_constraint->getTranslationalLimitMotor()->m_enableMotor[1] = v.y();
+	_constraint->getTranslationalLimitMotor()->m_enableMotor[2] = v.z();
 	
-	joint->emit("motorl", 1, &value);
+	emit("motorl", 1, &value);
 	
 }
 
 
-NAN_SETTER(Joint::motoraSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, motoraSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotora, v);
 	CHECK_CONSTRAINT;
 	
-	joint->_constraint->getRotationalLimitMotor(0)->m_enableMotor = v.x() != 0;
-	joint->_constraint->getRotationalLimitMotor(1)->m_enableMotor = v.y() != 0;
-	joint->_constraint->getRotationalLimitMotor(2)->m_enableMotor = v.z() != 0;
+	_constraint->getRotationalLimitMotor(0)->m_enableMotor = v.x() != 0;
+	_constraint->getRotationalLimitMotor(1)->m_enableMotor = v.y() != 0;
+	_constraint->getRotationalLimitMotor(2)->m_enableMotor = v.z() != 0;
 	
-	joint->emit("motora", 1, &value);
+	emit("motora", 1, &value);
 	
 }
 
 
-NAN_SETTER(Joint::motorlfSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, motorlfSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotorlf, v);
 	CHECK_CONSTRAINT;
 	
-	joint->_constraint->getTranslationalLimitMotor()->m_maxMotorForce = v;
+	_constraint->getTranslationalLimitMotor()->m_maxMotorForce = v;
 	
-	joint->emit("motorlf", 1, &value);
+	emit("motorlf", 1, &value);
 	
 }
 
 
-NAN_SETTER(Joint::motorafSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, motorafSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotoraf, v);
 	CHECK_CONSTRAINT;
 	
-	joint->_constraint->getRotationalLimitMotor(0)->m_maxMotorForce = v.x();
-	joint->_constraint->getRotationalLimitMotor(1)->m_maxMotorForce = v.y();
-	joint->_constraint->getRotationalLimitMotor(2)->m_maxMotorForce = v.z();
+	_constraint->getRotationalLimitMotor(0)->m_maxMotorForce = v.x();
+	_constraint->getRotationalLimitMotor(1)->m_maxMotorForce = v.y();
+	_constraint->getRotationalLimitMotor(2)->m_maxMotorForce = v.z();
 	
-	joint->emit("motoraf", 1, &value);
+	emit("motoraf", 1, &value);
 	
 }
 
 
-NAN_SETTER(Joint::motorlvSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, motorlvSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotorlv, v);
 	CHECK_CONSTRAINT;
 	
-	joint->_constraint->getTranslationalLimitMotor()->m_targetVelocity = v;
+	_constraint->getTranslationalLimitMotor()->m_targetVelocity = v;
 	
-	joint->emit("motorlv", 1, &value);
+	emit("motorlv", 1, &value);
 	
 }
 
 
-NAN_SETTER(Joint::motoravSetter) { THIS_JOINT; THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, motoravSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotorav, v);
 	CHECK_CONSTRAINT;
 	
-	joint->_constraint->getRotationalLimitMotor(0)->m_targetVelocity = v.x();
-	joint->_constraint->getRotationalLimitMotor(1)->m_targetVelocity = v.y();
-	joint->_constraint->getRotationalLimitMotor(2)->m_targetVelocity = v.z();
+	_constraint->getRotationalLimitMotor(0)->m_targetVelocity = v.x();
+	_constraint->getRotationalLimitMotor(1)->m_targetVelocity = v.y();
+	_constraint->getRotationalLimitMotor(2)->m_targetVelocity = v.z();
 	
-	joint->emit("motorav", 1, &value);
+	emit("motorav", 1, &value);
 	
 }
 
@@ -689,101 +725,11 @@ void Joint::_removeConstraint(btDynamicsWorld *world) { DES_CHECK;
 }
 
 
-// ------ System methods and props for ObjectWrap
-
-V8_STORE_FT Joint::_protoJoint;
-V8_STORE_FUNC Joint::_ctorJoint;
-
-
-void Joint::init(V8_VAR_OBJ target) {
-	
-	V8_VAR_FT proto = Nan::New<FunctionTemplate>(newCtor);
-	
-	// class Joint inherits EventEmitter
-	V8_VAR_FT parent = Nan::New(EventEmitter::_protoEventEmitter);
-	proto->Inherit(parent);
-	
-	proto->InstanceTemplate()->SetInternalFieldCount(1);
-	proto->SetClassName(JS_STR("Joint"));
-	
-	
-	// Accessors
-	
-	V8_VAR_OT obj = proto->PrototypeTemplate();
-	
-	ACCESSOR_R(obj, isDestroyed);
-	
-	ACCESSOR_RW(obj, a);
-	ACCESSOR_RW(obj, b);
-	ACCESSOR_RW(obj, broken);
-	ACCESSOR_RW(obj, posa);
-	ACCESSOR_RW(obj, posb);
-	ACCESSOR_RW(obj, rota);
-	ACCESSOR_RW(obj, rotb);
-	ACCESSOR_RW(obj, minl);
-	ACCESSOR_RW(obj, maxl);
-	ACCESSOR_RW(obj, mina);
-	ACCESSOR_RW(obj, maxa);
-	ACCESSOR_RW(obj, maximp);
-	ACCESSOR_RW(obj, dampl);
-	ACCESSOR_RW(obj, dampa);
-	ACCESSOR_RW(obj, stifl);
-	ACCESSOR_RW(obj, stifa);
-	ACCESSOR_RW(obj, springl);
-	ACCESSOR_RW(obj, springa);
-	ACCESSOR_RW(obj, motorl);
-	ACCESSOR_RW(obj, motora);
-	ACCESSOR_RW(obj, motorlf);
-	ACCESSOR_RW(obj, motoraf);
-	ACCESSOR_RW(obj, motorlv);
-	ACCESSOR_RW(obj, motorav);
-	
-	// -------- dynamic
-	
-	Nan::SetPrototypeMethod(proto, "destroy", destroy);
-	
-	
-	// -------- static
-	
-	V8_VAR_FUNC ctor = Nan::GetFunction(proto).ToLocalChecked();
-	
-	_protoJoint.Reset(proto);
-	_ctorJoint.Reset(ctor);
-	
-	Nan::Set(target, JS_STR("Joint"), ctor);
-	
+JS_IMPLEMENT_METHOD(Joint, destroy) { THIS_CHECK;
+	_destroy();
 }
 
 
-bool Joint::isJoint(V8_VAR_OBJ obj) {
-	return Nan::New(_protoJoint)->HasInstance(obj);
-}
-
-
-NAN_METHOD(Joint::newCtor) {
-	
-	CTOR_CHECK("Joint");
-	
-	Joint *joint = new Joint();
-	joint->Wrap(info.This());
-	
-	RET_VALUE(info.This());
-	
-}
-
-
-
-NAN_METHOD(Joint::destroy) { THIS_JOINT; THIS_CHECK;
-	
-	joint->emit("destroy");
-	
-	joint->_destroy();
-	
-}
-
-
-NAN_GETTER(Joint::isDestroyedGetter) { THIS_JOINT;
-	
-	RET_VALUE(JS_BOOL(joint->_isDestroyed));
-	
+JS_IMPLEMENT_GETTER(Joint, isDestroyedGetter) { THIS_JOINT;
+	RET_BOOL(_isDestroyed);
 }

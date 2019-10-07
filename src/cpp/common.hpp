@@ -94,6 +94,60 @@
 
 typedef std::vector<Napi::Object> ObjVec;
 
+
+#define V3_GETTER(CLASS, NAME, CACHE)                                         \
+	JS_IMPLEMENT_GETTER(CLASS::NAME ## Getter) { THIS_CHECK;                  \
+		VEC3_TO_OBJ(CACHE, NAME);                                             \
+		RET_VALUE(NAME);                                                      \
+	}
+
+#define NUM_GETTER(CLASS, NAME, CACHE)                                        \
+	JS_IMPLEMENT_GETTER(CLASS::NAME ## Getter) { THIS_CHECK;                  \
+		RET_VALUE(JS_NUM(CACHE));                                             \
+	}
+
+
+struct Common {
+	
+	Common(Napi::Value that, const char *name):
+	_asyncCtx(that.Env(), name) {
+		_that.Reset(that.As<Napi::Object>());
+		_isDestroyed = false;
+	}
+	
+	~Common() { _destroy(); }
+	
+	
+	void emit(
+		const char* name,
+		int argc = 0,
+		const Napi::Value *argv = nullptr
+	) { DES_CHECK;
+		eventEmit(_that.Value(), name, argc, argv);
+	}
+	
+	
+	void emitAsync(
+		const char* name,
+		int argc = 0,
+		const Napi::Value *argv = nullptr
+	) { DES_CHECK;
+		eventEmitAsync(_that.Value(), name, argc, argv);
+	}
+	
+	void _destroy() { DES_CHECK;
+		_isDestroyed = true;
+		_that.Reset();
+	}
+	
+	bool _isDestroyed;
+	
+	Napi::ObjectReference _that;
+	Napi::AsyncContext _asyncCtx;
+	
+};
+
+
 // Fix bad defines
 
 #undef True

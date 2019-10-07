@@ -13,11 +13,10 @@ class Scene;
 class Trimesh;
 
 
-ATTRIBUTE_ALIGNED16(class) Body {
+ATTRIBUTE_ALIGNED16(class) Body : Common {
 DECLARE_ES5_CLASS(Body, Body);
 	
 public:
-	
 	static void init(Napi::Env env, Napi::Object exports);
 	
 	~Body();
@@ -41,12 +40,11 @@ public:
 	
 private:
 	
-	bool _isDestroyed;
-	
 	void _rebuild();
 	
 	btVector3 _calcScale() const;
 	
+	Napi::ObjectReference _sceneObj;
 	Scene *_scene;
 	btAlignedObjectArray<Joint*> _joints;
 	

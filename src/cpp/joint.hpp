@@ -9,11 +9,10 @@ class btGeneric6DofSpringConstraint;
 class Body;
 
 
-ATTRIBUTE_ALIGNED16(class) Joint {
+ATTRIBUTE_ALIGNED16(class) Joint : Common {
 DECLARE_ES5_CLASS(Joint, Joint);
 	
 public:
-	
 	static void init(Napi::Env env, Napi::Object exports);
 	
 	~Joint();
@@ -31,8 +30,6 @@ public:
 	
 	
 private:
-	
-	bool _isDestroyed;
 	
 	void _removeConstraint(btDynamicsWorld *world);
 	
