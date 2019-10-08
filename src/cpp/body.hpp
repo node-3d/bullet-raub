@@ -68,56 +68,56 @@ private:
 	float _cacheFrict;
 	bool _cacheSleepy;
 	
-	JS_DECLARE_METHOD(destroy);
-	JS_DECLARE_GETTER(isDestroyed);
+	JS_DECLARE_METHOD(Body, destroy);
+	JS_DECLARE_GETTER(Body, isDestroyed);
 	
-	JS_DECLARE_GETTER(type);
-	JS_DECLARE_SETTER(type);
+	JS_DECLARE_GETTER(Body, type);
+	JS_DECLARE_SETTER(Body, type);
 	
-	JS_DECLARE_GETTER(pos);
-	JS_DECLARE_SETTER(pos);
+	JS_DECLARE_GETTER(Body, pos);
+	JS_DECLARE_SETTER(Body, pos);
 	
-	JS_DECLARE_GETTER(rot);
-	JS_DECLARE_SETTER(rot);
+	JS_DECLARE_GETTER(Body, rot);
+	JS_DECLARE_SETTER(Body, rot);
 	
-	JS_DECLARE_GETTER(vell);
-	JS_DECLARE_SETTER(vell);
+	JS_DECLARE_GETTER(Body, vell);
+	JS_DECLARE_SETTER(Body, vell);
 	
-	JS_DECLARE_GETTER(vela);
-	JS_DECLARE_SETTER(vela);
+	JS_DECLARE_GETTER(Body, vela);
+	JS_DECLARE_SETTER(Body, vela);
 	
-	JS_DECLARE_GETTER(size);
-	JS_DECLARE_SETTER(size);
+	JS_DECLARE_GETTER(Body, size);
+	JS_DECLARE_SETTER(Body, size);
 	
-	JS_DECLARE_GETTER(map);
-	JS_DECLARE_SETTER(map);
+	JS_DECLARE_GETTER(Body, map);
+	JS_DECLARE_SETTER(Body, map);
 	
-	JS_DECLARE_GETTER(mesh);
-	JS_DECLARE_SETTER(mesh);
+	JS_DECLARE_GETTER(Body, mesh);
+	JS_DECLARE_SETTER(Body, mesh);
 	
-	JS_DECLARE_GETTER(mass);
-	JS_DECLARE_SETTER(mass);
+	JS_DECLARE_GETTER(Body, mass);
+	JS_DECLARE_SETTER(Body, mass);
 	
-	JS_DECLARE_GETTER(rest);
-	JS_DECLARE_SETTER(rest);
+	JS_DECLARE_GETTER(Body, rest);
+	JS_DECLARE_SETTER(Body, rest);
 	
-	JS_DECLARE_GETTER(dampl);
-	JS_DECLARE_SETTER(dampl);
+	JS_DECLARE_GETTER(Body, dampl);
+	JS_DECLARE_SETTER(Body, dampl);
 	
-	JS_DECLARE_GETTER(dampa);
-	JS_DECLARE_SETTER(dampa);
+	JS_DECLARE_GETTER(Body, dampa);
+	JS_DECLARE_SETTER(Body, dampa);
 	
-	JS_DECLARE_GETTER(factl);
-	JS_DECLARE_SETTER(factl);
+	JS_DECLARE_GETTER(Body, factl);
+	JS_DECLARE_SETTER(Body, factl);
 	
-	JS_DECLARE_GETTER(facta);
-	JS_DECLARE_SETTER(facta);
+	JS_DECLARE_GETTER(Body, facta);
+	JS_DECLARE_SETTER(Body, facta);
 	
-	JS_DECLARE_GETTER(frict);
-	JS_DECLARE_SETTER(frict);
+	JS_DECLARE_GETTER(Body, frict);
+	JS_DECLARE_SETTER(Body, frict);
 	
-	JS_DECLARE_GETTER(sleepy);
-	JS_DECLARE_SETTER(sleepy);
+	JS_DECLARE_GETTER(Body, sleepy);
+	JS_DECLARE_SETTER(Body, sleepy);
 	
 };
 

@@ -174,7 +174,7 @@ void Body::__update() { DES_CHECK;
 	QUAT_TO_OBJ(_cacheRot, quat);
 	VEC3_TO_OBJ(_cacheVell, vell);
 	VEC3_TO_OBJ(_cacheVela, vela);
-	V8_VAR_OBJ obj = Napi::Object::New(env);
+	Napi::Object obj = Napi::Object::New(env);
 	SET_PROP(obj, "pos", pos);
 	SET_PROP(obj, "quat", quat);
 	SET_PROP(obj, "vell", vell);

@@ -11,28 +11,105 @@
 
 IMPLEMENT_ES5_CLASS(Trace);
 
-// ------ Aux macros
 
-#define THIS_TRACE                                                            \
-	Trace *trace = ObjectWrap::Unwrap<Trace>(info.This());
+void Body::init(Napi::Env env, Napi::Object exports) {
+	
+	Napi::Function ctor = wrap(env);
+	
+	JS_ASSIGN_METHOD(Body, destroy);
+	
+	JS_ASSIGN_GETTER(Body, isDestroyed);
+	JS_ASSIGN_GETTER(Body, type);
+	JS_ASSIGN_GETTER(Body, pos);
+	JS_ASSIGN_GETTER(Body, rot);
+	JS_ASSIGN_GETTER(Body, vell);
+	JS_ASSIGN_GETTER(Body, vela);
+	JS_ASSIGN_GETTER(Body, size);
+	JS_ASSIGN_GETTER(Body, map);
+	JS_ASSIGN_GETTER(Body, mesh);
+	JS_ASSIGN_GETTER(Body, mass);
+	JS_ASSIGN_GETTER(Body, rest);
+	JS_ASSIGN_GETTER(Body, dampl);
+	JS_ASSIGN_GETTER(Body, dampa);
+	JS_ASSIGN_GETTER(Body, factl);
+	JS_ASSIGN_GETTER(Body, facta);
+	JS_ASSIGN_GETTER(Body, frict);
+	JS_ASSIGN_GETTER(Body, sleepy);
+	
+	JS_ASSIGN_SETTER(Body, type);
+	JS_ASSIGN_SETTER(Body, pos);
+	JS_ASSIGN_SETTER(Body, rot);
+	JS_ASSIGN_SETTER(Body, vell);
+	JS_ASSIGN_SETTER(Body, vela);
+	JS_ASSIGN_SETTER(Body, size);
+	JS_ASSIGN_SETTER(Body, map);
+	JS_ASSIGN_SETTER(Body, mesh);
+	JS_ASSIGN_SETTER(Body, mass);
+	JS_ASSIGN_SETTER(Body, rest);
+	JS_ASSIGN_SETTER(Body, dampl);
+	JS_ASSIGN_SETTER(Body, dampa);
+	JS_ASSIGN_SETTER(Body, factl);
+	JS_ASSIGN_SETTER(Body, facta);
+	JS_ASSIGN_SETTER(Body, frict);
+	JS_ASSIGN_SETTER(Body, sleepy);
+	
+	exports.Set("Body", ctor);
+	
+}
 
-#define THIS_CHECK                                                            \
-	if (trace->_isDestroyed) return;
 
-#define V3_GETTER(NAME, CACHE)                                                \
-	NAN_GETTER(Trace::NAME ## Getter) { THIS_TRACE;                           \
-		VEC3_TO_OBJ(trace->CACHE, NAME);                                      \
-		RET_VALUE(NAME);                                                      \
+Body::Body(const Napi::CallbackInfo &info):
+Common(info.This(), "Body") { NAPI_ENV;
+	
+	super(info);
+	
+	Trace *traceResult = nullptr;
+	
+	if (info.Length() > 0) {
+		
+		REQ_OBJ_ARG(0, opts);
+		
+		if ( ! opts->Has(JS_STR("scene")) ) {
+			return Nan::ThrowTypeError("Missing 'opts.scene' argument.");
+		}
+		
+		V8_VAR_VAL ownerVal = opts->Get(JS_STR("scene"));
+		
+		if ( ! ownerVal->IsObject() ) {
+			return Nan::ThrowTypeError("Type of 'opts.scene' must be 'object'.");
+		}
+		
+		Napi::Object owner = Napi::Object::Cast(ownerVal);
+		Scene *scene = ObjectWrap::Unwrap<Scene>(owner);
+		
+		if ( ! (opts->Has(JS_STR("from")) && opts->Has(JS_STR("to")))) {
+			return Nan::ThrowTypeError("Missing 'opts.from' or 'opts.to' argument.");
+		}
+		
+		V8_VAR_VAL fromVal = opts->Get(JS_STR("from"));
+		V8_VAR_VAL toVal = opts->Get(JS_STR("to"));
+		
+		if ( ! (fromVal->IsObject() && toVal->IsObject()) ) {
+			return Nan::ThrowTypeError("Type of 'opts.from' and 'opts.to' must be 'object'.");
+		}
+		
+		Napi::Object fromObj = Napi::Object::Cast(fromVal);
+		Napi::Object toObj = Napi::Object::Cast(toVal);
+		
+		OBJ_TO_VEC3(fromObj, from);
+		OBJ_TO_VEC3(toObj, to);
+		
+		traceResult = new Trace(scene, from, to);
+		
+	} else {
+		
+		traceResult = new Trace();
+		
 	}
-
-#define CACHE_CAS(CACHE, V)                                                   \
-	if (trace->CACHE == V) {                                                  \
-		return;                                                               \
-	}                                                                         \
-	trace->CACHE = V;
+	
+}
 
 
-// ------ Constructor and Destructor
 
 Trace::Trace() {
 	
@@ -65,47 +142,38 @@ Trace::Trace(Scene *scene, const btVector3 &from, const btVector3 &to) {
 
 
 Trace::~Trace() {
-	
 	_destroy();
-	
-}
-
-
-void Trace::_destroy() { DES_CHECK;
-	
-	_isDestroyed = true;
-	
 }
 
 
 // ------ Methods and props
 
 
-V8_VAR_OBJ Trace::getNew(bool hit, Body *body, const btVector3 &pos, const btVector3 &norm) {
+Napi::Object Trace::getNew(bool hit, Body *body, const btVector3 &pos, const btVector3 &norm) {
 	
 	V8_VAR_FUNC ctor = Nan::New(_ctorTrace);
 	
-	V8_VAR_OBJ traceObj = Nan::NewInstance(ctor).ToLocalChecked();
+	Napi::Object traceObj = Nan::NewInstance(ctor).ToLocalChecked();
 	
 	Trace *trace = ObjectWrap::Unwrap<Trace>(traceObj);
-	trace->_cacheHit = hit;
-	trace->_cacheBody = body;
-	trace->_cachePos = pos;
-	trace->_cacheNorm = norm;
+	_cacheHit = hit;
+	_cacheBody = body;
+	_cachePos = pos;
+	_cacheNorm = norm;
 	
 	return traceObj;
 	
 }
 
 
-V8_VAR_OBJ Trace::getNew(Scene *scene, const btVector3 &from, const btVector3 &to) {
+Napi::Object Trace::getNew(Scene *scene, const btVector3 &from, const btVector3 &to) {
 	
 	V8_VAR_FUNC ctor = Nan::New(_ctorTrace);
 	
 	VEC3_TO_OBJ(from, fromObj);
 	VEC3_TO_OBJ(to, toObj);
 	
-	V8_VAR_OBJ args = Nan::New<Object>();
+	Napi::Object args = Nan::New<Object>();
 	SET_PROP(args, "scene", scene->handle());
 	SET_PROP(args, "from", fromObj);
 	SET_PROP(args, "to", toObj);
@@ -120,30 +188,27 @@ V8_VAR_OBJ Trace::getNew(Scene *scene, const btVector3 &from, const btVector3 &t
 V3_GETTER(pos, _cachePos);
 V3_GETTER(norm, _cacheNorm);
 
-NAN_GETTER(Trace::bodyGetter) { THIS_TRACE;
+JS_IMPLEMENT_GETTER(Trace, bodyGetter) { THIS_TRACE;
 	
-	if (trace->_cacheBody) {
-		RET_VALUE(trace->_cacheBody->handle());
+	if (_cacheBody) {
+		RET_VALUE(_cacheBody->handle());
 	} else {
 		RET_VALUE(Nan::Null());
 	}
 	
 }
 
-NAN_GETTER(Trace::hitGetter) { THIS_TRACE;
+JS_IMPLEMENT_GETTER(Trace, hitGetter) { THIS_TRACE;
 	
-	RET_VALUE(JS_BOOL(trace->_cacheHit));
+	RET_VALUE(JS_BOOL(_cacheHit));
 	
 }
 
 
 // ------ System methods and props for ObjectWrap
 
-V8_STORE_FT Trace::_protoTrace;
-V8_STORE_FUNC Trace::_ctorTrace;
 
-
-void Trace::init(V8_VAR_OBJ target) {
+void Trace::init(Napi::Object target) {
 	
 	V8_VAR_FT proto = Nan::New<FunctionTemplate>(newCtor);
 	
@@ -183,13 +248,8 @@ void Trace::init(V8_VAR_OBJ target) {
 }
 
 
-bool Trace::isTrace(V8_VAR_OBJ obj) {
-	return Nan::New(_protoTrace)->HasInstance(obj);
-}
 
-
-
-NAN_METHOD(Trace::newCtor) {
+JS_IMPLEMENT_METHOD(Trace, newCtor) {
 	
 	CTOR_CHECK("Trace");
 	
@@ -209,7 +269,7 @@ NAN_METHOD(Trace::newCtor) {
 			return Nan::ThrowTypeError("Type of 'opts.scene' must be 'object'.");
 		}
 		
-		V8_VAR_OBJ owner = V8_VAR_OBJ::Cast(ownerVal);
+		Napi::Object owner = Napi::Object::Cast(ownerVal);
 		Scene *scene = ObjectWrap::Unwrap<Scene>(owner);
 		
 		if ( ! (opts->Has(JS_STR("from")) && opts->Has(JS_STR("to")))) {
@@ -223,8 +283,8 @@ NAN_METHOD(Trace::newCtor) {
 			return Nan::ThrowTypeError("Type of 'opts.from' and 'opts.to' must be 'object'.");
 		}
 		
-		V8_VAR_OBJ fromObj = V8_VAR_OBJ::Cast(fromVal);
-		V8_VAR_OBJ toObj = V8_VAR_OBJ::Cast(toVal);
+		Napi::Object fromObj = Napi::Object::Cast(fromVal);
+		Napi::Object toObj = Napi::Object::Cast(toVal);
 		
 		OBJ_TO_VEC3(fromObj, from);
 		OBJ_TO_VEC3(toObj, to);
@@ -244,17 +304,17 @@ NAN_METHOD(Trace::newCtor) {
 }
 
 
-NAN_METHOD(Trace::destroy) { THIS_TRACE; THIS_CHECK;
+JS_IMPLEMENT_METHOD(Trace, destroy) { THIS_TRACE; THIS_CHECK;
 	
-	trace->emit("destroy");
+	emit("destroy");
 	
-	trace->_destroy();
+	_destroy();
 	
 }
 
 
-NAN_GETTER(Trace::isDestroyedGetter) { THIS_TRACE;
+JS_IMPLEMENT_GETTER(Trace, isDestroyedGetter) { THIS_TRACE;
 	
-	RET_VALUE(JS_BOOL(trace->_isDestroyed));
+	RET_BOOL(_isDestroyed);
 	
 }

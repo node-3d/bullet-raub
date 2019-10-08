@@ -59,16 +59,16 @@ private:
 	
 	btVector3 _cacheGrav;
 	
-	JS_DECLARE_METHOD(newCtor);
-	JS_DECLARE_METHOD(destroy);
-	JS_DECLARE_GETTER(isDestroyed);
+	JS_DECLARE_METHOD(Scene, newCtor);
+	JS_DECLARE_METHOD(Scene, destroy);
+	JS_DECLARE_GETTER(Scene, isDestroyed);
 	
-	JS_DECLARE_GETTER(gravity);
-	JS_DECLARE_SETTER(gravity);
+	JS_DECLARE_GETTER(Scene, gravity);
+	JS_DECLARE_SETTER(Scene, gravity);
 	
-	JS_DECLARE_METHOD(update);
-	JS_DECLARE_METHOD(hit);
-	JS_DECLARE_METHOD(trace);
+	JS_DECLARE_METHOD(Scene, update);
+	JS_DECLARE_METHOD(Scene, hit);
+	JS_DECLARE_METHOD(Scene, trace);
 	
 };
 

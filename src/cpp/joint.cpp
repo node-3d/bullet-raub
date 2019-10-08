@@ -173,7 +173,7 @@ void Joint::__update(bool asleep) { DES_CHECK;
 	VEC3_TO_OBJ(a, posa);
 	VEC3_TO_OBJ(b, posb);
 	
-	V8_VAR_OBJ obj = Nan::New<Object>();
+	Napi::Object obj = Nan::New<Object>();
 	SET_PROP(obj, "posa", posa);
 	SET_PROP(obj, "posb", posb);
 	SET_PROP(obj, "broken", JS_BOOL(_cacheBroken));

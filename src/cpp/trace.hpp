@@ -38,14 +38,14 @@ private:
 	btVector3 _cachePos;
 	btVector3 _cacheNorm;
 	
-	JS_DECLARE_METHOD(newCtor);
-	JS_DECLARE_METHOD(destroy);
-	JS_DECLARE_GETTER(isDestroyed);
+	JS_DECLARE_METHOD(Trace, newCtor);
+	JS_DECLARE_METHOD(Trace, destroy);
+	JS_DECLARE_GETTER(Trace, isDestroyed);
 	
-	JS_DECLARE_GETTER(hit);
-	JS_DECLARE_GETTER(body);
-	JS_DECLARE_GETTER(pos);
-	JS_DECLARE_GETTER(norm);
+	JS_DECLARE_GETTER(Trace, hit);
+	JS_DECLARE_GETTER(Trace, body);
+	JS_DECLARE_GETTER(Trace, pos);
+	JS_DECLARE_GETTER(Trace, norm);
 	
 };
 

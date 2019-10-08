@@ -66,81 +66,81 @@ private:
 	btVector3 _cacheMotorlv;
 	btVector3 _cacheMotorav;
 	
-	JS_DECLARE_METHOD(newCtor);
-	JS_DECLARE_METHOD(destroy);
-	JS_DECLARE_GETTER(isDestroyed);
+	JS_DECLARE_METHOD(Joint, newCtor);
+	JS_DECLARE_METHOD(Joint, destroy);
+	JS_DECLARE_GETTER(Joint, isDestroyed);
 	
-	JS_DECLARE_GETTER(a);
-	JS_DECLARE_SETTER(a);
+	JS_DECLARE_GETTER(Joint, a);
+	JS_DECLARE_SETTER(Joint, a);
 	
-	JS_DECLARE_GETTER(b);
-	JS_DECLARE_SETTER(b);
+	JS_DECLARE_GETTER(Joint, b);
+	JS_DECLARE_SETTER(Joint, b);
 	
-	JS_DECLARE_GETTER(broken);
-	JS_DECLARE_SETTER(broken);
+	JS_DECLARE_GETTER(Joint, broken);
+	JS_DECLARE_SETTER(Joint, broken);
 	
-	JS_DECLARE_GETTER(posa);
-	JS_DECLARE_SETTER(posa);
+	JS_DECLARE_GETTER(Joint, posa);
+	JS_DECLARE_SETTER(Joint, posa);
 	
-	JS_DECLARE_GETTER(posb);
-	JS_DECLARE_SETTER(posb);
+	JS_DECLARE_GETTER(Joint, posb);
+	JS_DECLARE_SETTER(Joint, posb);
 	
-	JS_DECLARE_GETTER(rota);
-	JS_DECLARE_SETTER(rota);
+	JS_DECLARE_GETTER(Joint, rota);
+	JS_DECLARE_SETTER(Joint, rota);
 	
-	JS_DECLARE_GETTER(rotb);
-	JS_DECLARE_SETTER(rotb);
+	JS_DECLARE_GETTER(Joint, rotb);
+	JS_DECLARE_SETTER(Joint, rotb);
 	
-	JS_DECLARE_GETTER(minl);
-	JS_DECLARE_SETTER(minl);
+	JS_DECLARE_GETTER(Joint, minl);
+	JS_DECLARE_SETTER(Joint, minl);
 	
-	JS_DECLARE_GETTER(maxl);
-	JS_DECLARE_SETTER(maxl);
+	JS_DECLARE_GETTER(Joint, maxl);
+	JS_DECLARE_SETTER(Joint, maxl);
 	
-	JS_DECLARE_GETTER(mina);
-	JS_DECLARE_SETTER(mina);
+	JS_DECLARE_GETTER(Joint, mina);
+	JS_DECLARE_SETTER(Joint, mina);
 	
-	JS_DECLARE_GETTER(maxa);
-	JS_DECLARE_SETTER(maxa);
+	JS_DECLARE_GETTER(Joint, maxa);
+	JS_DECLARE_SETTER(Joint, maxa);
 	
-	JS_DECLARE_GETTER(maximp);
-	JS_DECLARE_SETTER(maximp);
+	JS_DECLARE_GETTER(Joint, maximp);
+	JS_DECLARE_SETTER(Joint, maximp);
 	
-	JS_DECLARE_GETTER(dampl);
-	JS_DECLARE_SETTER(dampl);
+	JS_DECLARE_GETTER(Joint, dampl);
+	JS_DECLARE_SETTER(Joint, dampl);
 	
-	JS_DECLARE_GETTER(dampa);
-	JS_DECLARE_SETTER(dampa);
+	JS_DECLARE_GETTER(Joint, dampa);
+	JS_DECLARE_SETTER(Joint, dampa);
 	
-	JS_DECLARE_GETTER(stifl);
-	JS_DECLARE_SETTER(stifl);
+	JS_DECLARE_GETTER(Joint, stifl);
+	JS_DECLARE_SETTER(Joint, stifl);
 	
-	JS_DECLARE_GETTER(stifa);
-	JS_DECLARE_SETTER(stifa);
+	JS_DECLARE_GETTER(Joint, stifa);
+	JS_DECLARE_SETTER(Joint, stifa);
 	
-	JS_DECLARE_GETTER(springl);
-	JS_DECLARE_SETTER(springl);
+	JS_DECLARE_GETTER(Joint, springl);
+	JS_DECLARE_SETTER(Joint, springl);
 	
-	JS_DECLARE_GETTER(springa);
-	JS_DECLARE_SETTER(springa);
+	JS_DECLARE_GETTER(Joint, springa);
+	JS_DECLARE_SETTER(Joint, springa);
 	
-	JS_DECLARE_GETTER(motorl);
-	JS_DECLARE_SETTER(motorl);
+	JS_DECLARE_GETTER(Joint, motorl);
+	JS_DECLARE_SETTER(Joint, motorl);
 	
-	JS_DECLARE_GETTER(motora);
-	JS_DECLARE_SETTER(motora);
+	JS_DECLARE_GETTER(Joint, motora);
+	JS_DECLARE_SETTER(Joint, motora);
 	
-	JS_DECLARE_GETTER(motorlf);
-	JS_DECLARE_SETTER(motorlf);
+	JS_DECLARE_GETTER(Joint, motorlf);
+	JS_DECLARE_SETTER(Joint, motorlf);
 	
-	JS_DECLARE_GETTER(motoraf);
-	JS_DECLARE_SETTER(motoraf);
+	JS_DECLARE_GETTER(Joint, motoraf);
+	JS_DECLARE_SETTER(Joint, motoraf);
 	
-	JS_DECLARE_GETTER(motorlv);
-	JS_DECLARE_SETTER(motorlv);
+	JS_DECLARE_GETTER(Joint, motorlv);
+	JS_DECLARE_SETTER(Joint, motorlv);
 	
-	JS_DECLARE_GETTER(motorav);
-	JS_DECLARE_SETTER(motorav);
+	JS_DECLARE_GETTER(Joint, motorav);
+	JS_DECLARE_SETTER(Joint, motorav);
 	
 };
 

@@ -19,28 +19,6 @@
 
 IMPLEMENT_ES5_CLASS(Scene);
 
-// ------ Aux macros
-
-#define THIS_SCENE                                                            \
-	Scene *scene = ObjectWrap::Unwrap<Scene>(info.This());
-
-#define THIS_CHECK                                                            \
-	if (scene->_isDestroyed) return;
-
-#define V3_GETTER(NAME, CACHE)                                                \
-	NAN_GETTER(Scene::NAME ## Getter) { THIS_SCENE; THIS_CHECK;               \
-		VEC3_TO_OBJ(scene->CACHE, NAME);                                      \
-		RET_VALUE(NAME);                                                      \
-	}
-
-#define CACHE_CAS(CACHE, V)                                                   \
-	if (scene->CACHE == V) {                                                  \
-		return;                                                               \
-	}                                                                         \
-	scene->CACHE = V;
-
-
-// ------ Constructor and Destructor
 
 Scene::Scene() {
 	
@@ -199,7 +177,7 @@ NAN_METHOD(Scene::hit) { THIS_SCENE; THIS_CHECK;
 	REQ_VEC3_ARG(0, f);
 	REQ_VEC3_ARG(1, t);
 	
-	V8_VAR_OBJ trace = Trace::getNew(scene, f, t);
+	Napi::Object trace = Trace::getNew(scene, f, t);
 	
 	RET_VALUE(trace);
 	
@@ -232,7 +210,7 @@ V8_STORE_FT Scene::_protoScene;
 V8_STORE_FUNC Scene::_ctorScene;
 
 
-void Scene::init(V8_VAR_OBJ target) {
+void Scene::init(Napi::Object target) {
 	
 	V8_VAR_FT proto = Nan::New<FunctionTemplate>(newCtor);
 	
@@ -275,7 +253,7 @@ void Scene::init(V8_VAR_OBJ target) {
 }
 
 
-bool Scene::isScene(V8_VAR_OBJ obj) {
+bool Scene::isScene(Napi::Object obj) {
 	return Nan::New(_protoScene)->HasInstance(obj);
 }
 
