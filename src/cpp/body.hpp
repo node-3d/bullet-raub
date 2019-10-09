@@ -33,6 +33,7 @@ public:
 	btDynamicsWorld *getWorld();
 	btRigidBody *getBody() { return _body; }
 	const btVector3 &getPos() { return _cachePos; }
+	Napi::Object asJsObject() { return _that.Value(); }
 	
 	// called within engine
 	void __update();

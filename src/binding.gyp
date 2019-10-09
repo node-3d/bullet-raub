@@ -11,7 +11,6 @@
 				'cpp/body.cpp',
 				'cpp/joint.cpp',
 				'cpp/scene.cpp',
-				'cpp/trace.cpp',
 			],
 			'include_dirs' : [
 				'<!@(node -p "require(\'addon-tools-raub\').include")',

@@ -13,30 +13,43 @@
 #include <btAlignedObjectArray.h>
 
 #include "body.hpp"
-#include "trace.hpp"
 #include "scene.hpp"
 
 
 IMPLEMENT_ES5_CLASS(Scene);
 
 
-Scene::Scene() {
+void Scene::init(Napi::Env env, Napi::Object exports) {
 	
-	_isDestroyed = false;
+	Napi::Function ctor = wrap(env);
+	
+	JS_ASSIGN_METHOD(destroy);
+	JS_ASSIGN_GETTER(isDestroyed);
+	
+	JS_ASSIGN_METHOD(update);
+	JS_ASSIGN_METHOD(trace);
+	JS_ASSIGN_METHOD(hit);
+	
+	JS_ASSIGN_GETTER(gravity);
+	JS_ASSIGN_SETTER(gravity);
+	
+	exports.Set("Scene", ctor);
+	
+}
+
+
+Scene::Scene(const Napi::CallbackInfo &info):
+Common(info.This(), "Scene") { NAPI_ENV;
+	
+	super(info);
 	
 	_clock = ALIGNED_NEW(btClock);
-	
 	_clock->reset();
 	
-	
 	_physConfig = ALIGNED_NEW(btDefaultCollisionConfiguration);
-	
 	_physDispatcher = ALIGNED_NEW(btCollisionDispatcher, _physConfig);
-	
 	_physBroadphase = ALIGNED_NEW(btDbvtBroadphase);
-	
 	_physSolver = ALIGNED_NEW(btSequentialImpulseConstraintSolver);
-	
 	_physWorld = ALIGNED_NEW(
 		btDiscreteDynamicsWorld,
 		_physDispatcher,
@@ -45,7 +58,6 @@ Scene::Scene() {
 		_physConfig
 	);
 	
-	
 	_cacheGrav.setValue(0, -10, 0);
 	_physWorld->setGravity(_cacheGrav);
 	
@@ -53,13 +65,13 @@ Scene::Scene() {
 
 
 Scene::~Scene() {
-	
 	_destroy();
-	
 }
 
 
-void Scene::_destroy() { DES_CHECK; NAN_HS;
+void Scene::_destroy() { DES_CHECK;
+	
+	emit("destroy");
 	
 	EACH(_bodies) {
 		Body *b = _bodies[i];
@@ -78,10 +90,54 @@ void Scene::_destroy() { DES_CHECK; NAN_HS;
 	
 	ALIGNED_DELETE(btDefaultCollisionConfiguration, _physConfig);
 	
-	_isDestroyed = true;
+	Common::_destroy();
 	
 }
 
+
+inline Napi::Object fillTraceObject(
+	Napi::Env env,
+	const btVector3 &cppPos,
+	const btVector3 &cppNorm,
+	const btCollisionObject *m_collisionObject
+) {
+	
+	Napi::Object trace = Napi::Object::New(env);
+	
+	trace.Set("hit", true);
+	
+	Body *b = reinterpret_cast<Body *>(m_collisionObject->getUserPointer());
+	trace.Set("body", b->asJsObject());
+	
+	VEC3_TO_OBJ(cppPos, pos);
+	trace.Set("pos", pos);
+	VEC3_TO_OBJ(cppNorm, norm);
+	trace.Set("norm", norm);
+	
+	return trace;
+	
+}
+
+inline Napi::Object fillTraceObject(
+	Napi::Env env
+) {
+	
+	Napi::Object trace = Napi::Object::New(env);
+	
+	trace.Set("hit", false);
+	trace.Set("body", env.Null());
+	
+	btVector3 cppPos = btVector3(0, 0, 0);
+	btVector3 cppNorm = btVector3(0, 1, 0);
+	
+	VEC3_TO_OBJ(cppPos, pos);
+	trace.Set("pos", pos);
+	VEC3_TO_OBJ(cppNorm, norm);
+	trace.Set("norm", norm);
+	
+	return trace;
+	
+}
 
 // ------ Methods and props
 
@@ -119,83 +175,85 @@ void Scene::doUpdate() { DES_CHECK;
 	
 }
 
-
-Scene::ObjVec Scene::doTrace(const btVector3 &from, const btVector3 &to) {
-	
-	btCollisionWorld::AllHitsRayResultCallback allResults(from, to);
-	_physWorld->rayTest(from, to, allResults);
-	
-	ObjVec list = ObjVec(allResults.m_collisionObjects.size());
-	
-	EACH(allResults.m_collisionObjects) {
-		
-		Body *b = reinterpret_cast<Body *>(
-			allResults.m_collisionObjects[i]->getUserPointer()
-		);
-		
-		list[i] = Trace::getNew(
-			true, b,
-			allResults.m_hitPointWorld[i],
-			allResults.m_hitNormalWorld[i]
-		);
-		
-	}
-	
-	return list;
-	
-}
+V3_GETTER(Scene, gravity, _cacheGrav);
 
 
-V3_GETTER(gravity, _cacheGrav);
-
-NAN_SETTER(Scene::gravitySetter) { THIS_SCENE; THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Scene, gravity) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheGrav, v);
 	
-	scene->_physWorld->setGravity(scene->_cacheGrav);
+	_physWorld->setGravity(_cacheGrav);
 	
-	scene->emit("gravity", 1, &value);
+	emit("gravity", 1, &value);
 	
 }
 
 
-NAN_METHOD(Scene::update) { THIS_SCENE; THIS_CHECK;
+JS_IMPLEMENT_METHOD(Scene, update) { THIS_CHECK;
 	
 	LET_FLOAT_ARG(0, dt);
 	
 	if (dt > 0.f) {
-		scene->doUpdate(dt);
+		doUpdate(dt);
 	} else {
-		scene->doUpdate();
+		doUpdate();
 	}
+	
+	RET_UNDEFINED;
 	
 }
 
 
-NAN_METHOD(Scene::hit) { THIS_SCENE; THIS_CHECK;
+JS_IMPLEMENT_METHOD(Scene, hit) { THIS_CHECK;
 	
 	REQ_VEC3_ARG(0, f);
 	REQ_VEC3_ARG(1, t);
 	
-	Napi::Object trace = Trace::getNew(scene, f, t);
+	btCollisionWorld::ClosestRayResultCallback closestResults(f, t);
+	_physWorld->rayTest(f, t, closestResults);
+	
+	Napi::Object trace;
+	if (closestResults.hasHit()) {
+		trace = fillTraceObject(
+			env,
+			f.lerp(t, closestResults.m_closestHitFraction),
+			closestResults.m_hitNormalWorld,
+			closestResults.m_collisionObject
+		);
+	} else {
+		trace = fillTraceObject(env);
+	}
 	
 	RET_VALUE(trace);
 	
 }
 
 
-NAN_METHOD(Scene::trace) { THIS_SCENE; THIS_CHECK;
+JS_IMPLEMENT_METHOD(Scene, trace) { THIS_CHECK;
 	
 	REQ_VEC3_ARG(0, f);
 	REQ_VEC3_ARG(1, t);
 	
-	const ObjVec &traceList = scene->doTrace(f, t);
+	btCollisionWorld::AllHitsRayResultCallback allResults(f,t);
+	_physWorld->rayTest(f, t, allResults);
+	
+	ObjVec traceList = ObjVec(allResults.m_collisionObjects.size());
+	
+	EACH(allResults.m_collisionObjects) {
+		traceList[i] = fillTraceObject(
+			env,
+			allResults.m_hitPointWorld[i],
+			allResults.m_hitNormalWorld[i],
+			allResults.m_collisionObjects[i]
+		);
+	}
+	
 	int size = traceList.size();
 	
-	V8_VAR_ARR result = Nan::New<Array>(size);
+	Napi::Array result = Napi::Array::New(env);
 	
 	for (int i = 0; i < size; i++) {
-		SET_I(result, i, traceList[i]);
+		result.Set(i, traceList[i]);
 	}
 	
 	RET_VALUE(result);
@@ -203,84 +261,15 @@ NAN_METHOD(Scene::trace) { THIS_SCENE; THIS_CHECK;
 }
 
 
-
-// ------ System methods and props for ObjectWrap
-
-V8_STORE_FT Scene::_protoScene;
-V8_STORE_FUNC Scene::_ctorScene;
-
-
-void Scene::init(Napi::Object target) {
-	
-	V8_VAR_FT proto = Nan::New<FunctionTemplate>(newCtor);
-	
-	// class Scene inherits EventEmitter
-	V8_VAR_FT parent = Nan::New(EventEmitter::_protoEventEmitter);
-	proto->Inherit(parent);
-	
-	proto->InstanceTemplate()->SetInternalFieldCount(1);
-	proto->SetClassName(JS_STR("Scene"));
-	
-	
-	// Accessors
-	
-	V8_VAR_OT obj = proto->PrototypeTemplate();
-	
-	ACCESSOR_R(obj, isDestroyed);
-	
-	ACCESSOR_RW(obj, gravity);
-	
-	
-	// -------- dynamic
-	
-	Nan::SetPrototypeMethod(proto, "destroy", destroy);
-	
-	Nan::SetPrototypeMethod(proto, "update", update);
-	Nan::SetPrototypeMethod(proto, "trace", trace);
-	Nan::SetPrototypeMethod(proto, "hit", hit);
-	Nan::SetPrototypeMethod(proto, "destroy", destroy);
-	
-	
-	// -------- static
-	
-	V8_VAR_FUNC ctor = Nan::GetFunction(proto).ToLocalChecked();
-	
-	_protoScene.Reset(proto);
-	_ctorScene.Reset(ctor);
-	
-	Nan::Set(target, JS_STR("Scene"), ctor);
-	
+JS_IMPLEMENT_METHOD(Scene, destroy) { THIS_CHECK;
+	emit("destroy");
+	_destroy();
+	RET_UNDEFINED;
 }
 
 
-bool Scene::isScene(Napi::Object obj) {
-	return Nan::New(_protoScene)->HasInstance(obj);
-}
-
-
-NAN_METHOD(Scene::newCtor) {
+JS_IMPLEMENT_GETTER(Scene, isDestroyed) { THIS_CHECK;
 	
-	CTOR_CHECK("Scene");
-	
-	Scene *scene = new Scene();
-	scene->Wrap(info.This());
-	
-	RET_VALUE(info.This());
-	
-}
-
-
-NAN_METHOD(Scene::destroy) { THIS_SCENE; THIS_CHECK;
-	
-	scene->emit("destroy");
-	
-	scene->_destroy();
-	
-}
-
-
-NAN_GETTER(Scene::isDestroyedGetter) { THIS_SCENE;
-	
-	RET_VALUE(JS_BOOL(scene->_isDestroyed));
+	RET_BOOL(_isDestroyed);
 	
 }

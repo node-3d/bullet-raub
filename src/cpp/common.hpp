@@ -15,23 +15,23 @@
 
 #define VEC3_TO_OBJ(VEC3, NAME)                                               \
 	Napi::Array NAME = Napi::Array::New(env);                                 \
-	NAME.Set(0, JS_NUM(VEC3.getX()));                                         \
-	NAME.Set(1, JS_NUM(VEC3.getY()));                                         \
-	NAME.Set(2, JS_NUM(VEC3.getZ()));                                         \
-	NAME.Set("x", JS_NUM(VEC3.getX()));                                       \
-	NAME.Set("y", JS_NUM(VEC3.getY()));                                       \
-	NAME.Set("z", JS_NUM(VEC3.getZ()));
+	NAME.Set(0U, VEC3.getX());                                                 \
+	NAME.Set(1U, VEC3.getY());                                                 \
+	NAME.Set(2U, VEC3.getZ());                                                 \
+	NAME.Set("x", VEC3.getX());                                               \
+	NAME.Set("y", VEC3.getY());                                               \
+	NAME.Set("z", VEC3.getZ());
 
 #define QUAT_TO_OBJ(QUAT, NAME)                                               \
 	Napi::Array NAME = Napi::Array::New(env);                                 \
-	NAME.Set(0, JS_NUM(VEC3.getX()));                                         \
-	NAME.Set(1, JS_NUM(VEC3.getY()));                                         \
-	NAME.Set(2, JS_NUM(VEC3.getZ()));                                         \
-	NAME.Set(3, JS_NUM(VEC3.getW()));                                         \
-	NAME.Set("x", JS_NUM(VEC3.getX()));                                       \
-	NAME.Set("y", JS_NUM(VEC3.getY()));                                       \
-	NAME.Set("z", JS_NUM(VEC3.getZ()));                                       \
-	NAME.Set("w", JS_NUM(VEC3.getW()));
+	NAME.Set(0U, QUAT.getX());                                                 \
+	NAME.Set(1U, QUAT.getY());                                                 \
+	NAME.Set(2U, QUAT.getZ());                                                 \
+	NAME.Set(3U, QUAT.getW());                                                 \
+	NAME.Set("x", QUAT.getX());                                               \
+	NAME.Set("y", QUAT.getY());                                               \
+	NAME.Set("z", QUAT.getZ());                                               \
+	NAME.Set("w", QUAT.getW());
 
 
 #define OBJ_TO_VEC3(OBJ, NAME)                                                \
@@ -41,9 +41,9 @@
 		NAME.setY(OBJ.Get("y").ToNumber().FloatValue());                      \
 		NAME.setZ(OBJ.Get("z").ToNumber().FloatValue());                      \
 	} else {                                                                  \
-		NAME.setX(OBJ.Get(0).ToNumber().FloatValue());                        \
-		NAME.setY(OBJ.Get(1).ToNumber().FloatValue());                        \
-		NAME.setZ(OBJ.Get(2).ToNumber().FloatValue());                        \
+		NAME.setX(OBJ.Get(0U).ToNumber().FloatValue());                        \
+		NAME.setY(OBJ.Get(1U).ToNumber().FloatValue());                        \
+		NAME.setZ(OBJ.Get(2U).ToNumber().FloatValue());                        \
 	}
 
 #define OBJ_TO_QUAT(OBJ, NAME)                                                \
@@ -54,10 +54,10 @@
 		NAME.setZ(OBJ.Get("z").ToNumber().FloatValue());                      \
 		NAME.setW(OBJ.Get("w").ToNumber().FloatValue());                      \
 	} else {                                                                  \
-		NAME.setX(OBJ.Get(0).ToNumber().FloatValue());                        \
-		NAME.setY(OBJ.Get(1).ToNumber().FloatValue());                        \
-		NAME.setZ(OBJ.Get(2).ToNumber().FloatValue());                        \
-		NAME.setW(OBJ.Get(3).ToNumber().FloatValue());                        \
+		NAME.setX(OBJ.Get(0U).ToNumber().FloatValue());                        \
+		NAME.setY(OBJ.Get(1U).ToNumber().FloatValue());                        \
+		NAME.setZ(OBJ.Get(2U).ToNumber().FloatValue());                        \
+		NAME.setW(OBJ.Get(3U).ToNumber().FloatValue());                        \
 	}
 
 
@@ -71,11 +71,13 @@
 
 
 #define SETTER_VEC3_ARG                                                       \
-	SETTER_OBJ_ARG(_obj_v);                                                   \
+	SETTER_CHECK(IsObject(), "Object");                                       \
+	Napi::Object _obj_v = value.As<Napi::Object>();                           \
 	OBJ_TO_VEC3(_obj_v, v);
 
 #define SETTER_QUAT_ARG                                                       \
-	SETTER_OBJ_ARG(_obj_v);                                                   \
+	SETTER_CHECK(IsObject(), "Object");                                       \
+	Napi::Object _obj_v = value.As<Napi::Object>();                           \
 	OBJ_TO_QUAT(_obj_v, v);
 
 
@@ -96,13 +98,13 @@ typedef std::vector<Napi::Object> ObjVec;
 
 
 #define V3_GETTER(CLASS, NAME, CACHE)                                         \
-	JS_IMPLEMENT_GETTER(CLASS::NAME ## Getter) { THIS_CHECK;                  \
+	JS_IMPLEMENT_GETTER(CLASS, NAME) { THIS_CHECK;                  \
 		VEC3_TO_OBJ(CACHE, NAME);                                             \
 		RET_VALUE(NAME);                                                      \
 	}
 
 #define NUM_GETTER(CLASS, NAME, CACHE)                                        \
-	JS_IMPLEMENT_GETTER(CLASS::NAME ## Getter) { THIS_CHECK;                  \
+	JS_IMPLEMENT_GETTER(CLASS, NAME) { THIS_CHECK;                  \
 		RET_VALUE(JS_NUM(CACHE));                                             \
 	}
 

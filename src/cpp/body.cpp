@@ -23,42 +23,42 @@ void Body::init(Napi::Env env, Napi::Object exports) {
 	
 	Napi::Function ctor = wrap(env);
 	
-	JS_ASSIGN_METHOD(Body, destroy);
+	JS_ASSIGN_METHOD(destroy);
 	
-	JS_ASSIGN_GETTER(Body, isDestroyed);
-	JS_ASSIGN_GETTER(Body, type);
-	JS_ASSIGN_GETTER(Body, pos);
-	JS_ASSIGN_GETTER(Body, rot);
-	JS_ASSIGN_GETTER(Body, vell);
-	JS_ASSIGN_GETTER(Body, vela);
-	JS_ASSIGN_GETTER(Body, size);
-	JS_ASSIGN_GETTER(Body, map);
-	JS_ASSIGN_GETTER(Body, mesh);
-	JS_ASSIGN_GETTER(Body, mass);
-	JS_ASSIGN_GETTER(Body, rest);
-	JS_ASSIGN_GETTER(Body, dampl);
-	JS_ASSIGN_GETTER(Body, dampa);
-	JS_ASSIGN_GETTER(Body, factl);
-	JS_ASSIGN_GETTER(Body, facta);
-	JS_ASSIGN_GETTER(Body, frict);
-	JS_ASSIGN_GETTER(Body, sleepy);
+	JS_ASSIGN_GETTER(isDestroyed);
+	JS_ASSIGN_GETTER(type);
+	JS_ASSIGN_GETTER(pos);
+	JS_ASSIGN_GETTER(rot);
+	JS_ASSIGN_GETTER(vell);
+	JS_ASSIGN_GETTER(vela);
+	JS_ASSIGN_GETTER(size);
+	JS_ASSIGN_GETTER(map);
+	JS_ASSIGN_GETTER(mesh);
+	JS_ASSIGN_GETTER(mass);
+	JS_ASSIGN_GETTER(rest);
+	JS_ASSIGN_GETTER(dampl);
+	JS_ASSIGN_GETTER(dampa);
+	JS_ASSIGN_GETTER(factl);
+	JS_ASSIGN_GETTER(facta);
+	JS_ASSIGN_GETTER(frict);
+	JS_ASSIGN_GETTER(sleepy);
 	
-	JS_ASSIGN_SETTER(Body, type);
-	JS_ASSIGN_SETTER(Body, pos);
-	JS_ASSIGN_SETTER(Body, rot);
-	JS_ASSIGN_SETTER(Body, vell);
-	JS_ASSIGN_SETTER(Body, vela);
-	JS_ASSIGN_SETTER(Body, size);
-	JS_ASSIGN_SETTER(Body, map);
-	JS_ASSIGN_SETTER(Body, mesh);
-	JS_ASSIGN_SETTER(Body, mass);
-	JS_ASSIGN_SETTER(Body, rest);
-	JS_ASSIGN_SETTER(Body, dampl);
-	JS_ASSIGN_SETTER(Body, dampa);
-	JS_ASSIGN_SETTER(Body, factl);
-	JS_ASSIGN_SETTER(Body, facta);
-	JS_ASSIGN_SETTER(Body, frict);
-	JS_ASSIGN_SETTER(Body, sleepy);
+	JS_ASSIGN_SETTER(type);
+	JS_ASSIGN_SETTER(pos);
+	JS_ASSIGN_SETTER(rot);
+	JS_ASSIGN_SETTER(vell);
+	JS_ASSIGN_SETTER(vela);
+	JS_ASSIGN_SETTER(size);
+	JS_ASSIGN_SETTER(map);
+	JS_ASSIGN_SETTER(mesh);
+	JS_ASSIGN_SETTER(mass);
+	JS_ASSIGN_SETTER(rest);
+	JS_ASSIGN_SETTER(dampl);
+	JS_ASSIGN_SETTER(dampa);
+	JS_ASSIGN_SETTER(factl);
+	JS_ASSIGN_SETTER(facta);
+	JS_ASSIGN_SETTER(frict);
+	JS_ASSIGN_SETTER(sleepy);
 	
 	exports.Set("Body", ctor);
 	
@@ -73,7 +73,7 @@ Common(info.This(), "Body") { NAPI_ENV;
 	REQ_OBJ_ARG(0, sceneObj);
 	_sceneObj.Reset(sceneObj);
 	
-	_scene = _sceneObj;
+	_scene = Scene::unwrap(sceneObj);
 	
 	_cshape = nullptr;
 	_body = nullptr;
@@ -117,7 +117,7 @@ void Body::_destroy() { DES_CHECK;
 	_joints.clear();
 	_scene->unrefBody(this);
 	
-	btMotionState *motion = _getMotionState();
+	btMotionState *motion = _body->getMotionState();
 	ALIGNED_DELETE(btMotionState, motion);
 	
 	if (_body) {
@@ -151,7 +151,7 @@ btDynamicsWorld *Body::getWorld() {
 
 void Body::__update() { DES_CHECK;
 	
-	if (_isStaticObject() || ! _isActive()) {
+	if (_body->isStaticObject() || ! _body->isActive()) {
 		
 		EACH(_joints) {
 			_joints[i]->__update(true);
@@ -161,24 +161,27 @@ void Body::__update() { DES_CHECK;
 		
 	}
 	
-	btTransform transform = _getCenterOfMassTransform();
+	btTransform transform = _body->getCenterOfMassTransform();
 	
 	_cachePos = transform.getOrigin();
 	_cacheRot = transform.getRotation();
 	
-	_cacheVell = _getLinearVelocity();
-	_cacheVela = _getAngularVelocity();
+	_cacheVell = _body->getLinearVelocity();
+	_cacheVela = _body->getAngularVelocity();
 	
-	// Emit "update"
+	Napi::Env env = _that.Env();
+	
 	VEC3_TO_OBJ(_cachePos, pos);
 	QUAT_TO_OBJ(_cacheRot, quat);
 	VEC3_TO_OBJ(_cacheVell, vell);
 	VEC3_TO_OBJ(_cacheVela, vela);
+	
 	Napi::Object obj = Napi::Object::New(env);
-	SET_PROP(obj, "pos", pos);
-	SET_PROP(obj, "quat", quat);
-	SET_PROP(obj, "vell", vell);
-	SET_PROP(obj, "vela", vela);
+	obj.Set("pos", pos);
+	obj.Set("quat", quat);
+	obj.Set("vell", vell);
+	obj.Set("vela", vela);
+	
 	Napi::Value objVal = obj;
 	emit("update", 1, &objVal);
 	
@@ -189,14 +192,14 @@ void Body::__update() { DES_CHECK;
 }
 
 
-JS_IMPLEMENT_GETTER(Body, typeGetter) { THIS_CHECK;
+JS_IMPLEMENT_GETTER(Body, type) { THIS_CHECK;
 	
 	RET_STR(_cacheType.c_str());
 	
 }
 
 
-JS_IMPLEMENT_SETTER(Body, typeSetter) { THIS_CHECK; SETTER_STR_ARG;
+JS_IMPLEMENT_SETTER(Body, type) { THIS_SETTER_CHECK; SETTER_STR_ARG;
 	
 	CACHE_CAS(_cacheType, v);
 	
@@ -207,21 +210,21 @@ JS_IMPLEMENT_SETTER(Body, typeSetter) { THIS_CHECK; SETTER_STR_ARG;
 }
 
 
-V3_GETTER(pos, _cachePos);
-V3_GETTER(vell, _cacheVell);
-V3_GETTER(vela, _cacheVela);
-V3_GETTER(size, _cacheSize);
-V3_GETTER(factl, _cacheFactl);
-V3_GETTER(facta, _cacheFacta);
-NUM_GETTER(mass, _cacheMass);
-NUM_GETTER(rest, _cacheRest);
-NUM_GETTER(dampl, _cacheDampl);
-NUM_GETTER(dampa, _cacheDampa);
-NUM_GETTER(frict, _cacheFrict);
+V3_GETTER(Body, pos, _cachePos);
+V3_GETTER(Body, vell, _cacheVell);
+V3_GETTER(Body, vela, _cacheVela);
+V3_GETTER(Body, size, _cacheSize);
+V3_GETTER(Body, factl, _cacheFactl);
+V3_GETTER(Body, facta, _cacheFacta);
+NUM_GETTER(Body, mass, _cacheMass);
+NUM_GETTER(Body, rest, _cacheRest);
+NUM_GETTER(Body, dampl, _cacheDampl);
+NUM_GETTER(Body, dampa, _cacheDampa);
+NUM_GETTER(Body, frict, _cacheFrict);
 
 
 
-JS_IMPLEMENT_SETTER(Body, posSetter) { THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Body, pos) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cachePos, v);
 	
@@ -232,7 +235,7 @@ JS_IMPLEMENT_SETTER(Body, posSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 }
 
 
-JS_IMPLEMENT_GETTER(Body, rotGetter) { THIS_CHECK;
+JS_IMPLEMENT_GETTER(Body, rot) { THIS_CHECK;
 	
 	btScalar w = _cacheRot.getW();
 	btScalar x = _cacheRot.getX();
@@ -256,53 +259,53 @@ JS_IMPLEMENT_GETTER(Body, rotGetter) { THIS_CHECK;
 }
 
 
-JS_IMPLEMENT_SETTER(Body, rotSetter) { THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Body, rot) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	btQuaternion q;
 	q.setEuler(v.getY() * 0.01745329f, v.getX() * 0.01745329f, v.getZ() * 0.01745329f);
 	
 	CACHE_CAS(_cacheRot, q);
 	
-	btTransform transform = _getCenterOfMassTransform();
+	btTransform transform = _body->getCenterOfMassTransform();
 	transform.setRotation(_cacheRot);
-	_setCenterOfMassTransform(transform);
+	_body->setCenterOfMassTransform(transform);
 	
 	emit("rot", 1, &value);
 	
 }
 
 
-JS_IMPLEMENT_SETTER(Body, vellSetter) { THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Body, vell) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheVell, v);
 	
 	if (_cacheSleepy) {
-		_setActivationState(ACTIVE_TAG);
+		_body->setActivationState(ACTIVE_TAG);
 	}
 	
-	_setLinearVelocity(_cacheVell);
+	_body->setLinearVelocity(_cacheVell);
 	
 	emit("vell", 1, &value);
 	
 }
 
 
-JS_IMPLEMENT_SETTER(Body, velaSetter) { THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Body, vela) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheVela, v);
 	
 	if (_cacheSleepy) {
-		_setActivationState(ACTIVE_TAG);
+		_body->setActivationState(ACTIVE_TAG);
 	}
 	
-	_setAngularVelocity(_cacheVela);
+	_body->setAngularVelocity(_cacheVela);
 	
 	emit("vela", 1, &value);
 	
 }
 
 
-JS_IMPLEMENT_SETTER(Body, sizeSetter) { THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Body, size) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheSize, v);
 	
@@ -313,29 +316,29 @@ JS_IMPLEMENT_SETTER(Body, sizeSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 }
 
 
-JS_IMPLEMENT_SETTER(Body, factlSetter) { THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Body, factl) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheFactl, v);
 	
-	_setLinearFactor(_cacheFactl);
+	_body->setLinearFactor(_cacheFactl);
 	
 	emit("factl", 1, &value);
 	
 }
 
 
-JS_IMPLEMENT_SETTER(Body, factaSetter) { THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Body, facta) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheFacta, v);
 	
-	_setAngularFactor(_cacheFacta);
+	_body->setAngularFactor(_cacheFacta);
 	
 	emit("facta", 1, &value);
 	
 }
 
 
-JS_IMPLEMENT_SETTER(Body, mapSetter) { THIS_CHECK; SETTER_OBJ_ARG;
+JS_IMPLEMENT_SETTER(Body, map) { THIS_SETTER_CHECK; SETTER_OBJ_ARG;
 	
 	// TODO
 	
@@ -343,7 +346,7 @@ JS_IMPLEMENT_SETTER(Body, mapSetter) { THIS_CHECK; SETTER_OBJ_ARG;
 	
 }
 
-JS_IMPLEMENT_GETTER(Body, mapGetter) { THIS_CHECK;
+JS_IMPLEMENT_GETTER(Body, map) { THIS_CHECK;
 	
 	Napi::Value obj = Napi::Object::New(env);
 	
@@ -352,7 +355,7 @@ JS_IMPLEMENT_GETTER(Body, mapGetter) { THIS_CHECK;
 }
 
 
-JS_IMPLEMENT_SETTER(Body, meshSetter) { THIS_CHECK; SETTER_OBJ_ARG;
+JS_IMPLEMENT_SETTER(Body, mesh) { THIS_SETTER_CHECK; SETTER_OBJ_ARG;
 	
 	// TODO
 	
@@ -360,7 +363,7 @@ JS_IMPLEMENT_SETTER(Body, meshSetter) { THIS_CHECK; SETTER_OBJ_ARG;
 	
 }
 
-JS_IMPLEMENT_GETTER(Body, meshGetter) { THIS_CHECK;
+JS_IMPLEMENT_GETTER(Body, mesh) { THIS_CHECK;
 	
 	Napi::Value obj = Napi::Object::New(env);
 	
@@ -369,7 +372,7 @@ JS_IMPLEMENT_GETTER(Body, meshGetter) { THIS_CHECK;
 }
 
 
-JS_IMPLEMENT_SETTER(Body, massSetter) { THIS_CHECK; SETTER_FLOAT_ARG;
+JS_IMPLEMENT_SETTER(Body, mass) { THIS_SETTER_CHECK; SETTER_FLOAT_ARG;
 	
 	CACHE_CAS(_cacheMass, v);
 	
@@ -380,61 +383,61 @@ JS_IMPLEMENT_SETTER(Body, massSetter) { THIS_CHECK; SETTER_FLOAT_ARG;
 }
 
 
-JS_IMPLEMENT_SETTER(Body, restSetter) { THIS_CHECK; SETTER_FLOAT_ARG;
+JS_IMPLEMENT_SETTER(Body, rest) { THIS_SETTER_CHECK; SETTER_FLOAT_ARG;
 	
 	CACHE_CAS(_cacheRest, v);
 	
-	_setRestitution(_cacheRest);
+	_body->setRestitution(_cacheRest);
 	
 	emit("rest", 1, &value);
 	
 }
 
 
-JS_IMPLEMENT_SETTER(Body, damplSetter) { THIS_CHECK; SETTER_FLOAT_ARG;
+JS_IMPLEMENT_SETTER(Body, dampl) { THIS_SETTER_CHECK; SETTER_FLOAT_ARG;
 	
 	CACHE_CAS(_cacheDampl, v);
 	
-	_setDamping(_cacheDampl, _cacheDampa);
+	_body->setDamping(_cacheDampl, _cacheDampa);
 	
 	emit("dampl", 1, &value);
 	
 }
 
 
-JS_IMPLEMENT_SETTER(Body, dampaSetter) { THIS_CHECK; SETTER_FLOAT_ARG;
+JS_IMPLEMENT_SETTER(Body, dampa) { THIS_SETTER_CHECK; SETTER_FLOAT_ARG;
 	
 	CACHE_CAS(_cacheDampa, v);
 	
-	_setDamping(_cacheDampl, _cacheDampa);
+	_body->setDamping(_cacheDampl, _cacheDampa);
 	
 	emit("dampa", 1, &value);
 	
 }
 
 
-JS_IMPLEMENT_SETTER(Body, frictSetter) { THIS_CHECK; SETTER_FLOAT_ARG;
+JS_IMPLEMENT_SETTER(Body, frict) { THIS_SETTER_CHECK; SETTER_FLOAT_ARG;
 	
 	CACHE_CAS(_cacheFrict, v);
 	
-	_setFriction(_cacheFrict);
+	_body->setFriction(_cacheFrict);
 	
 	emit("frict", 1, &value);
 	
 }
 
 
-JS_IMPLEMENT_SETTER(Body, sleepySetter) { THIS_CHECK; SETTER_BOOL_ARG;
+JS_IMPLEMENT_SETTER(Body, sleepy) { THIS_SETTER_CHECK; SETTER_BOOL_ARG;
 	
 	CACHE_CAS(_cacheSleepy, v);
 	
-	_setActivationState(_cacheSleepy ? ACTIVE_TAG : DISABLE_DEACTIVATION);
+	_body->setActivationState(_cacheSleepy ? ACTIVE_TAG : DISABLE_DEACTIVATION);
 	
 	emit("sleepy", 1, &value);
 	
 }
 
-JS_IMPLEMENT_GETTER(Body, sleepyGetter) { THIS_CHECK;
+JS_IMPLEMENT_GETTER(Body, sleepy) { THIS_CHECK;
 	RET_BOOL(_cacheSleepy);
 }
 
@@ -488,16 +491,16 @@ void Body::_rebuild() { DES_CHECK;
 	);
 	_body = ALIGNED_NEW(btRigidBody, rbInfo);
 	// reapply cached setup
-	_setRestitution(_cacheRest);
-	_setDamping(_cacheDampl, _cacheDampa);
-	_setLinearFactor(_cacheFactl);
-	_setAngularFactor(_cacheFacta);
-	_setFriction(_cacheFrict);
+	_body->setRestitution(_cacheRest);
+	_body->setDamping(_cacheDampl, _cacheDampa);
+	_body->setLinearFactor(_cacheFactl);
+	_body->setAngularFactor(_cacheFacta);
+	_body->setFriction(_cacheFrict);
 	
-	_setActivationState(_cacheSleepy ? ACTIVE_TAG : DISABLE_DEACTIVATION);
-	_setSleepingThresholds(1.f, 1.f);
+	_body->setActivationState(_cacheSleepy ? ACTIVE_TAG : DISABLE_DEACTIVATION);
+	_body->setSleepingThresholds(1.f, 1.f);
 	
-	_setUserPointer(this);
+	_body->setUserPointer(this);
 	
 	_scene->getWorld()->addRigidBody(_body);
 	
@@ -534,10 +537,12 @@ btVector3 Body::_calcScale() const {
 
 
 JS_IMPLEMENT_METHOD(Body, destroy) { THIS_CHECK;
+	emit("destroy");
 	_destroy();
+	RET_UNDEFINED;
 }
 
 
-JS_IMPLEMENT_GETTER(Body, isDestroyedGetter) { THIS_BODY;
+JS_IMPLEMENT_GETTER(Body, isDestroyed) { THIS_CHECK;
 	RET_BOOL(_isDestroyed);
 }

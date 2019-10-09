@@ -15,6 +15,11 @@
 #include "joint.hpp"
 
 
+#define CHECK_CONSTRAINT                                                      \
+	if ( ! _constraint ) {                                                    \
+		return;                                                               \
+	}
+
 IMPLEMENT_ES5_CLASS(Joint);
 
 
@@ -22,57 +27,57 @@ void Joint::init(Napi::Env env, Napi::Object exports) {
 	
 	Napi::Function ctor = wrap(env);
 	
-	JS_ASSIGN_GETTER(Joint, isDestroyed);
+	JS_ASSIGN_GETTER(isDestroyed);
 	
-	JS_ASSIGN_GETTER(Joint, a);
-	JS_ASSIGN_GETTER(Joint, b);
-	JS_ASSIGN_GETTER(Joint, broken);
-	JS_ASSIGN_GETTER(Joint, posa);
-	JS_ASSIGN_GETTER(Joint, posb);
-	JS_ASSIGN_GETTER(Joint, rota);
-	JS_ASSIGN_GETTER(Joint, rotb);
-	JS_ASSIGN_GETTER(Joint, minl);
-	JS_ASSIGN_GETTER(Joint, maxl);
-	JS_ASSIGN_GETTER(Joint, mina);
-	JS_ASSIGN_GETTER(Joint, maxa);
-	JS_ASSIGN_GETTER(Joint, maximp);
-	JS_ASSIGN_GETTER(Joint, dampl);
-	JS_ASSIGN_GETTER(Joint, dampa);
-	JS_ASSIGN_GETTER(Joint, stifl);
-	JS_ASSIGN_GETTER(Joint, stifa);
-	JS_ASSIGN_GETTER(Joint, springl);
-	JS_ASSIGN_GETTER(Joint, springa);
-	JS_ASSIGN_GETTER(Joint, motorl);
-	JS_ASSIGN_GETTER(Joint, motora);
-	JS_ASSIGN_GETTER(Joint, motorlf);
-	JS_ASSIGN_GETTER(Joint, motoraf);
-	JS_ASSIGN_GETTER(Joint, motorlv);
-	JS_ASSIGN_GETTER(Joint, motorav);
+	JS_ASSIGN_GETTER(a);
+	JS_ASSIGN_GETTER(b);
+	JS_ASSIGN_GETTER(broken);
+	JS_ASSIGN_GETTER(posa);
+	JS_ASSIGN_GETTER(posb);
+	JS_ASSIGN_GETTER(rota);
+	JS_ASSIGN_GETTER(rotb);
+	JS_ASSIGN_GETTER(minl);
+	JS_ASSIGN_GETTER(maxl);
+	JS_ASSIGN_GETTER(mina);
+	JS_ASSIGN_GETTER(maxa);
+	JS_ASSIGN_GETTER(maximp);
+	JS_ASSIGN_GETTER(dampl);
+	JS_ASSIGN_GETTER(dampa);
+	JS_ASSIGN_GETTER(stifl);
+	JS_ASSIGN_GETTER(stifa);
+	JS_ASSIGN_GETTER(springl);
+	JS_ASSIGN_GETTER(springa);
+	JS_ASSIGN_GETTER(motorl);
+	JS_ASSIGN_GETTER(motora);
+	JS_ASSIGN_GETTER(motorlf);
+	JS_ASSIGN_GETTER(motoraf);
+	JS_ASSIGN_GETTER(motorlv);
+	JS_ASSIGN_GETTER(motorav);
 	
-	JS_ASSIGN_SETTER(Joint, a);
-	JS_ASSIGN_SETTER(Joint, b);
-	JS_ASSIGN_SETTER(Joint, broken);
-	JS_ASSIGN_SETTER(Joint, posa);
-	JS_ASSIGN_SETTER(Joint, posb);
-	JS_ASSIGN_SETTER(Joint, rota);
-	JS_ASSIGN_SETTER(Joint, rotb);
-	JS_ASSIGN_SETTER(Joint, minl);
-	JS_ASSIGN_SETTER(Joint, maxl);
-	JS_ASSIGN_SETTER(Joint, mina);
-	JS_ASSIGN_SETTER(Joint, maxa);
-	JS_ASSIGN_SETTER(Joint, maximp);
-	JS_ASSIGN_SETTER(Joint, dampl);
-	JS_ASSIGN_SETTER(Joint, dampa);
-	JS_ASSIGN_SETTER(Joint, stifl);
-	JS_ASSIGN_SETTER(Joint, stifa);
-	JS_ASSIGN_SETTER(Joint, springl);
-	JS_ASSIGN_SETTER(Joint, springa);
-	JS_ASSIGN_SETTER(Joint, motorl);
-	JS_ASSIGN_SETTER(Joint, motora);
-	JS_ASSIGN_SETTER(Joint, motorlf);
-	JS_ASSIGN_SETTER(Joint, motoraf);
-	JS_ASSIGN_SETTER(Joint, motorlv);
-	JS_ASSIGN_SETTER(Joint, motorav);
+	JS_ASSIGN_SETTER(a);
+	JS_ASSIGN_SETTER(b);
+	JS_ASSIGN_SETTER(broken);
+	JS_ASSIGN_SETTER(posa);
+	JS_ASSIGN_SETTER(posb);
+	JS_ASSIGN_SETTER(rota);
+	JS_ASSIGN_SETTER(rotb);
+	JS_ASSIGN_SETTER(minl);
+	JS_ASSIGN_SETTER(maxl);
+	JS_ASSIGN_SETTER(mina);
+	JS_ASSIGN_SETTER(maxa);
+	JS_ASSIGN_SETTER(maximp);
+	JS_ASSIGN_SETTER(dampl);
+	JS_ASSIGN_SETTER(dampa);
+	JS_ASSIGN_SETTER(stifl);
+	JS_ASSIGN_SETTER(stifa);
+	JS_ASSIGN_SETTER(springl);
+	JS_ASSIGN_SETTER(springa);
+	JS_ASSIGN_SETTER(motorl);
+	JS_ASSIGN_SETTER(motora);
+	JS_ASSIGN_SETTER(motorlf);
+	JS_ASSIGN_SETTER(motoraf);
+	JS_ASSIGN_SETTER(motorlv);
+	JS_ASSIGN_SETTER(motorav);
 	
 	exports.Set("Joint", ctor);
 	
@@ -83,9 +88,6 @@ Joint::Joint(const Napi::CallbackInfo &info):
 Common(info.This(), "Joint") { NAPI_ENV;
 	
 	super(info);
-	
-	REQ_OBJ_ARG(0, sceneObj);
-	_sceneObj.Reset(sceneObj);
 	
 	_constraint = nullptr;
 	
@@ -167,62 +169,64 @@ void Joint::__update(bool asleep) { DES_CHECK;
 		return;
 	}
 	
+	Napi::Env env = _that.Env();
+	
 	const btVector3 &a = _cacheA->getPos();
 	const btVector3 &b = _cacheB->getPos();
 	
 	VEC3_TO_OBJ(a, posa);
 	VEC3_TO_OBJ(b, posb);
 	
-	Napi::Object obj = Nan::New<Object>();
-	SET_PROP(obj, "posa", posa);
-	SET_PROP(obj, "posb", posb);
-	SET_PROP(obj, "broken", JS_BOOL(_cacheBroken));
+	Napi::Object obj = Napi::Object::New(env);
+	obj.Set("posa", posa);
+	obj.Set("posb", posb);
+	obj.Set("broken", _cacheBroken);
 	
-	V8_VAR_VAL objVal = obj;
+	Napi::Value objVal = obj;
 	emit("update", 1, &objVal);
 	
 }
 
 
-V3_GETTER(posa, _cachePosa);
-V3_GETTER(posb, _cachePosb);
-V3_GETTER(rota, _cacheRota);
-V3_GETTER(rotb, _cacheRotb);
-V3_GETTER(minl, _cacheMinl);
-V3_GETTER(maxl, _cacheMaxl);
-V3_GETTER(mina, _cacheMina);
-V3_GETTER(maxa, _cacheMaxa);
-V3_GETTER(dampl, _cacheDampl);
-V3_GETTER(dampa, _cacheDampa);
-V3_GETTER(stifl, _cacheStifl);
-V3_GETTER(stifa, _cacheStifa);
-V3_GETTER(springl, _cacheSpringl);
-V3_GETTER(springa, _cacheSpringa);
-V3_GETTER(motorl, _cacheMotorl);
-V3_GETTER(motora, _cacheMotora);
-V3_GETTER(motorlf, _cacheMotorlf);
-V3_GETTER(motoraf, _cacheMotoraf);
-V3_GETTER(motorlv, _cacheMotorlv);
-V3_GETTER(motorav, _cacheMotorav);
+V3_GETTER(Joint, posa, _cachePosa);
+V3_GETTER(Joint, posb, _cachePosb);
+V3_GETTER(Joint, rota, _cacheRota);
+V3_GETTER(Joint, rotb, _cacheRotb);
+V3_GETTER(Joint, minl, _cacheMinl);
+V3_GETTER(Joint, maxl, _cacheMaxl);
+V3_GETTER(Joint, mina, _cacheMina);
+V3_GETTER(Joint, maxa, _cacheMaxa);
+V3_GETTER(Joint, dampl, _cacheDampl);
+V3_GETTER(Joint, dampa, _cacheDampa);
+V3_GETTER(Joint, stifl, _cacheStifl);
+V3_GETTER(Joint, stifa, _cacheStifa);
+V3_GETTER(Joint, springl, _cacheSpringl);
+V3_GETTER(Joint, springa, _cacheSpringa);
+V3_GETTER(Joint, motorl, _cacheMotorl);
+V3_GETTER(Joint, motora, _cacheMotora);
+V3_GETTER(Joint, motorlf, _cacheMotorlf);
+V3_GETTER(Joint, motoraf, _cacheMotoraf);
+V3_GETTER(Joint, motorlv, _cacheMotorlv);
+V3_GETTER(Joint, motorav, _cacheMotorav);
 
 
-JS_IMPLEMENT_SETTER(Joint, aSetter) { THIS_CHECK; SETTER_OBJ_ARG;
+JS_IMPLEMENT_SETTER(Joint, a) { THIS_SETTER_CHECK; SETTER_OBJ_ARG;
 	
-	Body *body = ObjectWrap::Unwrap<Body>(v);
+	Body *body = Body::unwrap(v);
 	
 	if (_cacheA == body) {
 		return;
 	}
 	
 	if (_cacheA) {
-		_cacheA->unrefJoint(joint);
+		_cacheA->unrefJoint(this);
 		_removeConstraint(_cacheA->getWorld());
 	}
 	
 	_cacheA = body;
 	
 	if (_cacheA) {
-		_cacheA->refJoint(joint);
+		_cacheA->refJoint(this);
 	}
 	
 	_rebuild();
@@ -230,41 +234,41 @@ JS_IMPLEMENT_SETTER(Joint, aSetter) { THIS_CHECK; SETTER_OBJ_ARG;
 	if (_cacheA) {
 		emit("a", 1, &value);
 	} else {
-		V8_VAR_VAL nullVal = Nan::Null();
+		Napi::Value nullVal = env.Null();
 		emit("a", 1, &nullVal);
 	}
 	
 }
 
 
-JS_IMPLEMENT_GETTER(Joint, aGetter) { THIS_CHECK;
+JS_IMPLEMENT_GETTER(Joint, a) { THIS_CHECK;
 	
 	if (_cacheA) {
-		RET_VALUE(_cacheA->handle());
+		RET_VALUE(_cacheA->asJsObject());
 	} else {
-		RET_VALUE(Nan::Null());
+		RET_VALUE(env.Null());
 	}
 	
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, bSetter) { THIS_CHECK; SETTER_OBJ_ARG;
+JS_IMPLEMENT_SETTER(Joint, b) { THIS_SETTER_CHECK; SETTER_OBJ_ARG;
 	
-	Body *body = ObjectWrap::Unwrap<Body>(v);
+	Body *body = Body::unwrap(v);
 	
 	if (_cacheB == body) {
 		return;
 	}
 	
 	if (_cacheB) {
-		_cacheB->unrefJoint(joint);
+		_cacheB->unrefJoint(this);
 		_removeConstraint(_cacheB->getWorld());
 	}
 	
 	_cacheB = body;
 	
 	if (_cacheB) {
-		_cacheB->refJoint(joint);
+		_cacheB->refJoint(this);
 	}
 	
 	_rebuild();
@@ -272,24 +276,24 @@ JS_IMPLEMENT_SETTER(Joint, bSetter) { THIS_CHECK; SETTER_OBJ_ARG;
 	if (_cacheB) {
 		emit("b", 1, &value);
 	} else {
-		V8_VAR_VAL nullVal = Nan::Null();
+		Napi::Value nullVal = env.Null();
 		emit("b", 1, &nullVal);
 	}
 	
 }
 
-JS_IMPLEMENT_GETTER(Joint, bGetter) { THIS_CHECK;
+JS_IMPLEMENT_GETTER(Joint, b) { THIS_CHECK;
 	
 	if (_cacheB) {
-		RET_VALUE(_cacheB->handle());
+		RET_VALUE(_cacheB->asJsObject());
 	} else {
-		RET_VALUE(Nan::Null());
+		RET_VALUE(env.Null());
 	}
 	
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, brokenSetter) { THIS_CHECK; SETTER_BOOL_ARG;
+JS_IMPLEMENT_SETTER(Joint, broken) { THIS_SETTER_CHECK; SETTER_BOOL_ARG;
 	
 	CACHE_CAS(_cacheBroken, v);
 	CHECK_CONSTRAINT;
@@ -301,14 +305,14 @@ JS_IMPLEMENT_SETTER(Joint, brokenSetter) { THIS_CHECK; SETTER_BOOL_ARG;
 }
 
 
-JS_IMPLEMENT_GETTER(Joint, brokenGetter) { THIS_CHECK;
+JS_IMPLEMENT_GETTER(Joint, broken) { THIS_CHECK;
 	
-	RET_VALUE(JS_BOOL(_cacheBroken));
+	RET_BOOL(_cacheBroken);
 	
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, maximpSetter) { THIS_CHECK; SETTER_FLOAT_ARG;
+JS_IMPLEMENT_SETTER(Joint, maximp) { THIS_SETTER_CHECK; SETTER_FLOAT_ARG;
 	
 	CACHE_CAS(_cacheMaximp, v);
 	CHECK_CONSTRAINT;
@@ -320,14 +324,14 @@ JS_IMPLEMENT_SETTER(Joint, maximpSetter) { THIS_CHECK; SETTER_FLOAT_ARG;
 }
 
 
-JS_IMPLEMENT_GETTER(Joint, maximpGetter) { THIS_CHECK;
+JS_IMPLEMENT_GETTER(Joint, maximp) { THIS_CHECK;
 	
-	RET_VALUE(JS_NUM(_cacheMaximp));
+	RET_NUM(_cacheMaximp);
 	
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, posaSetter) { THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, posa) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cachePosa, v);
 	CHECK_CONSTRAINT;
@@ -341,7 +345,7 @@ JS_IMPLEMENT_SETTER(Joint, posaSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, posbSetter) { THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, posb) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cachePosb, v);
 	CHECK_CONSTRAINT;
@@ -355,7 +359,7 @@ JS_IMPLEMENT_SETTER(Joint, posbSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, rotaSetter) { THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, rota) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheRota, v);
 	CHECK_CONSTRAINT;
@@ -373,7 +377,7 @@ JS_IMPLEMENT_SETTER(Joint, rotaSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, rotbSetter) { THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, rotb) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheRotb, v);
 	CHECK_CONSTRAINT;
@@ -391,7 +395,7 @@ JS_IMPLEMENT_SETTER(Joint, rotbSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, minlSetter) { THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, minl) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMinl, v);
 	CHECK_CONSTRAINT;
@@ -403,7 +407,7 @@ JS_IMPLEMENT_SETTER(Joint, minlSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, maxlSetter) { THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, maxl) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMaxl, v);
 	CHECK_CONSTRAINT;
@@ -415,7 +419,7 @@ JS_IMPLEMENT_SETTER(Joint, maxlSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, minaSetter) { THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, mina) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMina, v);
 	CHECK_CONSTRAINT;
@@ -427,7 +431,7 @@ JS_IMPLEMENT_SETTER(Joint, minaSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, maxaSetter) { THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, maxa) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMaxa, v);
 	CHECK_CONSTRAINT;
@@ -439,7 +443,7 @@ JS_IMPLEMENT_SETTER(Joint, maxaSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, damplSetter) { THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, dampl) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheDampl, v);
 	CHECK_CONSTRAINT;
@@ -453,7 +457,7 @@ JS_IMPLEMENT_SETTER(Joint, damplSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, dampaSetter) { THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, dampa) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheDampa, v);
 	CHECK_CONSTRAINT;
@@ -467,7 +471,7 @@ JS_IMPLEMENT_SETTER(Joint, dampaSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, stiflSetter) { THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, stifl) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheStifl, v);
 	CHECK_CONSTRAINT;
@@ -481,7 +485,7 @@ JS_IMPLEMENT_SETTER(Joint, stiflSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, stifaSetter) { THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, stifa) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheStifa, v);
 	CHECK_CONSTRAINT;
@@ -495,7 +499,7 @@ JS_IMPLEMENT_SETTER(Joint, stifaSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, springlSetter) { THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, springl) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheSpringl, v);
 	CHECK_CONSTRAINT;
@@ -509,7 +513,7 @@ JS_IMPLEMENT_SETTER(Joint, springlSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, springaSetter) { THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, springa) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheSpringa, v);
 	CHECK_CONSTRAINT;
@@ -523,7 +527,7 @@ JS_IMPLEMENT_SETTER(Joint, springaSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, motorlSetter) { THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, motorl) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotorl, v);
 	CHECK_CONSTRAINT;
@@ -537,7 +541,7 @@ JS_IMPLEMENT_SETTER(Joint, motorlSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, motoraSetter) { THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, motora) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotora, v);
 	CHECK_CONSTRAINT;
@@ -551,7 +555,7 @@ JS_IMPLEMENT_SETTER(Joint, motoraSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, motorlfSetter) { THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, motorlf) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotorlf, v);
 	CHECK_CONSTRAINT;
@@ -563,7 +567,7 @@ JS_IMPLEMENT_SETTER(Joint, motorlfSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, motorafSetter) { THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, motoraf) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotoraf, v);
 	CHECK_CONSTRAINT;
@@ -577,7 +581,7 @@ JS_IMPLEMENT_SETTER(Joint, motorafSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, motorlvSetter) { THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, motorlv) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotorlv, v);
 	CHECK_CONSTRAINT;
@@ -589,7 +593,7 @@ JS_IMPLEMENT_SETTER(Joint, motorlvSetter) { THIS_CHECK; SETTER_VEC3_ARG;
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, motoravSetter) { THIS_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, motorav) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotorav, v);
 	CHECK_CONSTRAINT;
@@ -726,10 +730,12 @@ void Joint::_removeConstraint(btDynamicsWorld *world) { DES_CHECK;
 
 
 JS_IMPLEMENT_METHOD(Joint, destroy) { THIS_CHECK;
+	emit("destroy");
 	_destroy();
+	RET_UNDEFINED;
 }
 
 
-JS_IMPLEMENT_GETTER(Joint, isDestroyedGetter) { THIS_JOINT;
+JS_IMPLEMENT_GETTER(Joint, isDestroyed) { THIS_CHECK;
 	RET_BOOL(_isDestroyed);
 }

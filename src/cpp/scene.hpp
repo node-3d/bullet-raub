@@ -17,7 +17,7 @@ class Body;
 class Trace;
 
 
-ATTRIBUTE_ALIGNED16(class) Scene {
+ATTRIBUTE_ALIGNED16(class) Scene : Common {
 DECLARE_ES5_CLASS(Scene, Scene);
 	
 public:
@@ -30,8 +30,6 @@ public:
 	
 	void *operator new (size_t size) { return btAlignedAlloc(size, 16); }
 	void operator delete (void *ptr) { btAlignedFree(ptr); }
-	
-	void _destroy();
 	
 	void refBody(Body* body);
 	void unrefBody(Body* body);
@@ -46,8 +44,6 @@ public:
 	
 	
 private:
-	bool _isDestroyed;
-	
 	btClock *_clock;
 	btAlignedObjectArray<Body*> _bodies;
 	
