@@ -1,5 +1,6 @@
 {
 	'variables': {
+		'bin'            : '<!(node -p "require(\'addon-tools-raub\').bin")',
 		'bullet_include' : '<!(node -p "require(\'deps-bullet-raub\').include")',
 		'bullet_bin'     : '<!(node -p "require(\'deps-bullet-raub\').bin")',
 	},
