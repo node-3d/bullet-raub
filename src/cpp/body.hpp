@@ -13,7 +13,7 @@ class Scene;
 class Trimesh;
 
 
-ATTRIBUTE_ALIGNED16(class) Body : Common {
+ATTRIBUTE_ALIGNED16(class) Body : public Common {
 DECLARE_ES5_CLASS(Body, Body);
 	
 public:

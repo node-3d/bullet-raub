@@ -8,9 +8,11 @@ const { Body } = require('../core');
 inherits(Body, Emitter);
 
 
-function JsBody() {
+function JsBody({ scene, ...opts }) {
 	
-	Body.call(this);
+	Body.call(this, scene);
+	
+	Object.keys(opts).forEach(key => (this[key] = opts[key]));
 	
 }
 

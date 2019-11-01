@@ -27,32 +27,9 @@ void Joint::init(Napi::Env env, Napi::Object exports) {
 	
 	Napi::Function ctor = wrap(env);
 	
-	JS_ASSIGN_GETTER(isDestroyed);
+	JS_ASSIGN_METHOD(destroy);
 	
-	JS_ASSIGN_GETTER(a);
-	JS_ASSIGN_GETTER(b);
-	JS_ASSIGN_GETTER(broken);
-	JS_ASSIGN_GETTER(posa);
-	JS_ASSIGN_GETTER(posb);
-	JS_ASSIGN_GETTER(rota);
-	JS_ASSIGN_GETTER(rotb);
-	JS_ASSIGN_GETTER(minl);
-	JS_ASSIGN_GETTER(maxl);
-	JS_ASSIGN_GETTER(mina);
-	JS_ASSIGN_GETTER(maxa);
-	JS_ASSIGN_GETTER(maximp);
-	JS_ASSIGN_GETTER(dampl);
-	JS_ASSIGN_GETTER(dampa);
-	JS_ASSIGN_GETTER(stifl);
-	JS_ASSIGN_GETTER(stifa);
-	JS_ASSIGN_GETTER(springl);
-	JS_ASSIGN_GETTER(springa);
-	JS_ASSIGN_GETTER(motorl);
-	JS_ASSIGN_GETTER(motora);
-	JS_ASSIGN_GETTER(motorlf);
-	JS_ASSIGN_GETTER(motoraf);
-	JS_ASSIGN_GETTER(motorlv);
-	JS_ASSIGN_GETTER(motorav);
+	JS_ASSIGN_GETTER(isDestroyed);
 	
 	JS_ASSIGN_SETTER(a);
 	JS_ASSIGN_SETTER(b);

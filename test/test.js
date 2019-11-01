@@ -39,14 +39,6 @@ const classes = {
 		methods: ['destroy'],
 	},
 	
-	Trace: {
-		create() {
-			return new bullet.Trace();
-		},
-		props: ['hit', 'body', 'pos', 'norm'],
-		methods: ['destroy'],
-	},
-	
 };
 
 
@@ -59,7 +51,7 @@ describe('Bullet', () => {
 	
 	Object.keys(classes).forEach(
 		c => {
-			it(`${c} is exported`, () => {
+			it(`exports ${c}`, () => {
 				expect(bullet).to.respondTo(c);
 			});
 		}
@@ -75,13 +67,13 @@ describe('Bullet', () => {
 		
 		
 		current.props.forEach(prop => {
-			it(`#${prop} property exposed`, () => {
+			it(`exposes #${prop} property`, () => {
 				expect(current.create()).to.have.property(prop);
 			});
 		});
 		
 		current.methods.forEach(method => {
-			it(`#${method}() method exposed`, () => {
+			it(`exposes #${method}() method`, () => {
 				expect(current.create()).to.respondTo(method);
 			});
 		});

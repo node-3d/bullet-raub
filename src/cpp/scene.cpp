@@ -30,7 +30,6 @@ void Scene::init(Napi::Env env, Napi::Object exports) {
 	JS_ASSIGN_METHOD(trace);
 	JS_ASSIGN_METHOD(hit);
 	
-	JS_ASSIGN_GETTER(gravity);
 	JS_ASSIGN_SETTER(gravity);
 	
 	exports.Set("Scene", ctor);

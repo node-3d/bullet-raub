@@ -9,7 +9,7 @@ class btGeneric6DofSpringConstraint;
 class Body;
 
 
-ATTRIBUTE_ALIGNED16(class) Joint : Common {
+ATTRIBUTE_ALIGNED16(class) Joint : public Common {
 DECLARE_ES5_CLASS(Joint, Joint);
 	
 public:

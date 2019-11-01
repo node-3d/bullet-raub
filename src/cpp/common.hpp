@@ -1,7 +1,6 @@
 #ifndef _COMMON_HPP_
 #define _COMMON_HPP_
 
-
 #include <vector>
 
 #include <btVector3.h>

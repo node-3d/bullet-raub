@@ -26,22 +26,6 @@ void Body::init(Napi::Env env, Napi::Object exports) {
 	JS_ASSIGN_METHOD(destroy);
 	
 	JS_ASSIGN_GETTER(isDestroyed);
-	JS_ASSIGN_GETTER(type);
-	JS_ASSIGN_GETTER(pos);
-	JS_ASSIGN_GETTER(rot);
-	JS_ASSIGN_GETTER(vell);
-	JS_ASSIGN_GETTER(vela);
-	JS_ASSIGN_GETTER(size);
-	JS_ASSIGN_GETTER(map);
-	JS_ASSIGN_GETTER(mesh);
-	JS_ASSIGN_GETTER(mass);
-	JS_ASSIGN_GETTER(rest);
-	JS_ASSIGN_GETTER(dampl);
-	JS_ASSIGN_GETTER(dampa);
-	JS_ASSIGN_GETTER(factl);
-	JS_ASSIGN_GETTER(facta);
-	JS_ASSIGN_GETTER(frict);
-	JS_ASSIGN_GETTER(sleepy);
 	
 	JS_ASSIGN_SETTER(type);
 	JS_ASSIGN_SETTER(pos);
@@ -501,7 +485,6 @@ void Body::_rebuild() { DES_CHECK;
 	_body->setSleepingThresholds(1.f, 1.f);
 	
 	_body->setUserPointer(this);
-	
 	_scene->getWorld()->addRigidBody(_body);
 	
 	EACH(_joints) {

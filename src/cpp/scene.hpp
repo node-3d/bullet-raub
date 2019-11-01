@@ -17,7 +17,7 @@ class Body;
 class Trace;
 
 
-ATTRIBUTE_ALIGNED16(class) Scene : Common {
+ATTRIBUTE_ALIGNED16(class) Scene : public Common {
 DECLARE_ES5_CLASS(Scene, Scene);
 	
 public:
