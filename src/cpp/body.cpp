@@ -54,7 +54,7 @@ Common(info.This(), "Body") { NAPI_ENV;
 	
 	super(info);
 	
-	REQ_OBJ_ARG(0, sceneObj);
+	Napi::Object sceneObj = info[0].As<Napi::Object>();
 	_sceneObj.Reset(sceneObj);
 	
 	_scene = Scene::unwrap(sceneObj);
@@ -183,13 +183,15 @@ JS_IMPLEMENT_GETTER(Body, type) { THIS_CHECK;
 }
 
 
-JS_IMPLEMENT_SETTER(Body, type) { THIS_SETTER_CHECK; SETTER_STR_ARG;
+JS_IMPLEMENT_SETTER(Body, type) { THIS_CHECK; SETTER_STR_ARG;
 	
 	CACHE_CAS(_cacheType, v);
 	
 	_rebuild();
 	
 	emit("type", 1, &value);
+	
+	RET_UNDEFINED;
 	
 }
 
@@ -208,13 +210,15 @@ NUM_GETTER(Body, frict, _cacheFrict);
 
 
 
-JS_IMPLEMENT_SETTER(Body, pos) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Body, pos) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cachePos, v);
 	
 	_rebuild(); // FIXME: ???
 	
 	emit("pos", 1, &value);
+	
+	RET_UNDEFINED;
 	
 }
 
@@ -243,7 +247,7 @@ JS_IMPLEMENT_GETTER(Body, rot) { THIS_CHECK;
 }
 
 
-JS_IMPLEMENT_SETTER(Body, rot) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Body, rot) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	btQuaternion q;
 	q.setEuler(v.getY() * 0.01745329f, v.getX() * 0.01745329f, v.getZ() * 0.01745329f);
@@ -256,10 +260,12 @@ JS_IMPLEMENT_SETTER(Body, rot) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	emit("rot", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Body, vell) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Body, vell) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheVell, v);
 	
@@ -271,10 +277,12 @@ JS_IMPLEMENT_SETTER(Body, vell) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	emit("vell", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Body, vela) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Body, vela) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheVela, v);
 	
@@ -286,10 +294,12 @@ JS_IMPLEMENT_SETTER(Body, vela) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	emit("vela", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Body, size) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Body, size) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheSize, v);
 	
@@ -297,10 +307,12 @@ JS_IMPLEMENT_SETTER(Body, size) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	emit("size", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Body, factl) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Body, factl) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheFactl, v);
 	
@@ -308,10 +320,12 @@ JS_IMPLEMENT_SETTER(Body, factl) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	emit("factl", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Body, facta) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Body, facta) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheFacta, v);
 	
@@ -319,14 +333,18 @@ JS_IMPLEMENT_SETTER(Body, facta) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	emit("facta", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Body, map) { THIS_SETTER_CHECK; SETTER_OBJ_ARG;
+JS_IMPLEMENT_SETTER(Body, map) { THIS_CHECK; SETTER_OBJ_ARG;
 	
 	// TODO
 	
 	emit("map", 1, &value);
+	
+	RET_UNDEFINED;
 	
 }
 
@@ -336,14 +354,18 @@ JS_IMPLEMENT_GETTER(Body, map) { THIS_CHECK;
 	
 	RET_VALUE(obj);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Body, mesh) { THIS_SETTER_CHECK; SETTER_OBJ_ARG;
+JS_IMPLEMENT_SETTER(Body, mesh) { THIS_CHECK; SETTER_OBJ_ARG;
 	
 	// TODO
 	
 	emit("mest", 1, &value);
+	
+	RET_UNDEFINED;
 	
 }
 
@@ -356,7 +378,7 @@ JS_IMPLEMENT_GETTER(Body, mesh) { THIS_CHECK;
 }
 
 
-JS_IMPLEMENT_SETTER(Body, mass) { THIS_SETTER_CHECK; SETTER_FLOAT_ARG;
+JS_IMPLEMENT_SETTER(Body, mass) { THIS_CHECK; SETTER_FLOAT_ARG;
 	
 	CACHE_CAS(_cacheMass, v);
 	
@@ -364,10 +386,12 @@ JS_IMPLEMENT_SETTER(Body, mass) { THIS_SETTER_CHECK; SETTER_FLOAT_ARG;
 	
 	emit("mass", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Body, rest) { THIS_SETTER_CHECK; SETTER_FLOAT_ARG;
+JS_IMPLEMENT_SETTER(Body, rest) { THIS_CHECK; SETTER_FLOAT_ARG;
 	
 	CACHE_CAS(_cacheRest, v);
 	
@@ -375,10 +399,12 @@ JS_IMPLEMENT_SETTER(Body, rest) { THIS_SETTER_CHECK; SETTER_FLOAT_ARG;
 	
 	emit("rest", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Body, dampl) { THIS_SETTER_CHECK; SETTER_FLOAT_ARG;
+JS_IMPLEMENT_SETTER(Body, dampl) { THIS_CHECK; SETTER_FLOAT_ARG;
 	
 	CACHE_CAS(_cacheDampl, v);
 	
@@ -386,10 +412,12 @@ JS_IMPLEMENT_SETTER(Body, dampl) { THIS_SETTER_CHECK; SETTER_FLOAT_ARG;
 	
 	emit("dampl", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Body, dampa) { THIS_SETTER_CHECK; SETTER_FLOAT_ARG;
+JS_IMPLEMENT_SETTER(Body, dampa) { THIS_CHECK; SETTER_FLOAT_ARG;
 	
 	CACHE_CAS(_cacheDampa, v);
 	
@@ -397,10 +425,12 @@ JS_IMPLEMENT_SETTER(Body, dampa) { THIS_SETTER_CHECK; SETTER_FLOAT_ARG;
 	
 	emit("dampa", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Body, frict) { THIS_SETTER_CHECK; SETTER_FLOAT_ARG;
+JS_IMPLEMENT_SETTER(Body, frict) { THIS_CHECK; SETTER_FLOAT_ARG;
 	
 	CACHE_CAS(_cacheFrict, v);
 	
@@ -408,16 +438,20 @@ JS_IMPLEMENT_SETTER(Body, frict) { THIS_SETTER_CHECK; SETTER_FLOAT_ARG;
 	
 	emit("frict", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Body, sleepy) { THIS_SETTER_CHECK; SETTER_BOOL_ARG;
+JS_IMPLEMENT_SETTER(Body, sleepy) { THIS_CHECK; SETTER_BOOL_ARG;
 	
 	CACHE_CAS(_cacheSleepy, v);
 	
 	_body->setActivationState(_cacheSleepy ? ACTIVE_TAG : DISABLE_DEACTIVATION);
 	
 	emit("sleepy", 1, &value);
+	
+	RET_UNDEFINED;
 	
 }
 

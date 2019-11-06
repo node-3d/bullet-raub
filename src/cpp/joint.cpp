@@ -16,9 +16,9 @@
 
 
 #define CHECK_CONSTRAINT                                                      \
-	if ( ! _constraint ) {                                                    \
-		return;                                                               \
-	}
+	if ( ! _constraint ) {                                                    /*
+*/		RET_UNDEFINED;                                                        /*
+*/	}
 
 IMPLEMENT_ES5_CLASS(Joint);
 
@@ -187,12 +187,12 @@ V3_GETTER(Joint, motorlv, _cacheMotorlv);
 V3_GETTER(Joint, motorav, _cacheMotorav);
 
 
-JS_IMPLEMENT_SETTER(Joint, a) { THIS_SETTER_CHECK; SETTER_OBJ_ARG;
+JS_IMPLEMENT_SETTER(Joint, a) { THIS_CHECK; SETTER_OBJ_ARG;
 	
 	Body *body = Body::unwrap(v);
 	
 	if (_cacheA == body) {
-		return;
+		RET_UNDEFINED;
 	}
 	
 	if (_cacheA) {
@@ -215,6 +215,8 @@ JS_IMPLEMENT_SETTER(Joint, a) { THIS_SETTER_CHECK; SETTER_OBJ_ARG;
 		emit("a", 1, &nullVal);
 	}
 	
+	RET_UNDEFINED;
+	
 }
 
 
@@ -229,12 +231,12 @@ JS_IMPLEMENT_GETTER(Joint, a) { THIS_CHECK;
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, b) { THIS_SETTER_CHECK; SETTER_OBJ_ARG;
+JS_IMPLEMENT_SETTER(Joint, b) { THIS_CHECK; SETTER_OBJ_ARG;
 	
 	Body *body = Body::unwrap(v);
 	
 	if (_cacheB == body) {
-		return;
+		RET_UNDEFINED;
 	}
 	
 	if (_cacheB) {
@@ -257,6 +259,8 @@ JS_IMPLEMENT_SETTER(Joint, b) { THIS_SETTER_CHECK; SETTER_OBJ_ARG;
 		emit("b", 1, &nullVal);
 	}
 	
+	RET_UNDEFINED;
+	
 }
 
 JS_IMPLEMENT_GETTER(Joint, b) { THIS_CHECK;
@@ -270,7 +274,7 @@ JS_IMPLEMENT_GETTER(Joint, b) { THIS_CHECK;
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, broken) { THIS_SETTER_CHECK; SETTER_BOOL_ARG;
+JS_IMPLEMENT_SETTER(Joint, broken) { THIS_CHECK; SETTER_BOOL_ARG;
 	
 	CACHE_CAS(_cacheBroken, v);
 	CHECK_CONSTRAINT;
@@ -278,6 +282,8 @@ JS_IMPLEMENT_SETTER(Joint, broken) { THIS_SETTER_CHECK; SETTER_BOOL_ARG;
 	_constraint->setEnabled( ! _cacheBroken );
 	
 	emit("broken", 1, &value);
+	
+	RET_UNDEFINED;
 	
 }
 
@@ -289,7 +295,7 @@ JS_IMPLEMENT_GETTER(Joint, broken) { THIS_CHECK;
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, maximp) { THIS_SETTER_CHECK; SETTER_FLOAT_ARG;
+JS_IMPLEMENT_SETTER(Joint, maximp) { THIS_CHECK; SETTER_FLOAT_ARG;
 	
 	CACHE_CAS(_cacheMaximp, v);
 	CHECK_CONSTRAINT;
@@ -297,6 +303,8 @@ JS_IMPLEMENT_SETTER(Joint, maximp) { THIS_SETTER_CHECK; SETTER_FLOAT_ARG;
 	_constraint->setBreakingImpulseThreshold(_cacheMaximp);
 	
 	emit("maximp", 1, &value);
+	
+	RET_UNDEFINED;
 	
 }
 
@@ -308,7 +316,7 @@ JS_IMPLEMENT_GETTER(Joint, maximp) { THIS_CHECK;
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, posa) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, posa) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cachePosa, v);
 	CHECK_CONSTRAINT;
@@ -319,10 +327,12 @@ JS_IMPLEMENT_SETTER(Joint, posa) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	emit("posa", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, posb) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, posb) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cachePosb, v);
 	CHECK_CONSTRAINT;
@@ -333,10 +343,12 @@ JS_IMPLEMENT_SETTER(Joint, posb) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	emit("posb", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, rota) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, rota) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheRota, v);
 	CHECK_CONSTRAINT;
@@ -351,10 +363,12 @@ JS_IMPLEMENT_SETTER(Joint, rota) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	emit("rota", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, rotb) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, rotb) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheRotb, v);
 	CHECK_CONSTRAINT;
@@ -369,10 +383,12 @@ JS_IMPLEMENT_SETTER(Joint, rotb) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	emit("rotb", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, minl) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, minl) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMinl, v);
 	CHECK_CONSTRAINT;
@@ -381,10 +397,12 @@ JS_IMPLEMENT_SETTER(Joint, minl) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	emit("minl", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, maxl) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, maxl) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMaxl, v);
 	CHECK_CONSTRAINT;
@@ -393,10 +411,12 @@ JS_IMPLEMENT_SETTER(Joint, maxl) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	emit("maxl", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, mina) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, mina) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMina, v);
 	CHECK_CONSTRAINT;
@@ -405,10 +425,12 @@ JS_IMPLEMENT_SETTER(Joint, mina) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	emit("mina", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, maxa) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, maxa) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMaxa, v);
 	CHECK_CONSTRAINT;
@@ -417,10 +439,12 @@ JS_IMPLEMENT_SETTER(Joint, maxa) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	emit("maxa", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, dampl) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, dampl) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheDampl, v);
 	CHECK_CONSTRAINT;
@@ -431,10 +455,12 @@ JS_IMPLEMENT_SETTER(Joint, dampl) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	emit("dampl", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, dampa) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, dampa) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheDampa, v);
 	CHECK_CONSTRAINT;
@@ -445,10 +471,12 @@ JS_IMPLEMENT_SETTER(Joint, dampa) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	emit("dampa", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, stifl) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, stifl) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheStifl, v);
 	CHECK_CONSTRAINT;
@@ -459,10 +487,12 @@ JS_IMPLEMENT_SETTER(Joint, stifl) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	emit("stifl", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, stifa) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, stifa) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheStifa, v);
 	CHECK_CONSTRAINT;
@@ -473,10 +503,12 @@ JS_IMPLEMENT_SETTER(Joint, stifa) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	emit("stifa", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, springl) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, springl) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheSpringl, v);
 	CHECK_CONSTRAINT;
@@ -487,10 +519,12 @@ JS_IMPLEMENT_SETTER(Joint, springl) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	emit("springl", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, springa) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, springa) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheSpringa, v);
 	CHECK_CONSTRAINT;
@@ -501,10 +535,12 @@ JS_IMPLEMENT_SETTER(Joint, springa) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	emit("springa", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, motorl) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, motorl) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotorl, v);
 	CHECK_CONSTRAINT;
@@ -515,10 +551,12 @@ JS_IMPLEMENT_SETTER(Joint, motorl) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	emit("motorl", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, motora) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, motora) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotora, v);
 	CHECK_CONSTRAINT;
@@ -529,10 +567,12 @@ JS_IMPLEMENT_SETTER(Joint, motora) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	emit("motora", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, motorlf) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, motorlf) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotorlf, v);
 	CHECK_CONSTRAINT;
@@ -541,10 +581,12 @@ JS_IMPLEMENT_SETTER(Joint, motorlf) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	emit("motorlf", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, motoraf) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, motoraf) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotoraf, v);
 	CHECK_CONSTRAINT;
@@ -555,10 +597,12 @@ JS_IMPLEMENT_SETTER(Joint, motoraf) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	emit("motoraf", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, motorlv) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, motorlv) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotorlv, v);
 	CHECK_CONSTRAINT;
@@ -567,10 +611,12 @@ JS_IMPLEMENT_SETTER(Joint, motorlv) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	
 	emit("motorlv", 1, &value);
 	
+	RET_UNDEFINED;
+	
 }
 
 
-JS_IMPLEMENT_SETTER(Joint, motorav) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Joint, motorav) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheMotorav, v);
 	CHECK_CONSTRAINT;
@@ -580,6 +626,8 @@ JS_IMPLEMENT_SETTER(Joint, motorav) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
 	_constraint->getRotationalLimitMotor(2)->m_targetVelocity = v.z();
 	
 	emit("motorav", 1, &value);
+	
+	RET_UNDEFINED;
 	
 }
 

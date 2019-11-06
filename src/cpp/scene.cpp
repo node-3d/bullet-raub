@@ -173,13 +173,15 @@ void Scene::doUpdate() { DES_CHECK;
 V3_GETTER(Scene, gravity, _cacheGrav);
 
 
-JS_IMPLEMENT_SETTER(Scene, gravity) { THIS_SETTER_CHECK; SETTER_VEC3_ARG;
+JS_IMPLEMENT_SETTER(Scene, gravity) { THIS_CHECK; SETTER_VEC3_ARG;
 	
 	CACHE_CAS(_cacheGrav, v);
 	
 	_physWorld->setGravity(_cacheGrav);
 	
 	emit("gravity", 1, &value);
+	
+	RET_UNDEFINED;
 	
 }
 
