@@ -1,5 +1,3 @@
-#include <cstdlib>
-
 #include <btQuickprof.h>
 #include <btDefaultCollisionConfiguration.h>
 #include <btDbvtBroadphase.h>
@@ -117,9 +115,7 @@ inline Napi::Object fillTraceObject(
 	
 }
 
-inline Napi::Object fillTraceObject(
-	Napi::Env env
-) {
+inline Napi::Object fillTraceObject(Napi::Env env) {
 	
 	Napi::Object trace = Napi::Object::New(env);
 	
@@ -233,7 +229,7 @@ JS_IMPLEMENT_METHOD(Scene, trace) { THIS_CHECK;
 	REQ_VEC3_ARG(0, f);
 	REQ_VEC3_ARG(1, t);
 	
-	btCollisionWorld::AllHitsRayResultCallback allResults(f,t);
+	btCollisionWorld::AllHitsRayResultCallback allResults(f, t);
 	_physWorld->rayTest(f, t, allResults);
 	
 	ObjVec traceList = ObjVec(allResults.m_collisionObjects.size());
@@ -268,7 +264,5 @@ JS_IMPLEMENT_METHOD(Scene, destroy) { THIS_CHECK;
 
 
 JS_IMPLEMENT_GETTER(Scene, isDestroyed) { THIS_CHECK;
-	
 	RET_BOOL(_isDestroyed);
-	
 }

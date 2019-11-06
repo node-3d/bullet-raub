@@ -62,7 +62,7 @@ void Joint::init(Napi::Env env, Napi::Object exports) {
 
 
 Joint::Joint(const Napi::CallbackInfo &info):
-Common(info.This(), "Joint") { NAPI_ENV;
+Common(info.This(), "Joint") { // NAPI_ENV;
 	
 	super(info);
 	
