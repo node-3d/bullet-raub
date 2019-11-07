@@ -92,8 +92,6 @@ Body::~Body() {
 
 void Body::_destroy() { DES_CHECK;
 	
-	emit("destroy");
-	
 	EACH(_joints) {
 		_joints[i]->_dropBody(this);
 	}

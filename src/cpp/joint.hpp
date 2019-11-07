@@ -1,5 +1,5 @@
-#ifndef _JOINT_HPP_
-#define _JOINT_HPP_
+#ifndef JOINT_HPP
+#define JOINT_HPP
 
 #include "common.hpp"
 
@@ -145,4 +145,4 @@ private:
 };
 
 
-#endif // _JOINT_HPP_
+#endif // JOINT_HPP

@@ -1,5 +1,5 @@
-#ifndef _SCENE_HPP_
-#define _SCENE_HPP_
+#ifndef SCENE_HPP
+#define SCENE_HPP
 
 #include "common.hpp"
 
@@ -69,4 +69,4 @@ private:
 };
 
 
-#endif // _SCENE_HPP_
+#endif // SCENE_HPP

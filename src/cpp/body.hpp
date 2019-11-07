@@ -1,5 +1,5 @@
-#ifndef _BODY_HPP_
-#define _BODY_HPP_
+#ifndef BODY_HPP
+#define BODY_HPP
 
 #include "common.hpp"
 
@@ -123,4 +123,4 @@ private:
 };
 
 
-#endif // _BODY_HPP_
+#endif // BODY_HPP
