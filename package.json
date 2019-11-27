@@ -26,8 +26,8 @@
 		"README.md"
 	],
 	"engines": {
-		"node": ">=10.16.1",
-		"npm": ">=6.9.0"
+		"node": ">=12.13.0",
+		"npm": ">=6.12.0"
 	},
 	"config": {
 		"install": "v2.0.0"
@@ -40,8 +40,8 @@
 		"url": "https://github.com/node-3d/bullet-raub.git"
 	},
 	"dependencies": {
-		"addon-tools-raub": "https://github.com/node-3d/addon-tools-raub",
-		"deps-bullet-raub": "https://github.com/node-3d/deps-bullet-raub",
-		"segfault-raub": "https://github.com/node-3d/segfault-raub.git"
+		"addon-tools-raub": "5.0.0",
+		"deps-bullet-raub": "2.0.0",
+		"segfault-raub": "1.0.0"
 	}
 }
