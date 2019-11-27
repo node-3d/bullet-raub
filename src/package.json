@@ -6,7 +6,7 @@
 		"build": "node-gyp rebuild && node -e \"require('addon-tools-raub/cpbin')('bullet')\""
 	},
 	"dependencies": {
-		"addon-tools-raub": "https://github.com/node-3d/addon-tools-raub",
-		"deps-bullet-raub": "https://github.com/node-3d/deps-bullet-raub"
+		"addon-tools-raub": "5.0.0",
+		"deps-bullet-raub": "2.0.0"
 	}
 }
