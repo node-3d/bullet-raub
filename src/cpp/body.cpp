@@ -1,15 +1,15 @@
-#include <btDynamicsWorld.h>
-#include <btRigidBody.h>
-#include <btDefaultMotionState.h>
+#include <BulletDynamics/Dynamics/btDynamicsWorld.h>
+#include <BulletDynamics/Dynamics/btRigidBody.h>
+#include <LinearMath/btDefaultMotionState.h>
 
-#include <btBoxShape.h>
-#include <btCapsuleShape.h>
-#include <btCollisionShape.h>
-#include <btConvexTriangleMeshShape.h>
-#include <btCylinderShape.h>
-#include <btHeightfieldTerrainShape.h>
-#include <btSphereShape.h>
-#include <btStaticPlaneShape.h>
+#include <BulletCollision/CollisionShapes/btBoxShape.h>
+#include <BulletCollision/CollisionShapes/btCapsuleShape.h>
+#include <BulletCollision/CollisionShapes/btCollisionShape.h>
+#include <BulletCollision/CollisionShapes/btConvexTriangleMeshShape.h>
+#include <BulletCollision/CollisionShapes/btCylinderShape.h>
+#include <BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
+#include <BulletCollision/CollisionShapes/btSphereShape.h>
+#include <BulletCollision/CollisionShapes/btStaticPlaneShape.h>
 
 #include "scene.hpp"
 #include "joint.hpp"
@@ -20,7 +20,6 @@ IMPLEMENT_ES5_CLASS(Body);
 
 
 void Body::init(Napi::Env env, Napi::Object exports) {
-	
 	Napi::Function ctor = wrap(env);
 	
 	JS_ASSIGN_METHOD(destroy);
@@ -45,13 +44,11 @@ void Body::init(Napi::Env env, Napi::Object exports) {
 	JS_ASSIGN_SETTER(sleepy);
 	
 	exports.Set("Body", ctor);
-	
 }
 
 
 Body::Body(const Napi::CallbackInfo &info):
 Common(info.This(), "Body") { NAPI_ENV;
-	
 	super(info);
 	
 	Napi::Object sceneObj = info[0].As<Napi::Object>();
@@ -81,7 +78,6 @@ Common(info.This(), "Body") { NAPI_ENV;
 	
 	_rebuild();
 	_scene->refBody(this);
-	
 }
 
 
@@ -91,7 +87,6 @@ Body::~Body() {
 
 
 void Body::_destroy() { DES_CHECK;
-	
 	EACH(_joints) {
 		_joints[i]->_dropBody(this);
 	}
@@ -112,7 +107,6 @@ void Body::_destroy() { DES_CHECK;
 	_scene = nullptr;
 	
 	Common::_destroy();
-	
 }
 
 
@@ -122,7 +116,14 @@ void Body::refJoint(Joint *joint) { DES_CHECK;
 
 
 void Body::unrefJoint(Joint* joint) { DES_CHECK;
-	_joints.remove(joint);
+	auto size = _joints.size();
+	if (!size) {
+		return;
+	}
+	auto it = std::find(_joints.begin(), _joints.end(), joint);
+	if (it != _joints.end()) {
+		_joints.erase(it);
+	}
 }
 
 
@@ -132,15 +133,12 @@ btDynamicsWorld *Body::getWorld() {
 
 
 void Body::__update() { DES_CHECK;
-	
-	if (_body->isStaticObject() || ! _body->isActive()) {
-		
+	if (_body->isStaticObject() || !_body->isActive()) {
 		EACH(_joints) {
 			_joints[i]->__update(true);
 		}
 		
 		return;
-		
 	}
 	
 	btTransform transform = _body->getCenterOfMassTransform();
@@ -170,19 +168,15 @@ void Body::__update() { DES_CHECK;
 	EACH(_joints) {
 		_joints[i]->__update();
 	}
-	
 }
 
 
 JS_IMPLEMENT_GETTER(Body, type) { THIS_CHECK;
-	
 	RET_STR(_cacheType.c_str());
-	
 }
 
 
 JS_IMPLEMENT_SETTER(Body, type) { THIS_CHECK; SETTER_STR_ARG;
-	
 	CACHE_CAS(_cacheType, v);
 	
 	_rebuild();
@@ -190,7 +184,6 @@ JS_IMPLEMENT_SETTER(Body, type) { THIS_CHECK; SETTER_STR_ARG;
 	emit("type", 1, &value);
 	
 	RET_UNDEFINED;
-	
 }
 
 
@@ -209,7 +202,6 @@ NUM_GETTER(Body, frict, _cacheFrict);
 
 
 JS_IMPLEMENT_SETTER(Body, pos) { THIS_CHECK; SETTER_VEC3_ARG;
-	
 	CACHE_CAS(_cachePos, v);
 	
 	_rebuild(); // FIXME: ???
@@ -217,12 +209,10 @@ JS_IMPLEMENT_SETTER(Body, pos) { THIS_CHECK; SETTER_VEC3_ARG;
 	emit("pos", 1, &value);
 	
 	RET_UNDEFINED;
-	
 }
 
 
 JS_IMPLEMENT_GETTER(Body, rot) { THIS_CHECK;
-	
 	btScalar w = _cacheRot.getW();
 	btScalar x = _cacheRot.getX();
 	btScalar y = _cacheRot.getY();
@@ -241,12 +231,10 @@ JS_IMPLEMENT_GETTER(Body, rot) { THIS_CHECK;
 	VEC3_TO_OBJ(r, rot)
 	
 	RET_VALUE(rot);
-	
 }
 
 
 JS_IMPLEMENT_SETTER(Body, rot) { THIS_CHECK; SETTER_VEC3_ARG;
-	
 	btQuaternion q;
 	q.setEuler(v.getY() * 0.01745329f, v.getX() * 0.01745329f, v.getZ() * 0.01745329f);
 	
@@ -259,12 +247,10 @@ JS_IMPLEMENT_SETTER(Body, rot) { THIS_CHECK; SETTER_VEC3_ARG;
 	emit("rot", 1, &value);
 	
 	RET_UNDEFINED;
-	
 }
 
 
 JS_IMPLEMENT_SETTER(Body, vell) { THIS_CHECK; SETTER_VEC3_ARG;
-	
 	CACHE_CAS(_cacheVell, v);
 	
 	if (_cacheSleepy) {
@@ -276,12 +262,10 @@ JS_IMPLEMENT_SETTER(Body, vell) { THIS_CHECK; SETTER_VEC3_ARG;
 	emit("vell", 1, &value);
 	
 	RET_UNDEFINED;
-	
 }
 
 
 JS_IMPLEMENT_SETTER(Body, vela) { THIS_CHECK; SETTER_VEC3_ARG;
-	
 	CACHE_CAS(_cacheVela, v);
 	
 	if (_cacheSleepy) {
@@ -293,12 +277,10 @@ JS_IMPLEMENT_SETTER(Body, vela) { THIS_CHECK; SETTER_VEC3_ARG;
 	emit("vela", 1, &value);
 	
 	RET_UNDEFINED;
-	
 }
 
 
 JS_IMPLEMENT_SETTER(Body, size) { THIS_CHECK; SETTER_VEC3_ARG;
-	
 	CACHE_CAS(_cacheSize, v);
 	
 	_rebuild(); // ??
@@ -306,12 +288,10 @@ JS_IMPLEMENT_SETTER(Body, size) { THIS_CHECK; SETTER_VEC3_ARG;
 	emit("size", 1, &value);
 	
 	RET_UNDEFINED;
-	
 }
 
 
 JS_IMPLEMENT_SETTER(Body, factl) { THIS_CHECK; SETTER_VEC3_ARG;
-	
 	CACHE_CAS(_cacheFactl, v);
 	
 	_body->setLinearFactor(_cacheFactl);
@@ -319,12 +299,10 @@ JS_IMPLEMENT_SETTER(Body, factl) { THIS_CHECK; SETTER_VEC3_ARG;
 	emit("factl", 1, &value);
 	
 	RET_UNDEFINED;
-	
 }
 
 
 JS_IMPLEMENT_SETTER(Body, facta) { THIS_CHECK; SETTER_VEC3_ARG;
-	
 	CACHE_CAS(_cacheFacta, v);
 	
 	_body->setAngularFactor(_cacheFacta);
@@ -332,52 +310,42 @@ JS_IMPLEMENT_SETTER(Body, facta) { THIS_CHECK; SETTER_VEC3_ARG;
 	emit("facta", 1, &value);
 	
 	RET_UNDEFINED;
-	
 }
 
 
 JS_IMPLEMENT_SETTER(Body, map) { THIS_CHECK; SETTER_OBJ_ARG;
-	
 	// TODO
 	
 	emit("map", 1, &value);
 	
 	RET_UNDEFINED;
-	
 }
 
 JS_IMPLEMENT_GETTER(Body, map) { THIS_CHECK;
-	
 	Napi::Value obj = Napi::Object::New(env);
 	
 	RET_VALUE(obj);
 	
 	RET_UNDEFINED;
-	
 }
 
 
 JS_IMPLEMENT_SETTER(Body, mesh) { THIS_CHECK; SETTER_OBJ_ARG;
-	
 	// TODO
 	
 	emit("mest", 1, &value);
 	
 	RET_UNDEFINED;
-	
 }
 
 JS_IMPLEMENT_GETTER(Body, mesh) { THIS_CHECK;
-	
 	Napi::Value obj = Napi::Object::New(env);
 	
 	RET_VALUE(obj);
-	
 }
 
 
 JS_IMPLEMENT_SETTER(Body, mass) { THIS_CHECK; SETTER_FLOAT_ARG;
-	
 	CACHE_CAS(_cacheMass, v);
 	
 	_rebuild();
@@ -385,12 +353,10 @@ JS_IMPLEMENT_SETTER(Body, mass) { THIS_CHECK; SETTER_FLOAT_ARG;
 	emit("mass", 1, &value);
 	
 	RET_UNDEFINED;
-	
 }
 
 
 JS_IMPLEMENT_SETTER(Body, rest) { THIS_CHECK; SETTER_FLOAT_ARG;
-	
 	CACHE_CAS(_cacheRest, v);
 	
 	_body->setRestitution(_cacheRest);
@@ -398,12 +364,10 @@ JS_IMPLEMENT_SETTER(Body, rest) { THIS_CHECK; SETTER_FLOAT_ARG;
 	emit("rest", 1, &value);
 	
 	RET_UNDEFINED;
-	
 }
 
 
 JS_IMPLEMENT_SETTER(Body, dampl) { THIS_CHECK; SETTER_FLOAT_ARG;
-	
 	CACHE_CAS(_cacheDampl, v);
 	
 	_body->setDamping(_cacheDampl, _cacheDampa);
@@ -411,12 +375,10 @@ JS_IMPLEMENT_SETTER(Body, dampl) { THIS_CHECK; SETTER_FLOAT_ARG;
 	emit("dampl", 1, &value);
 	
 	RET_UNDEFINED;
-	
 }
 
 
 JS_IMPLEMENT_SETTER(Body, dampa) { THIS_CHECK; SETTER_FLOAT_ARG;
-	
 	CACHE_CAS(_cacheDampa, v);
 	
 	_body->setDamping(_cacheDampl, _cacheDampa);
@@ -424,12 +386,10 @@ JS_IMPLEMENT_SETTER(Body, dampa) { THIS_CHECK; SETTER_FLOAT_ARG;
 	emit("dampa", 1, &value);
 	
 	RET_UNDEFINED;
-	
 }
 
 
 JS_IMPLEMENT_SETTER(Body, frict) { THIS_CHECK; SETTER_FLOAT_ARG;
-	
 	CACHE_CAS(_cacheFrict, v);
 	
 	_body->setFriction(_cacheFrict);
@@ -437,12 +397,10 @@ JS_IMPLEMENT_SETTER(Body, frict) { THIS_CHECK; SETTER_FLOAT_ARG;
 	emit("frict", 1, &value);
 	
 	RET_UNDEFINED;
-	
 }
 
 
 JS_IMPLEMENT_SETTER(Body, sleepy) { THIS_CHECK; SETTER_BOOL_ARG;
-	
 	CACHE_CAS(_cacheSleepy, v);
 	
 	_body->setActivationState(_cacheSleepy ? ACTIVE_TAG : DISABLE_DEACTIVATION);
@@ -450,7 +408,6 @@ JS_IMPLEMENT_SETTER(Body, sleepy) { THIS_CHECK; SETTER_BOOL_ARG;
 	emit("sleepy", 1, &value);
 	
 	RET_UNDEFINED;
-	
 }
 
 JS_IMPLEMENT_GETTER(Body, sleepy) { THIS_CHECK;
@@ -459,7 +416,6 @@ JS_IMPLEMENT_GETTER(Body, sleepy) { THIS_CHECK;
 
 
 void Body::_rebuild() { DES_CHECK;
-	
 	btCollisionShape *oldShape = _cshape;
 	
 	if (_cacheType == "ball") {
@@ -529,12 +485,10 @@ void Body::_rebuild() { DES_CHECK;
 	
 	ALIGNED_DELETE(btRigidBody, oldb);
 	ALIGNED_DELETE(btCollisionShape, oldShape);
-	
 }
 
 
 btVector3 Body::_calcScale() const {
-	
 	if (_cacheType != "map" || ! _cacheMap) {
 		return _cacheSize;
 	}
@@ -547,7 +501,6 @@ btVector3 Body::_calcScale() const {
 	// );
 	
 	return sz;
-	
 }
 
 

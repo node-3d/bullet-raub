@@ -5,8 +5,8 @@ require('segfault-raub');
 // Add deps dll dirs
 require('deps-bullet-raub');
 
-const { bin } = require('addon-tools-raub');
+const { getBin } = require('addon-tools-raub');
 
-const core = require(`./${bin}/bullet`);
+const core = require(`./${getBin()}/bullet`);
 
 module.exports = core;

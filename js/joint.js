@@ -1,29 +1,34 @@
 'use strict';
 
-const { inspect, inherits } = require('util');
-const Emitter = require('events');
+const { inspect, inherits } = require('node:util');
+const Emitter = require('node:events');
 
 const { Joint } = require('../core');
 
 inherits(Joint, Emitter);
 
+let nextId = 1;
+const genId = () => nextId++;
+const nonGcDict = {};
 
-function JsJoint() {
-	
-	Joint.call(this);
-	
-}
 
-JsJoint.prototype = {
-	
-	[inspect.custom]() { return this.toString(); },
+class JsJoint extends Joint {
+	constructor() {
+		super();
+		
+		// Prevent garbage collection until object is intentionally destroyed
+		this.__nonGcId = genId();
+		nonGcDict[this.__nonGcId] = this;
+		this.on('destroy', () => {
+			delete nonGcDict[this.__nonGcId];
+		});
+	}
+
+	[inspect.custom]() { return this.toString(); }
 	
 	toString() {
 		return `Joint { broken: ${this.broken} }`;
-	},
-	
-};
-
-inherits(JsJoint, Joint);
+	}
+}
 
 module.exports = JsJoint;

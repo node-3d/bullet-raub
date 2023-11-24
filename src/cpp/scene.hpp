@@ -19,7 +19,6 @@ class Trace;
 
 ATTRIBUTE_ALIGNED16(class) Scene : public Common {
 DECLARE_ES5_CLASS(Scene, Scene);
-	
 public:
 	static void init(Napi::Env env, Napi::Object exports);
 	
@@ -42,10 +41,9 @@ public:
 	Napi::Object doHit(const btVector3 &from, const btVector3 &to);
 	ObjVec doTrace(const btVector3 &from, const btVector3 &to);
 	
-	
 private:
 	btClock *_clock;
-	btAlignedObjectArray<Body*> _bodies;
+	std::vector<Body*> _bodies;
 	
 	btDefaultCollisionConfiguration *_physConfig;
 	btCollisionDispatcher *_physDispatcher;
@@ -65,7 +63,6 @@ private:
 	JS_DECLARE_METHOD(Scene, update);
 	JS_DECLARE_METHOD(Scene, hit);
 	JS_DECLARE_METHOD(Scene, trace);
-	
 };
 
 

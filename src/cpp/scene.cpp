@@ -1,14 +1,13 @@
-#include <btQuickprof.h>
-#include <btDefaultCollisionConfiguration.h>
-#include <btDbvtBroadphase.h>
-#include <btSequentialImpulseConstraintSolver.h>
-#include <btDiscreteDynamicsWorld.h>
-#include <btConstraintSolver.h>
-#include <btRaycastCallback.h>
-#include <btSolverConstraint.h>
-#include <btDynamicsWorld.h>
-#include <btAabbUtil2.h>
-#include <btAlignedObjectArray.h>
+#include <LinearMath/btQuickprof.h>
+#include <BulletCollision/CollisionDispatch/btDefaultCollisionConfiguration.h>
+#include <BulletCollision/BroadphaseCollision/btDbvtBroadphase.h>
+#include <BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h>
+#include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
+#include <BulletDynamics/ConstraintSolver/btConstraintSolver.h>
+#include <BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
+#include <BulletDynamics/ConstraintSolver/btSolverConstraint.h>
+#include <BulletDynamics/Dynamics/btDynamicsWorld.h>
+#include <LinearMath/btAabbUtil2.h>
 
 #include "body.hpp"
 #include "scene.hpp"
@@ -18,7 +17,6 @@ IMPLEMENT_ES5_CLASS(Scene);
 
 
 void Scene::init(Napi::Env env, Napi::Object exports) {
-	
 	Napi::Function ctor = wrap(env);
 	
 	JS_ASSIGN_METHOD(destroy);
@@ -31,13 +29,11 @@ void Scene::init(Napi::Env env, Napi::Object exports) {
 	JS_ASSIGN_SETTER(gravity);
 	
 	exports.Set("Scene", ctor);
-	
 }
 
 
 Scene::Scene(const Napi::CallbackInfo &info):
 Common(info.This(), "Scene") { NAPI_ENV;
-	
 	super(info);
 	
 	_clock = ALIGNED_NEW(btClock);
@@ -57,7 +53,6 @@ Common(info.This(), "Scene") { NAPI_ENV;
 	
 	_cacheGrav.setValue(0, -10, 0);
 	_physWorld->setGravity(_cacheGrav);
-	
 }
 
 
@@ -67,7 +62,6 @@ Scene::~Scene() {
 
 
 void Scene::_destroy() { DES_CHECK;
-	
 	emit("destroy");
 	
 	EACH(_bodies) {
@@ -88,7 +82,6 @@ void Scene::_destroy() { DES_CHECK;
 	ALIGNED_DELETE(btDefaultCollisionConfiguration, _physConfig);
 	
 	Common::_destroy();
-	
 }
 
 
@@ -98,7 +91,6 @@ inline Napi::Object fillTraceObject(
 	const btVector3 &cppNorm,
 	const btCollisionObject *m_collisionObject
 ) {
-	
 	Napi::Object trace = Napi::Object::New(env);
 	
 	trace.Set("hit", true);
@@ -112,11 +104,9 @@ inline Napi::Object fillTraceObject(
 	trace.Set("norm", norm);
 	
 	return trace;
-	
 }
 
 inline Napi::Object fillTraceObject(Napi::Env env) {
-	
 	Napi::Object trace = Napi::Object::New(env);
 	
 	trace.Set("hit", false);
@@ -131,50 +121,47 @@ inline Napi::Object fillTraceObject(Napi::Env env) {
 	trace.Set("norm", norm);
 	
 	return trace;
-	
 }
 
 // ------ Methods and props
 
 void Scene::refBody(Body *body) { DES_CHECK;
-	
 	_bodies.push_back(body);
-	
 }
 
 
 void Scene::unrefBody(Body* body) { DES_CHECK;
-	
-	_bodies.remove(body);
-	
+	auto size = _bodies.size();
+	if (!size) {
+		return;
+	}
+	auto it = std::find(_bodies.begin(), _bodies.end(), body);
+	if (it != _bodies.end()) {
+		_bodies.erase(it);
+	}
 }
 
 
 void Scene::doUpdate(float dt) { DES_CHECK;
-	
 	_physWorld->stepSimulation(dt, 10, 1.f / 120.f);
 	
 	EACH(_bodies) {
 		_bodies[i]->__update();
 	}
-	
 }
 
 
 void Scene::doUpdate() { DES_CHECK;
-	
 	btScalar dt = static_cast<btScalar>(_clock->getTimeMicroseconds())* 0.000001f;
 	_clock->reset();
 	
 	doUpdate(dt);
-	
 }
 
 V3_GETTER(Scene, gravity, _cacheGrav);
 
 
 JS_IMPLEMENT_SETTER(Scene, gravity) { THIS_CHECK; SETTER_VEC3_ARG;
-	
 	CACHE_CAS(_cacheGrav, v);
 	
 	_physWorld->setGravity(_cacheGrav);
@@ -182,12 +169,10 @@ JS_IMPLEMENT_SETTER(Scene, gravity) { THIS_CHECK; SETTER_VEC3_ARG;
 	emit("gravity", 1, &value);
 	
 	RET_UNDEFINED;
-	
 }
 
 
 JS_IMPLEMENT_METHOD(Scene, update) { THIS_CHECK;
-	
 	LET_FLOAT_ARG(0, dt);
 	
 	if (dt > 0.f) {
@@ -197,12 +182,10 @@ JS_IMPLEMENT_METHOD(Scene, update) { THIS_CHECK;
 	}
 	
 	RET_UNDEFINED;
-	
 }
 
 
 JS_IMPLEMENT_METHOD(Scene, hit) { THIS_CHECK;
-	
 	REQ_VEC3_ARG(0, f);
 	REQ_VEC3_ARG(1, t);
 	
@@ -222,12 +205,10 @@ JS_IMPLEMENT_METHOD(Scene, hit) { THIS_CHECK;
 	}
 	
 	RET_VALUE(trace);
-	
 }
 
 
 JS_IMPLEMENT_METHOD(Scene, trace) { THIS_CHECK;
-	
 	REQ_VEC3_ARG(0, f);
 	REQ_VEC3_ARG(1, t);
 	
@@ -254,7 +235,6 @@ JS_IMPLEMENT_METHOD(Scene, trace) { THIS_CHECK;
 	}
 	
 	RET_VALUE(result);
-	
 }
 
 

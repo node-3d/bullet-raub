@@ -3,9 +3,8 @@
 
 #include <vector>
 
-#include <btVector3.h>
-#include <btQuaternion.h>
-#include <btAlignedObjectArray.h>
+#include <LinearMath/btVector3.h>
+#include <LinearMath/btQuaternion.h>
 
 #include <addon-tools.hpp>
 
@@ -109,7 +108,6 @@ typedef std::vector<Napi::Object> ObjVec;
 
 
 struct Common {
-	
 	Common(Napi::Value that, const char *name):
 	_asyncCtx(that.Env(), name) {
 		_that.Reset(that.As<Napi::Object>());
@@ -117,7 +115,6 @@ struct Common {
 	}
 	
 	~Common() { _destroy(); }
-	
 	
 	void emit(
 		const char* name,
@@ -127,13 +124,12 @@ struct Common {
 		eventEmit(_that.Value(), name, argc, argv);
 	}
 	
-	
 	void emitAsync(
 		const char* name,
 		int argc = 0,
 		const Napi::Value *argv = nullptr
 	) { DES_CHECK;
-		eventEmitAsync(_that.Value(), name, argc, argv);
+		eventEmit(_that.Value(), name, argc, argv);
 	}
 	
 	void _destroy() { DES_CHECK;
@@ -145,7 +141,6 @@ struct Common {
 	
 	Napi::ObjectReference _that;
 	Napi::AsyncContext _asyncCtx;
-	
 };
 
 

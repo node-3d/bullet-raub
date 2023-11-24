@@ -15,7 +15,6 @@ class Trimesh;
 
 ATTRIBUTE_ALIGNED16(class) Body : public Common {
 DECLARE_ES5_CLASS(Body, Body);
-	
 public:
 	static void init(Napi::Env env, Napi::Object exports);
 	
@@ -38,16 +37,14 @@ public:
 	// called within engine
 	void __update();
 	
-	
 private:
-	
 	void _rebuild();
 	
 	btVector3 _calcScale() const;
 	
 	Napi::ObjectReference _sceneObj;
 	Scene *_scene;
-	btAlignedObjectArray<Joint*> _joints;
+	std::vector<Joint*> _joints;
 	
 	btCollisionShape *_cshape;
 	btRigidBody *_body;
@@ -119,7 +116,6 @@ private:
 	
 	JS_DECLARE_GETTER(Body, sleepy);
 	JS_DECLARE_SETTER(Body, sleepy);
-	
 };
 
 

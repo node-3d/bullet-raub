@@ -11,7 +11,6 @@ class Body;
 
 ATTRIBUTE_ALIGNED16(class) Joint : public Common {
 DECLARE_ES5_CLASS(Joint, Joint);
-	
 public:
 	static void init(Napi::Env env, Napi::Object exports);
 	
@@ -28,9 +27,7 @@ public:
 	
 	void __update(bool asleep = false);
 	
-	
 private:
-	
 	void _removeConstraint(btDynamicsWorld *world);
 	
 	btGeneric6DofSpringConstraint *_constraint;
@@ -141,7 +138,6 @@ private:
 	
 	JS_DECLARE_GETTER(Joint, motorav);
 	JS_DECLARE_SETTER(Joint, motorav);
-	
 };
 
 
