@@ -25,7 +25,7 @@
 					"-Wl,-rpath,'$$ORIGIN'",
 					"-Wl,-rpath,'$$ORIGIN/../node_modules/deps-bullet-raub/<(bin)'",
 					"-Wl,-rpath,'$$ORIGIN/../../deps-bullet-raub/<(bin)'",
-					'-lBulletCollision', '-lBulletDynamics', '-lLinearMath'
+					'-lBulletDynamics', '-lBulletCollision', '-lLinearMath',
 				],
 				'defines': ['__linux__'],
 			}],
@@ -34,7 +34,7 @@
 					'-Wl,-rpath,@loader_path',
 					'-Wl,-rpath,@loader_path/../node_modules/deps-bullet-raub/<(bin)',
 					'-Wl,-rpath,@loader_path/../../deps-bullet-raub/<(bin)',
-					'-lBulletCollision', '-lBulletDynamics', '-lLinearMath'
+					'-lBulletDynamics', '-lBulletCollision', '-lLinearMath',
 				],
 				'MACOSX_DEPLOYMENT_TARGET': '10.9',
 				'defines': ['__APPLE__'],
@@ -43,7 +43,7 @@
 			}],
 			['OS=="win"', {
 				'libraries': [
-					'-lBulletCollision', '-lBulletDynamics', '-lLinearMath'
+					'-lBulletDynamics', '-lBulletCollision', '-lLinearMath',
 				],
 				'defines': ['WIN32_LEAN_AND_MEAN', 'VC_EXTRALEAN', '_WIN32', '_HAS_EXCEPTIONS=0'],
 				'msvs_settings' : {
