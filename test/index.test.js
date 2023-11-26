@@ -85,8 +85,4 @@ describe('Bullet', async () => {
 			});
 		});
 	}));
-	
-	setTimeout(() => {
-		scene.destroy();
-	}, 500);
 });

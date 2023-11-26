@@ -100,8 +100,6 @@ Joint::~Joint() {
 }
 
 void Joint::_destroy() { DES_CHECK;
-	emit("destroy");
-	
 	if (_cacheA) {
 		_cacheA->unrefJoint(this);
 	}
@@ -262,7 +260,7 @@ JS_IMPLEMENT_SETTER(Joint, broken) { THIS_CHECK; SETTER_BOOL_ARG;
 	CACHE_CAS(_cacheBroken, v);
 	CHECK_CONSTRAINT;
 	
-	_constraint->setEnabled(!_cacheBroken );
+	_constraint->setEnabled(!_cacheBroken);
 	
 	emit("broken", 1, &value);
 	
@@ -492,9 +490,9 @@ JS_IMPLEMENT_SETTER(Joint, motorl) { THIS_CHECK; SETTER_VEC3_ARG;
 	CACHE_CAS(_cacheMotorl, v);
 	CHECK_CONSTRAINT;
 	
-	_constraint->getTranslationalLimitMotor()->m_enableMotor[0] = v.x();
-	_constraint->getTranslationalLimitMotor()->m_enableMotor[1] = v.y();
-	_constraint->getTranslationalLimitMotor()->m_enableMotor[2] = v.z();
+	_constraint->getTranslationalLimitMotor()->m_enableMotor[0] = v.x() > 0;
+	_constraint->getTranslationalLimitMotor()->m_enableMotor[1] = v.y() > 0;
+	_constraint->getTranslationalLimitMotor()->m_enableMotor[2] = v.z() > 0;
 	
 	emit("motorl", 1, &value);
 	

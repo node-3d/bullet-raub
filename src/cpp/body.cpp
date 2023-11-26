@@ -333,7 +333,7 @@ JS_IMPLEMENT_GETTER(Body, map) { THIS_CHECK;
 JS_IMPLEMENT_SETTER(Body, mesh) { THIS_CHECK; SETTER_OBJ_ARG;
 	// TODO
 	
-	emit("mest", 1, &value);
+	emit("mesh", 1, &value);
 	
 	RET_UNDEFINED;
 }
@@ -422,7 +422,7 @@ void Body::_rebuild() { DES_CHECK;
 		_cshape = ALIGNED_NEW(btSphereShape, 0.5f);
 	} else if (_cacheType == "roll") {
 		_cshape = ALIGNED_NEW(btCylinderShape, btVector3(0.5f, 0.5f, 0.5f));
-	} else if (_cacheType == "caps") {
+	} else if (_cacheType == "pill") {
 		_cshape = ALIGNED_NEW(btCapsuleShape, 0.5f, 1);
 	} else if (_cacheType == "plane") {
 		_cshape = ALIGNED_NEW(btStaticPlaneShape, btVector3(0.0f, 1.0f, 0.0f), 0);
@@ -434,6 +434,9 @@ void Body::_rebuild() { DES_CHECK;
 			1, 1,
 			true, false
 		);
+	} */
+	/*} else if (_cacheType == "mesh" && _cacheMesh) {
+		
 	} */
 	} else /*if (type == "box")*/ {
 		_cshape = ALIGNED_NEW(btBoxShape, btVector3(0.5f, 0.5f, 0.5f));

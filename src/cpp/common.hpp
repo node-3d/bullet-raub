@@ -124,14 +124,6 @@ struct Common {
 		eventEmit(_that.Value(), name, argc, argv);
 	}
 	
-	void emitAsync(
-		const char* name,
-		int argc = 0,
-		const Napi::Value *argv = nullptr
-	) { DES_CHECK;
-		eventEmit(_that.Value(), name, argc, argv);
-	}
-	
 	void _destroy() { DES_CHECK;
 		_isDestroyed = true;
 		_that.Reset();

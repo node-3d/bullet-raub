@@ -1,7 +1,9 @@
 'use strict';
 
+const Body = require('./body');
+const Scene = require('./scene');
+const Joint = require('./joint');
+
 module.exports = {
-	Scene: require('./scene'),
-	Body: require('./body'),
-	Joint: require('./joint'),
+	Body, Scene, Joint,
 };

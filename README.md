@@ -1,4 +1,4 @@
-# Physics engine for Node.js
+# Bullet Physics for Node.js
 
 This is a part of [Node3D](https://github.com/node-3d) project.
 

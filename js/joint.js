@@ -13,8 +13,9 @@ const nonGcDict = {};
 
 
 class JsJoint extends Joint {
-	constructor() {
+	constructor(opts = {}) {
 		super();
+		Object.keys(opts).forEach((key) => (this[key] = opts[key]));
 		
 		// Prevent garbage collection until object is intentionally destroyed
 		this.__nonGcId = genId();

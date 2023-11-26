@@ -57,12 +57,13 @@ Common(info.This(), "Scene") { NAPI_ENV;
 
 
 Scene::~Scene() {
+	printf("Scene::~Scene()\n");
 	_destroy();
 }
 
 
 void Scene::_destroy() { DES_CHECK;
-	emit("destroy");
+	printf("Scene::_destroy()\n");
 	
 	EACH(_bodies) {
 		Body *b = _bodies[i];
@@ -72,14 +73,11 @@ void Scene::_destroy() { DES_CHECK;
 	_bodies.clear();
 	
 	ALIGNED_DELETE(btDiscreteDynamicsWorld, _physWorld);
-	
 	ALIGNED_DELETE(btSequentialImpulseConstraintSolver, _physSolver);
-	
 	ALIGNED_DELETE(btDbvtBroadphase, _physBroadphase);
-	
 	ALIGNED_DELETE(btCollisionDispatcher, _physDispatcher);
-	
 	ALIGNED_DELETE(btDefaultCollisionConfiguration, _physConfig);
+	ALIGNED_DELETE(btClock, _clock);
 	
 	Common::_destroy();
 }

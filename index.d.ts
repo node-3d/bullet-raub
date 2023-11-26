@@ -1,175 +1,280 @@
-import { EventEmitter } from 'events';
-
-
-type TEvent = {
-	type: string;
-	[key: string]: unknown;
-};
-
-type TEventCb<T extends TEvent> = (event: T) => (void | boolean);
-
-
-declare module "webaudio-raub" {
-	class AudioListener extends EventEmitter {
-		setOrientation(x: number, y: number, z: number, xUp: number, yUp: number, zUp: number): void;
-		setPosition(x: number, y: number, z: number): void;
-		readonly upZ: AudioParam;
-		readonly upY: AudioParam;
-		readonly upX: AudioParam;
-		readonly forwardZ: AudioParam;
-		readonly forwardY: AudioParam;
-		readonly forwardX: AudioParam;
-		readonly positionZ: AudioParam;
-		readonly positionY: AudioParam;
-		readonly positionX: AudioParam;
-		destroy(): void;
-	}
+declare module "bullet-raub" {
+	type TArr3 = Readonly<[number, number, number]>;
+	type TObj3 = Readonly<{ x: number; y: number; z: number }>;
+	type TArr4 = Readonly<[number, number, number, number]>;
+	type TObj4 = Readonly<{ x: number; y: number; z: number, w: number }>;
+	type TVec3Either = TArr3 | TObj3;
+	type TQuatEither = TArr4 | TObj4;
+	type TVec3Both = TArr3 & TObj3;
+	type TQuatBoth = TArr4 & TObj4;
 	
-	class AudioContext extends EventEmitter {
-		resume(): void;
-		decodeAudioData(source: Buffer, cb: (buffer: AudioBuffer) => void): void;
-		update(): void;
+	type TTraceHit = Readonly<{
+		hit: boolean;
+		body: Body;
+		pos: TVec3Both;
+		norm: TVec3Both;
+	}>;
+	
+	type TTraceHits = ReadonlyArray<TTraceHit>;
+	
+	type TEvent = {
+		type: string;
+		[key: string]: unknown;
+	};
+	
+	type TEventCb<T extends TEvent> = (event: T) => (void | boolean);
+	
+	type EventEmitter = import('node:events').EventEmitter;
+	
+	type TPropsCommon = EventEmitter & {
+		/**
+		 * True if `destroy` was called.
+		 */
+		readonly isDestroyed: boolean;
 		
-		readonly state: string;
-		readonly listener: AudioListener;
-		readonly sampleRate: number;
-		readonly currentTime: number;
-		readonly destination: AudioNode;
+		/** Stringification helper. */
+		toString(): string;
 		
-		getOutputTimestamp(): void;
-		close(): void;
-		suspend(): void;
-		readonly baseLatency: number;
+		/**
+		 * Delete the object and free the resources.
+		 * 
+		 * After calling this, the object is **no longer valid** and should not be used from JS.
+		 * Also emits the "destroy" event.
+		 */
 		destroy(): void;
-		onstatechange: TEventCb<TEvent> | ReadonlyArray<TEventCb<TEvent>>;
-		onerror: TEventCb<TEvent> | ReadonlyArray<TEventCb<TEvent>>;
-	}
+	};
 	
-	class AudioNode extends EventEmitter {
-		channelInterpretation: 'discrete' | 'speakers';
-		channelCountMode: 'clamped-max' | 'explicit' | 'max';
-		channelCount: number;
-		disconnect(other: AudioNode, output: number, input: number): void;
-		connect(): void;
-		readonly numberOfOutputs: number;
-		readonly numberOfInputs: number;
-		context(): AudioContext;
-		destroy(): void;
-		onended: TEventCb<TEvent> | ReadonlyArray<TEventCb<TEvent>>;
-		onerror: TEventCb<TEvent> | ReadonlyArray<TEventCb<TEvent>>;
-	}
+	type TBodyType = 'ball' | 'roll' | 'pill' | 'plane' | 'box'; // + todo: map mesh
 	
-	class AudioBuffer extends EventEmitter {
-		copyToChannel(): void;
-		copyFromChannel(): void;
-		getChannelData(): void;
-		readonly numberOfChannels: number;
-		readonly sampleRate: number;
-		readonly duration: number;
-		readonly length: number;
-		destroy(): void;
-	}
-	
-	class AudioParam extends EventEmitter {
-		value: number;
-		cancelAndHoldAtTime(startTime: number): void;
-		cancelScheduledValues(startTime: number): void;
-		setValueCurveAtTime(values: number[], time: number, duration: number): void;
-		setTargetAtTime(target: number, time: number, timeConstant: number): void;
-		exponentialRampToValueAtTime(values: number, time: number): void;
-		linearRampToValueAtTime(values: number, time: number): void;
-		setValueAtTime(values: number, time: number): void;
-		readonly maxValue: number;
-		readonly minValue: number;
-		readonly defaultValue: number;
-		destroy(): void;
+	type TPropsBody = {
+		/**
+		 * Body shape type. Default is "box".
+		 * 
+		 * Can be changed any time, but is slow. Reinterprets all other props as possible.
+		 */
+		type: TBodyType;
 		
-		onended: TEventCb<TEvent> | ReadonlyArray<TEventCb<TEvent>>;
-		onerror: TEventCb<TEvent> | ReadonlyArray<TEventCb<TEvent>>;
+		/** Position in 3D. Default is `[0, 0, 0]`. */
+		pos: TVec3Either;
+		
+		/** Rotation quaternion. Default is `[0, 0, 0, 1]`. */
+		rot: TQuatEither;
+		
+		/** Linear velocity. Default is `[0, 0, 0]`. */
+		vell: TVec3Either;
+		
+		/** Angular velocity. Default is `[0, 0, 0]`. */
+		vela: TVec3Either;
+		
+		/** Bounding box size (or "scale"). Default is `[1, 1, 1]`. */
+		size: TVec3Either;
+		
+		/** TODO */
+		// map: unknown;
+		
+		/** TODO */
+		// mesh: unknown;
+		
+		/** Body mass in KG. Zero is static body. Default is 0 (static). */
+		mass: number;
+		
+		/**
+		 * Restitution - bounciness. Default is 0 (no bounce).
+		 * 
+		 * @see https://en.wikipedia.org/wiki/Coefficient_of_restitution
+		 */
+		rest: number;
+		
+		/**
+		 * Linear damping. Default is `0.1`.
+		 * 
+		 * How quickly the body loses linear velocity due to "air friction".
+		 */
+		dampl: number;
+		
+		/**
+		 * Angular damping. Default is `0.1`.
+		 * 
+		 * How quickly the body loses angular velocity due to "air friction".
+		 */
+		dampa: number;
+		
+		/**
+		 * Linear impulse factor. Default is `[1, 1, 1]`.
+		 * 
+		 * It can be used to constrain object motion to certain world-frame axes.
+		 * For example: to constrain an object to only move in the XZ plane,
+		 * you would set the Y-component of `factl` to 0, and the XZ components to 1.
+		 */
+		factl: number;
+		
+		/**
+		 * Angular impulse factor. Default is `[1, 1, 1]`.
+		 * 
+		 * It can be used to constrain object rotation to certain world-frame axes.
+		 * For example: to constrain an object to only rotate around the Y axis,
+		 * you would set the XZ-components of `facta` to 0, and the Y-component to 1.
+		 */
+		facta: number;
+		
+		/** Surface friction. Default is `0.5`. */
+		frict: number;
+		
+		/**
+		 * Allow this body to "sleep". Default is `true`.
+		 * 
+		 * Usually should be `true` - this is an optimization for inactive bodies.
+		 */
+		sleepy: boolean;
+	};
+	
+	export type TOptsBody = (
+		Readonly<Partial<TPropsBody>> &
+		Readonly<{ scene: TSceneInstance }>
+	);
+	
+	type TBodyInstance = TPropsCommon & TPropsBody;
+	
+	interface TNewableBody {
+		new(opts?: TOptsBody): TBodyInstance;
 	}
 	
-	class AudioScheduledSourceNode extends AudioNode {
-		stop(when: number): void;
-		start(when: number): void;
-		destroy(): void;
+	/**
+	 * Body
+	 * 
+	 * Creates `btRigidBody` and its related components.
+	*/
+	export const Body: TNewableBody;
+	
+	type TPropsJoint = {
+		/** First connected body. */
+		a: TBodyInstance | null;
+		
+		/** Second connected body. */
+		b: TBodyInstance | null;
+		
+		/** Is connection broken. */
+		broken: boolean;
+		
+		/** Attachment position on body A. */
+		posa: TVec3Either;
+		
+		/** Attachment position on body B. */
+		posb: TVec3Either;
+		
+		/** Attachment rotation (Euler) on body A. */
+		rota: TVec3Either;
+		
+		/** Attachment rotation (Euler) on body B. */
+		rotb: TVec3Either;
+		
+		/** Min linear distance between A and B. */
+		minl: TVec3Either;
+		
+		/** Max linear distance between A and B. */
+		maxl: TVec3Either;
+		
+		/** Min angular distance between A and B. */
+		mina: TVec3Either;
+		
+		/** Max angular distance between A and B. */
+		maxa: TVec3Either;
+		
+		/** Maximum allowed impulse before breaking the connection. */
+		maximp: TVec3Either;
+		
+		/** Linear damping. */
+		dampl: TVec3Either;
+		
+		/** Angular damping. */
+		dampa: TVec3Either;
+		
+		/** Linear stiffness. */
+		stifl: TVec3Either;
+		
+		/** Angular stiffness. */
+		stifa: TVec3Either;
+		
+		/** Linear spring force. */
+		springl: TVec3Either;
+		
+		/** Angular spring force. */
+		springa: TVec3Either;
+		
+		/**
+		 * Linear motor enabled axes.
+		 * 
+		 * Values `> 0` mean "enabled".
+		 */
+		motorl: TVec3Either;
+		
+		/**
+		 * Angular motor enabled axes.
+		 * 
+		 * Values `> 0` mean "enabled".
+		 */
+		motora: TVec3Either;
+		
+		/** Linear motor force. */
+		motorlf: TVec3Either;
+		
+		/** Angular motor force. */
+		motoraf: TVec3Either;
+		
+		/** Linear motor velocity. */
+		motorlv: TVec3Either;
+		
+		/** Angular motor velocity. */
+		motorav: TVec3Either;
+	};
+	
+	export type TOptsJoint = Readonly<Partial<TPropsJoint>>;
+	
+	type TJointInstance = TPropsCommon & TPropsJoint;
+	
+	interface TNewableJoint {
+		new(opts?: TOptsJoint): TJointInstance;
 	}
 	
-	class AnalyserNode extends AudioNode {
-		smoothingTimeConstant: number;
-		maxDecibels: number;
-		minDecibels: number;
-		fftSize: number;
-		getByteTimeDomainData(array: number[]): void;
-		getFloatTimeDomainData(array: number[]): void;
-		getByteFrequencyData(array: number[]): void;
-		getFloatFrequencyData(array: number[]): void;
-		readonly frequencyBinCount: number;
-		destroy(): void;
+	/**
+	 * Joint
+	 * 
+	 * Creates `btGeneric6DofSpringConstraint` and its related components.
+	*/
+	export const Joint: TNewableJoint;
+	
+	export type TPropsScene = {
+		/**
+		 * Scene gravity. Default is `[0, -10, 0]`.
+		 */
+		gravity: TVec3Either;
+	};
+	
+	export type TOptsScene = Readonly<Partial<TPropsScene>>;
+	
+	type TSceneInstance = TPropsCommon & TPropsScene & {
+		/**
+		 * Make a simulation step.
+		 * 
+		 * If `deltaTime` is not defined, the realtime delta will be used.
+		*/
+		update(deltaTime?: number): void;
+		
+		/** Detect the **first** hit on a ray trace. */
+		hit(from: TVec3Either, to: TVec3Either): TTraceHit;
+		
+		/** Detect **all** hits on a ray trace. */
+		trace(from: TVec3Either, to: TVec3Either): TTraceHits;
+	};
+	
+	interface TNewableScene {
+		new(opts?: TOptsScene): TSceneInstance;
 	}
 	
-	class BiquadFilterNode extends AudioNode {
-		type: number;
-		getFrequencyResponse(): void;
-		readonly gain: AudioParam;
-		readonly Q: AudioParam;
-		readonly detune: AudioParam;
-		readonly frequency: AudioParam;
-		destroy(): void;
-	}
-	
-	class ConvolverNode extends AudioNode {
-		normalize: boolean;
-		buffer: AudioBuffer;
-		destroy(): void;
-	}
-	
-	class DelayNode extends AudioNode {
-		readonly delayTime: AudioParam;
-		destroy(): void;
-	}
-	
-	class GainNode extends AudioNode {
-		readonly gain: AudioParam;
-		destroy(): void;
-	}
-	
-	class PannerNode extends AudioNode {
-		coneOuterGain: number;
-		coneOuterAngle: number;
-		coneInnerAngle: number;
-		rolloffFactor: number;
-		maxDistance: number;
-		refDistance: number;
-		distanceModel: 'linear' | 'inverse' | 'exponential';
-		panningModel: 'equalpower' | 'HRTF';
-		setOrientation(x: number, y: number, z: number): void;
-		setPosition(x: number, y: number, z: number): void;
-		setVelocity(x: number, y: number, z: number): void;
-		readonly orientationZ: AudioParam;
-		readonly orientationY: AudioParam;
-		readonly orientationX: AudioParam;
-		readonly positionZ: AudioParam;
-		readonly positionY: AudioParam;
-		readonly positionX: AudioParam;
-		destroy(): void;
-	}
-	
-	class AudioBufferSourceNode extends AudioNode {
-		loopEnd: number;
-		loopStart: number;
-		loop: boolean;
-		buffer: AudioBuffer;
-		start(when: number, grainOffset: number, grainDuration: number): void;
-		readonly detune: AudioParam;
-		readonly playbackRate: AudioParam;
-		destroy(): void;
-	}
-	
-	class OscillatorNode extends AudioNode {
-		type: 'sine' | 'square' | 'sawtooth' | 'triangle' | 'custom';
-		setPeriodicWave(): void;
-		readonly detune: AudioParam;
-		readonly frequency: AudioParam;
-		destroy(): void;
-	}
+	/**
+	 * Scene
+	 * 
+	 * Creates a `btDiscreteDynamicsWorld` and its related components.
+	*/
+	export const Scene: TNewableScene;
 }
