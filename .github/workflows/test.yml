@@ -16,7 +16,7 @@ jobs:
     name: Unit Tests
     strategy:
         matrix:
-          os: [ubuntu-20.04, windows-2022, macos-11, [self-hosted, linux, ARM64]]
+          os: [ubuntu-22.04, ubuntu-22.04-arm, windows-2022, macos-14]
 
     runs-on: ${{ matrix.os }}
 
@@ -30,18 +30,14 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18.16.0
+          node-version: 22.14.0
           cache: 'npm'
 
       - name: Install Modules
         run: npm ci
 
-      - name: Fix Python
-        if: matrix.os == 'macos-11'
-        run: pip install setuptools
-
       - name: Build Current Binary
         run: npm run build
 
       - name: Run Unit Tests
-        run: npm test
+        run: npm run test-ci

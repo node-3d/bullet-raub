@@ -1,11 +1,9 @@
-#ifndef JOINT_HPP
-#define JOINT_HPP
+#pragma once
 
 #include "common.hpp"
 
 
 class btGeneric6DofSpringConstraint;
-
 class Body;
 
 
@@ -139,6 +137,3 @@ private:
 	JS_DECLARE_GETTER(Joint, motorav);
 	JS_DECLARE_SETTER(Joint, motorav);
 };
-
-
-#endif // JOINT_HPP

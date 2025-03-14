@@ -1,5 +1,4 @@
-#ifndef BODY_HPP
-#define BODY_HPP
+#pragma once
 
 #include "common.hpp"
 
@@ -117,6 +116,3 @@ private:
 	JS_DECLARE_GETTER(Body, sleepy);
 	JS_DECLARE_SETTER(Body, sleepy);
 };
-
-
-#endif // BODY_HPP

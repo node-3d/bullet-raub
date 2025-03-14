@@ -1,5 +1,3 @@
-'use strict';
-
 import * as bullet from 'bullet-raub';
 const { Scene, Body, Joint } = bullet;
 console.log('bb', Scene, Body, Joint);

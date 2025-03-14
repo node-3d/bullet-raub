@@ -1,7 +1,6 @@
-
-#include "scene.hpp"
-#include "body.hpp"
-#include "joint.hpp"
+#include "scene.cpp"
+#include "body.cpp"
+#include "joint.cpp"
 
 
 Napi::Object initModule(Napi::Env env, Napi::Object exports) {

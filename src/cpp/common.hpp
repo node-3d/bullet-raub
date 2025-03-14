@@ -1,12 +1,14 @@
-#ifndef COMMON_HPP
-#define COMMON_HPP
+#pragma once
 
 #include <vector>
-
 #include <LinearMath/btVector3.h>
 #include <LinearMath/btQuaternion.h>
-
 #include <addon-tools.hpp>
+
+
+// Fix bad defines
+#undef True
+#undef False
 
 
 // Bullet stuff
@@ -134,12 +136,3 @@ struct Common {
 	Napi::ObjectReference _that;
 	Napi::AsyncContext _asyncCtx;
 };
-
-
-// Fix bad defines
-
-#undef True
-#undef False
-
-
-#endif /* COMMON_HPP */

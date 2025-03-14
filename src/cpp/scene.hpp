@@ -1,5 +1,4 @@
-#ifndef SCENE_HPP
-#define SCENE_HPP
+#pragma once
 
 #include "common.hpp"
 
@@ -64,6 +63,3 @@ private:
 	JS_DECLARE_METHOD(Scene, hit);
 	JS_DECLARE_METHOD(Scene, trace);
 };
-
-
-#endif // SCENE_HPP

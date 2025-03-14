@@ -11,14 +11,12 @@ This is a part of [Node3D](https://github.com/node-3d) project.
 npm i -s bullet-raub
 ```
 
+> This addon is ABI-compatible across Node.js versions. **There is no compilation** during `npm i`.
+
 **Node.js** addon providing a Bullet-driven physics API.
 
 This library is a simplified interpretation of
 [Bullet Physics](https://github.com/bulletphysics/bullet3).
 Only rigid bodies and DOF-6 constraint are supported.
-
-> Note: this **addon uses N-API**, and therefore is ABI-compatible across different
-Node.js versions. Addon binaries are precompiled and **there is no compilation**
-step during the `npm i` command.
 
 See [TypeScript declarations](/index.d.ts) for more details.
