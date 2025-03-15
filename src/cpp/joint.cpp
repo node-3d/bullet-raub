@@ -593,7 +593,7 @@ void Joint::_rebuild() { DES_CHECK;
 		_removeConstraint(_cacheB->getWorld());
 	}
 	
-	if(!(_cacheA && _cacheB)) {
+	if(!_cacheA || !_cacheB) {
 		return;
 	}
 	
@@ -622,14 +622,13 @@ void Joint::_rebuild() { DES_CHECK;
 	);
 	
 	_cacheA->getWorld()->addConstraint(_constraint, true);
-	_constraint->setEnabled(!_cacheBroken );
+	_constraint->setEnabled(!_cacheBroken);
 	
 	_constraint->setLinearLowerLimit(_cacheMinl);
 	_constraint->setLinearUpperLimit(_cacheMaxl);
 	_constraint->setAngularLowerLimit(static_cast<float>(M_PI) * _cacheMina);
 	_constraint->setAngularUpperLimit(static_cast<float>(M_PI) * _cacheMaxa);
 	
-	// Holy fucking props
 	_constraint->setBreakingImpulseThreshold(_cacheMaximp);
 	
 	_constraint->setDamping(0, _cacheDampl.getX());
@@ -674,11 +673,13 @@ void Joint::_rebuild() { DES_CHECK;
 
 
 void Joint::_removeConstraint(btDynamicsWorld *world) { DES_CHECK;
-	if (_constraint) {
-		world->removeConstraint(_constraint);
+	if (!_constraint) {
+		return;
 	}
 	
+	world->removeConstraint(_constraint);
 	ALIGNED_DELETE(btGeneric6DofSpringConstraint, _constraint);
+	_constraint = nullptr;
 }
 
 

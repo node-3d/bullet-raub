@@ -3,7 +3,7 @@ const { Scene, Body, Joint } = bullet;
 
 
 const scene = new Scene();
-scene.on('gravity', (g) => console.log('gravity event', g));
+// scene.on('gravity', (g) => console.log('gravity event', g));
 scene.gravity = [0, -9.8, 0];
 
 const plane = new Body({ scene });
