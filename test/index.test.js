@@ -24,8 +24,8 @@ const classes = {
 			inst.destroy();
 		},
 		props: [
-			'type', 'pos', 'rot', 'vell', 'vela', 'size', 'factl', 'facta',
-			'map','mesh','mass','rest','dampl','dampa','frict','sleepy'
+			'type', 'pos', 'rot', 'quat', 'vell', 'vela', 'size', 'factl', 'facta',
+			'map', 'mesh', 'mass', 'rest', 'dampl', 'dampa', 'frict', 'sleepy',
 		],
 		methods: ['destroy'],
 	},
@@ -37,9 +37,9 @@ const classes = {
 			inst.destroy();
 		},
 		props: [
-			'a','b','broken','maximp','posa','posb','rota','rotb','minl',
-			'maxl','mina','maxa','dampl','dampa','stifl','stifa','springl',
-			'springa','motorl','motora','motorlf','motoraf','motorlv','motorav',
+			'a', 'b', 'broken', 'maximp', 'posa', 'posb', 'rota', 'rotb', 'minl',
+			'maxl', 'mina', 'maxa', 'dampl', 'dampa', 'stifl', 'stifa', 'springl',
+			'springa', 'motorl', 'motora', 'motorlf', 'motoraf', 'motorlv', 'motorav',
 		],
 		methods: ['destroy'],
 	},
