@@ -29,6 +29,7 @@ void Body::init(Napi::Env env, Napi::Object exports) {
 	JS_ASSIGN_SETTER(type);
 	JS_ASSIGN_SETTER(pos);
 	JS_ASSIGN_SETTER(rot);
+	JS_ASSIGN_SETTER(quat);
 	JS_ASSIGN_SETTER(vell);
 	JS_ASSIGN_SETTER(vela);
 	JS_ASSIGN_SETTER(size);
@@ -245,6 +246,24 @@ JS_IMPLEMENT_SETTER(Body, rot) { THIS_CHECK; SETTER_VEC3_ARG;
 	_body->setCenterOfMassTransform(transform);
 	
 	emit("rot", 1, &value);
+	
+	RET_UNDEFINED;
+}
+
+JS_IMPLEMENT_GETTER(Body, quat) { THIS_CHECK;
+	QUAT_TO_OBJ(_cacheRot, quat);
+	RET_VALUE(quat);
+}
+
+
+JS_IMPLEMENT_SETTER(Body, quat) { THIS_CHECK; SETTER_QUAT_ARG;
+	CACHE_CAS(_cacheRot, v);
+	
+	btTransform transform = _body->getCenterOfMassTransform();
+	transform.setRotation(_cacheRot);
+	_body->setCenterOfMassTransform(transform);
+	
+	emit("quat", 1, &value);
 	
 	RET_UNDEFINED;
 }

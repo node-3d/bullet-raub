@@ -10,7 +10,7 @@ declare module "bullet-raub" {
 	
 	type TTraceHit = Readonly<{
 		hit: boolean;
-		body: Body;
+		body: TBodyInstance;
 		pos: TVec3Both;
 		norm: TVec3Both;
 	}>;
@@ -32,7 +32,9 @@ declare module "bullet-raub" {
 		 */
 		readonly isDestroyed: boolean;
 		
-		/** Stringification helper. */
+		/**
+		 * Stringification helper. Shows "Body { ... }".
+		 */
 		toString(): string;
 		
 		/**
@@ -54,11 +56,16 @@ declare module "bullet-raub" {
 		 */
 		type: TBodyType;
 		
-		/** Position in 3D. Default is `[0, 0, 0]`. */
+		/**
+		 * Position in 3D. Default is `[0, 0, 0]`.
+		 */
 		pos: TVec3Either;
 		
+		/** Rotation euler angles. Default is `[0, 0, 0]`. */
+		rot: TVec3Either;
+		
 		/** Rotation quaternion. Default is `[0, 0, 0, 1]`. */
-		rot: TQuatEither;
+		quat: TQuatEither;
 		
 		/** Linear velocity. Default is `[0, 0, 0]`. */
 		vell: TVec3Either;

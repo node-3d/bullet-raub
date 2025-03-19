@@ -1,7 +1,7 @@
 {
 	"author": "Luis Blanco <luisblanco1337@gmail.com>",
 	"name": "bullet-raub",
-	"version": "4.0.0",
+	"version": "4.1.0",
 	"description": "Bullet-driven physics API",
 	"license": "MIT",
 	"main": "index.js",

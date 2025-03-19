@@ -77,6 +77,9 @@ private:
 	JS_DECLARE_GETTER(Body, rot);
 	JS_DECLARE_SETTER(Body, rot);
 	
+	JS_DECLARE_GETTER(Body, quat);
+	JS_DECLARE_SETTER(Body, quat);
+	
 	JS_DECLARE_GETTER(Body, vell);
 	JS_DECLARE_SETTER(Body, vell);
 	
