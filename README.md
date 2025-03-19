@@ -52,6 +52,14 @@ The `scene` contains all bodies and joints. It is a high-level wrapper that init
 From `scene` you can also run ray hits or traces. It should be possible to use many scenes
 in parallel.
 
+```ts
+const { body } = scene.hit(start, end);
+```
+
+Here `body` is whatever `Body` the ray hits first on its path. For subclasses of `Body`,
+this will respect the dynamic type. I.e. for `class House extends Body {...}` the expression
+`body instanceof House` will be `true`.
+See `scene.hit` and `scene.trace` in the [example](/examples/main.ts).
 
 ## Adding Bodies
 
@@ -108,7 +116,7 @@ interpolation, shading, networking, etc.
 Objects of `Joint` will fire `'update'` events every tick while not sleeping:
 
 ```ts
-body.on('update', (event) => {
+joint.on('update', (event) => {
 	event.posa; // current position of body A
 	event.posb; // current position of body B
 	event.broken; // boolean, is this joint broken
