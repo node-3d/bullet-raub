@@ -2,16 +2,16 @@
 
 This is a part of [Node3D](https://github.com/node-3d) project.
 
-[![NPM](https://badge.fury.io/js/bullet-raub.svg)](https://badge.fury.io/js/bullet-raub)
-[![ESLint](https://github.com/node-3d/bullet-raub/actions/workflows/eslint.yml/badge.svg)](https://github.com/node-3d/bullet-raub/actions/workflows/eslint.yml)
-[![Test](https://github.com/node-3d/bullet-raub/actions/workflows/test.yml/badge.svg)](https://github.com/node-3d/bullet-raub/actions/workflows/test.yml)
-[![Cpplint](https://github.com/node-3d/bullet-raub/actions/workflows/cpplint.yml/badge.svg)](https://github.com/node-3d/bullet-raub/actions/workflows/cpplint.yml)
+[![NPM](https://badge.fury.io/js/%40node-3d%2Fbullet.svg)](https://badge.fury.io/js/@node-3d/bullet)
+[![Lint](https://github.com/node-3d/bullet/actions/workflows/lint.yml/badge.svg)](https://github.com/node-3d/bullet/actions/workflows/lint.yml)
+[![Test](https://github.com/node-3d/bullet/actions/workflows/test.yml/badge.svg)](https://github.com/node-3d/bullet/actions/workflows/test.yml)
+[![Cpplint](https://github.com/node-3d/bullet/actions/workflows/cpplint.yml/badge.svg)](https://github.com/node-3d/bullet/actions/workflows/cpplint.yml)
 
 ```console
-npm i -s bullet-raub
+npm install @node-3d/bullet
 ```
 
-> This addon is ABI-compatible across Node.js versions. **There is no compilation** during `npm i`.
+> This addon is ABI-compatible across Node.js versions. **There is no compilation** during `npm install`.
 
 **Node.js** addon providing a Bullet-driven physics API.
 
@@ -26,12 +26,52 @@ Only rigid body primitives are supported. The API is simplified to just 3 classe
 Body can be static or dynamic and with different shapes. Joint is a DOF6 that you can set up in
 many possible ways.
 
-See [TypeScript declarations](/index.d.ts) for more details.
+## API
+
+### `Scene`
+
+Owns a Bullet dynamics world and all bodies/joints created for that world.
+Useful members:
+
+* `gravity` - world gravity as `{ x, y, z }` or `[x, y, z]`.
+* `update(dt = 0)` - advance simulation. If `dt` is `0`, internal timing is used.
+* `hit(from, to)` - return the first ray hit.
+* `trace(from, to)` - return all ray hits along a segment.
+* `destroy()` - release native resources.
+
+### `Body`
+
+Rigid body primitive. Constructor requires `{ scene }` and accepts shape/physics options.
+Common properties:
+
+* `type` - body shape, such as `'box'`, `'sphere'`, or `'plane'`.
+* `pos`, `quat` - transform.
+* `size`, `radius`, `height` - shape dimensions, depending on `type`.
+* `mass` - `0` for static bodies, positive values for dynamic bodies.
+* `vell`, `vela` - linear and angular velocity.
+* `friction`, `restitution`, `damping`, `sleeping` controls.
+
+`Body` emits property-change events and `update` events while active.
+
+### `Joint`
+
+Six-degree-of-freedom constraint between two bodies.
+Common properties:
+
+* `a`, `b` - connected bodies.
+* `posa`, `posb` - local joint anchors.
+* `minl`, `maxl` - linear limits.
+* `mina`, `maxa` - angular limits.
+* `maximp` - breaking impulse threshold.
+
+`Joint` emits `update` events with current anchor positions and break state.
 
 
 ## Creating Scenes:
 
 ```ts
+import { Scene } from '@node-3d/bullet';
+
 const scene = new Scene();
 scene.gravity = [0, -9.8, 0];
 const frame = () => {
@@ -64,6 +104,8 @@ See `scene.hit` and `scene.trace` in the [example](/examples/main.ts).
 ## Adding Bodies
 
 ```ts
+import { Body } from '@node-3d/bullet';
+
 const plane = new Body({ scene }); // static box
 plane.type = 'plane'; // change shape to ("ground") plane
 
@@ -78,6 +120,8 @@ Pass `scene` as a required constructor option. All bodies always exist within th
 ## Connecting Joints
 
 ```ts
+import { Joint } from '@node-3d/bullet';
+
 const joint = new Joint();
 joint.minl = [0, 1, 0];
 joint.maxl = [0, 1, 0];

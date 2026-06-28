@@ -1,6 +1,4 @@
-import * as bullet from 'bullet-raub';
-const { Scene, Body, Joint } = bullet;
-
+import { Body, Joint, Scene } from '@node-3d/bullet';
 
 const scene = new Scene();
 // scene.on('gravity', (g) => console.log('gravity event', g));
